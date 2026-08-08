@@ -1,0 +1,80 @@
+name: E2E — routage public et redirection (ADDENDUM §55)
+
+# ---------------------------------------------------------------------------
+# AVERTISSEMENT
+#
+# Ces scenarios n'ont JAMAIS ete executes. L'environnement de developpement
+# dans lequel ils ont ete ecrits bloque `*.supabase.co` : aucune connexion
+# reelle n'y est possible, donc aucun des trois scenarios du §55 n'a pu etre
+# joue une seule fois. Ce workflow est le premier endroit ou ils tourneront.
+#
+# Il est volontairement SEPARE de `ci.yml` : tant qu'il n'est pas passe au
+# vert, il ne doit pas bloquer la chaine principale. Il est declenche a la
+# main (`workflow_dispatch`) et une fois par nuit.
+#
+# Secrets a configurer avant la premiere execution :
+#   E2E_SUPABASE_URL, E2E_SUPABASE_ANON_KEY : projet de test.
+#   E2E_MEMBER_EMAIL, E2E_MEMBER_PASSWORD   : compte de test reel, prefixe
+#                                             `test+` et marque
+#                                             `is_test_account` (D-104).
+# Sans ces secrets, les scenarios qui exigent une session se declarent
+# `skipped` plutot que de passer faussement au vert.
+# ---------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  redirect:
+    name: Scenarios de redirection
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_ENVIRONMENT: local
+      E2E_BASE_URL: http://localhost:3000
+      E2E_MEMBER_EMAIL: ${{ secrets.E2E_MEMBER_EMAIL }}
+      E2E_MEMBER_PASSWORD: ${{ secrets.E2E_MEMBER_PASSWORD }}
+      E2E_PROTECTED_TARGET: /tableau-de-bord
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Installer les navigateurs Playwright
+        run: pnpm --filter @ise/web exec playwright install --with-deps chromium
+
+      - name: Build de production
+        run: pnpm --filter @ise/web build
+
+      - name: Scenarios §55
+        run: pnpm --filter @ise/web exec playwright test
+
+      - name: Rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+          if-no-files-found: ignore

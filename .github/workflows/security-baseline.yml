@@ -1,0 +1,35 @@
+name: Ligne de base de sécurité (base de données)
+
+# Contrôle la base réelle : RLS active partout, aucun privilège pour `anon`,
+# aucune fonction SECURITY DEFINER sans search_path figé.
+# MASTER PROMPT §11, §72, §80, §84.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  baseline:
+    name: private.security_baseline_violations()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Interroger la base
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::warning::Secret SUPABASE_DB_URL absent — contrôle ignoré."
+            exit 0
+          fi
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+          COUNT=$(psql "$SUPABASE_DB_URL" -tAc \
+            "select count(*) from private.security_baseline_violations();")
+          if [ "$COUNT" != "0" ]; then
+            echo "::error::$COUNT violation(s) de la ligne de base de sécurité."
+            psql "$SUPABASE_DB_URL" -c "select * from private.security_baseline_violations();"
+            exit 1
+          fi
+          echo "Ligne de base de sécurité respectée."

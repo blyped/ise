@@ -1,0 +1,16 @@
+# Artefacts generes : ils sont reecrits par les outils, pas par nous.
+#
+# `apps/web/next-env.d.ts` est produit par `next build` a chaque execution,
+# avec ses propres conventions de guillemets, et porte la mention
+# « This file should not be edited ». Le formater le rendrait rouge au build
+# suivant : il est donc exclu de la verification plutot que corrige en boucle.
+apps/web/next-env.d.ts
+
+# Sorties de build et caches.
+.next/
+.turbo/
+dist/
+coverage/
+playwright-report/
+test-results/
+pnpm-lock.yaml

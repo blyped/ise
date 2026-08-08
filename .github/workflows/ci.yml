@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder-anon-key-not-a-secret
+  NEXT_PUBLIC_SITE_URL: http://localhost:3000
+  NEXT_PUBLIC_ENVIRONMENT: local
+
+jobs:
+  quality:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Vérification du formatage
+        run: pnpm format:check
+
+      - name: Typage TypeScript strict
+        run: pnpm typecheck
+
+      - name: Tests unitaires
+        run: pnpm test
+
+      - name: Build de production
+        run: pnpm build
+
+  secrets:
+    name: Aucun secret dans le dépôt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # MASTER PROMPT §76 : jamais de secret dans Git, la source ou le bundle.
+      - name: Recherche de clés Supabase et de fichiers .env
+        run: bash scripts/check-secrets.sh
+
+  migrations:
+    name: Intégrité des migrations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # MASTER PROMPT §77 : une modification du schéma = une nouvelle migration.
+      - name: Numérotation continue et sans doublon
+        run: |
+          set -e
+          cd supabase/migrations
+          ls *.sql | sed -E 's/^([0-9]{4})_.*/\1/' | sort > /tmp/nums
+          if [ "$(sort -u /tmp/nums | wc -l)" != "$(wc -l < /tmp/nums)" ]; then
+            echo "::error::Deux migrations portent le même numéro."
+            exit 1
+          fi
+          echo "$(wc -l < /tmp/nums) migrations, numérotation valide."
+
+      - name: Aucune migration appliquée n'a été rééditée
+        if: github.event_name == 'pull_request'
+        run: |
+          set -e
+          git fetch origin ${{ github.base_ref }} --depth=1
+          CHANGED=$(git diff --name-only --diff-filter=M origin/${{ github.base_ref }} -- supabase/migrations || true)
+          if [ -n "$CHANGED" ]; then
+            echo "::error::Migration(s) modifiée(s) au lieu d'être ajoutée(s) :"
+            echo "$CHANGED"
+            exit 1
+          fi
+          echo "Aucune migration existante modifiée."

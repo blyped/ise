@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34" role="img" aria-label="Competences ISE">
+  <rect width="34" height="34" rx="7" fill="#0B214A" />
+  <path d="M17 5 29 17 17 29 5 17Z" fill="none" stroke="#FFFFFF" stroke-width="1.5" />
+  <circle cx="17" cy="5" r="2.2" fill="#FFFFFF" />
+  <circle cx="29" cy="17" r="2.2" fill="#FFFFFF" />
+  <circle cx="17" cy="29" r="2.2" fill="#FFFFFF" />
+  <circle cx="5" cy="17" r="2.2" fill="#FFFFFF" />
+  <circle cx="17" cy="17" r="3" fill="#D9A441" />
+</svg>

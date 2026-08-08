@@ -1,0 +1,127 @@
+/** Chemins de l'application Web, en francais (MASTER PROMPT §66). */
+export const ROUTES = {
+  /**
+   * PUB-001 — Landing publique (ADDENDUM §2).
+   * La racine n'est plus l'ecran de connexion : elle est ouverte a tous.
+   */
+  home: '/',
+  signIn: '/connexion',
+  signUp: '/creer-compte',
+  forgotPassword: '/mot-de-passe-oublie',
+  resetPassword: '/reinitialiser-mot-de-passe',
+  signOut: '/deconnexion',
+  authCallback: '/auth/callback',
+  dashboard: '/tableau-de-bord',
+  sessionExpired: '/session-expiree',
+  accessDenied: '/acces-refuse',
+
+  /** ISE-005 — Rechercher son profil reference. */
+  claimSearch: '/reclamer-mon-profil',
+  /** ISE-007 — Etat de la reclamation en cours. */
+  claimVerification: '/reclamer-mon-profil/verification',
+
+  /**
+   * ADDENDUM §46 — Point d'invalidation ciblee du cache de PUB-001.
+   * Appelable par le CMS apres une publication. Protege par un secret
+   * partage, jamais par une session : c'est un appel machine.
+   */
+  landingRevalidation: '/api/cms/revalidation-landing',
+} as const;
+
+/** ISE-006 — Confirmer l'association d'un profil precis. */
+export function claimConfirmRoute(profileId: string): string {
+  return `${ROUTES.claimSearch}/${encodeURIComponent(profileId)}`;
+}
+
+/**
+ * Routes accessibles sans session. Tout le reste est protege par
+ * `src/middleware.ts`.
+ *
+ * ADDENDUM §2 : `ROUTES.home` a rejoint cette liste. Elle est traitee a part
+ * dans `isPublicPath` — un prefixe `/` rendrait tout le site public.
+ */
+export const PUBLIC_ROUTES: readonly string[] = [
+  ROUTES.home,
+  ROUTES.signIn,
+  ROUTES.signUp,
+  ROUTES.forgotPassword,
+  ROUTES.resetPassword,
+];
+
+/** Ecrans systeme : joignables dans tous les cas, connecte ou non. */
+export const SYSTEM_ROUTES: readonly string[] = [
+  ROUTES.authCallback,
+  ROUTES.sessionExpired,
+  ROUTES.accessDenied,
+  ROUTES.landingRevalidation,
+];
+
+/**
+ * Prefixes des ecrans d'authentification. Une cible `redirectTo` qui pointe
+ * vers l'un d'eux serait une boucle : ils sont refuses par `safeRedirect`
+ * (ADDENDUM §5).
+ */
+export const AUTH_ROUTE_PREFIXES: readonly string[] = [
+  ROUTES.signIn,
+  ROUTES.signUp,
+  ROUTES.forgotPassword,
+  ROUTES.resetPassword,
+  ROUTES.signOut,
+  ROUTES.authCallback,
+  ROUTES.sessionExpired,
+];
+
+/**
+ * Liste blanche des cibles de redirection apres authentification.
+ *
+ * ADDENDUM §5 exige une « route autorisee », pas seulement un chemin
+ * relatif : une cible inconnue est refusee, meme si elle est syntaxiquement
+ * interne. Cette liste enumere les prefixes reels de l'espace membre ;
+ * elle grandit avec les tranches verticales.
+ */
+export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
+  '/tableau-de-bord',
+  '/mon-profil',
+  '/profil',
+  '/rechercher',
+  '/reseau',
+  '/appels',
+  '/opportunites',
+  '/candidatures',
+  '/messages',
+  '/notifications',
+  '/parametres',
+  '/aide',
+  '/bienvenue',
+  '/reclamer-mon-profil',
+  '/collaborer',
+  '/promotions',
+  '/stages',
+  '/mentorat',
+  '/communautes',
+  '/projets',
+  '/actualites',
+  '/evenements',
+];
+
+/** Retire la barre finale, sauf sur la racine. */
+function withoutTrailingSlash(pathname: string): string {
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    return pathname.replace(/\/+$/, '') || '/';
+  }
+  return pathname;
+}
+
+/** `true` si `pathname` est exactement l'un des prefixes, ou l'un de leurs descendants. */
+export function matchesRoutePrefix(pathname: string, prefixes: readonly string[]): boolean {
+  const path = withoutTrailingSlash(pathname).toLowerCase();
+  return prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+}
+
+export function isPublicPath(pathname: string): boolean {
+  const path = withoutTrailingSlash(pathname);
+  if (path === ROUTES.home) return true;
+
+  const prefixes = [...PUBLIC_ROUTES, ...SYSTEM_ROUTES].filter((route) => route !== ROUTES.home);
+  return matchesRoutePrefix(path, prefixes);
+}

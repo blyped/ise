@@ -1,0 +1,111 @@
+/**
+ * Variables CSS Competences ISE — Tailwind v4.
+ * Generees depuis packages/design-tokens. Ne pas editer a la main.
+ * D-90 : la couleur ne porte jamais seule une information.
+ */
+@theme {
+  /* Marque */
+  --color-deep-navy: #0b214a;
+  --color-dark-navy: #071a36;
+  --color-action-blue: #2563eb;
+  --color-active-blue: #1d4ed8;
+  --color-ise-gold: #d9a441;
+
+  /* Roles semantiques */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8; /* D-92 */
+  --color-primary-foreground: #ffffff;
+
+  --color-background: #f7f9fc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #ffffff;
+
+  --color-border: #e2e8f0;
+
+  --color-success: #15803d;
+  --color-warning: #b45309;
+  --color-error: #b91c1c;
+  --color-info: #0369a1;
+  --color-purple: #7c3aed;
+
+  /* Typographie */
+  --font-sans: Geist, Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --text-display: 2.5rem;
+  --text-display--line-height: 3rem;
+  --text-h1: 2rem;
+  --text-h1--line-height: 2.5rem;
+  --text-h2: 1.5rem;
+  --text-h2--line-height: 2rem;
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.75rem;
+  --text-h4: 1.125rem;
+  --text-h4--line-height: 1.625rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.25rem;
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.125rem;
+  --text-overline: 0.75rem;
+  --text-overline--line-height: 1rem;
+
+  /* Espacement (echelle a 11 tokens, D-91) */
+  --spacing-1: 2px;
+  --spacing-2: 4px;
+  --spacing-3: 8px;
+  --spacing-4: 12px;
+  --spacing-5: 16px;
+  --spacing-6: 20px;
+  --spacing-7: 24px;
+  --spacing-8: 32px;
+  --spacing-9: 40px;
+  --spacing-10: 48px;
+  --spacing-11: 64px;
+
+  /* Rayons */
+  --radius-sm: 6px;
+  --radius-base: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Ombres */
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-base: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(15 23 42 / 0.1), 0 2px 6px -2px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 12px 28px -8px rgb(15 23 42 / 0.16);
+
+  /* Grille (D-96) */
+  --layout-sidebar: 248px;
+  --layout-topbar: 68px;
+  --layout-content-max: 1160px;
+
+  /* Points de rupture */
+  --breakpoint-sm: 375px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+}
+
+/* Focus toujours visible — MASTER PROMPT §55. */
+@layer base {
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-active-blue);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
