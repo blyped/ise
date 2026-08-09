@@ -59,12 +59,10 @@ export default async function CollaborateHubPage() {
       key: 'mentorship',
       title: frPromotions.hub.mentorshipTitle,
       body: frPromotions.hub.mentorshipBody,
-      // ISE-078 a ISE-083 : le socle SQL et les requetes existent (migration
-      // 0075), les ecrans non. Tant qu'ils manquent, pas de lien.
-      href: null,
+      // ISE-078 a ISE-083 livres : la carte ouvre l'espace mentorat.
+      href: MENTORSHIP_ROUTES.home,
     },
   ];
-  void MENTORSHIP_ROUTES;
 
   return (
     <AppShell

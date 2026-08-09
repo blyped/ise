@@ -576,6 +576,8 @@ export interface InternshipApplicationDetail extends InternshipApplicationRow {
     requestType: string;
     status: string;
     displayName: string;
+    /** Identifiant du membre, pour l'attribution honnete d'ISE-077. */
+    alumniProfileId: string | null;
   }[];
   placement: { placementId: string; status: string } | null;
 }
@@ -616,6 +618,7 @@ export function toInternshipApplicationDetail(raw: unknown): InternshipApplicati
           requestType: str(h['request_type']) ?? 'advice',
           status: str(h['status']) ?? 'sent',
           displayName: str(asObject(h['alumni'])['display_name']) ?? '',
+          alumniProfileId: str(asObject(h['alumni'])['profile_id']),
         },
       ];
     }),

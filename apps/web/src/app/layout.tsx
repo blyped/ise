@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { fr } from '@/i18n/fr';
+import { ConnectionLostBanner } from '@/components/system/ConnectionLostBanner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -25,7 +26,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* SYS-010 — bandeau global « Connexion perdue » (role=status). */}
+        <ConnectionLostBanner />
+      </body>
     </html>
   );
 }

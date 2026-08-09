@@ -17,7 +17,7 @@ import {
 import { cx } from '@ise/ui-web';
 import { fr } from '@/i18n/fr';
 import { ROUTES } from '@/lib/routes';
-import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
+import { AVAILABILITY_ROUTES, PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { NETWORK_ROUTES } from '@/lib/routes/network';
 import { CALL_ROUTES } from '@/lib/routes/calls';
 import { OPPORTUNITY_ROUTES } from '@/lib/routes/opportunities';
@@ -69,7 +69,13 @@ const ITEMS: readonly NavItem[] = [
   // ISE-097 livre.
   { key: 'messages', label: fr.nav.messages, icon: MessageSquare, href: MESSAGING_ROUTES.inbox },
   { key: 'profile', label: fr.nav.myProfile, icon: UserRound, href: PROFILE_ROUTES.overview },
-  { key: 'availability', label: fr.nav.myAvailability, icon: Bell, href: null },
+  // ISE-032 / ISE-033 livres : « Ma disponibilité » a une destination reelle.
+  {
+    key: 'availability',
+    label: fr.nav.myAvailability,
+    icon: Bell,
+    href: AVAILABILITY_ROUTES.overview,
+  },
   // ISE-099 livre.
   { key: 'settings', label: fr.nav.settings, icon: Settings, href: SETTINGS_ROUTES.overview },
   // ISE-100 livre.
