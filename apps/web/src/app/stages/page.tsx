@@ -14,7 +14,7 @@ import { frInternships } from '@/i18n/internships';
 import { frPromotions } from '@/i18n/promotions';
 import { ROUTES } from '@/lib/routes';
 import { PROMOTION_ROUTES } from '@/lib/routes/promotions';
-import { INTERNSHIP_ROUTES } from '@/lib/routes/internships';
+import { INTERNSHIP_ROUTES, internshipOfferRoute } from '@/lib/routes/internships';
 import { newCorrelationId } from '@/lib/correlation';
 import { readFeedback } from '@/lib/collaborate-feedback';
 import { unsealCursor } from '@/lib/opaque-cursor';
@@ -23,6 +23,7 @@ import { loadViewerContext } from '@/lib/queries/viewer';
 import { loadInternshipHome, loadInternshipOffers } from '@/lib/queries/internships';
 import { loadCountries, loadSectors } from '@/lib/queries/reference';
 import { formatDate } from '@/lib/collaborate-view';
+import { internshipOfferTypeLabel } from '@/lib/collaborate-status';
 import { AppShell } from '@/components/layout/AppShell';
 import {
   Breadcrumb,
@@ -240,10 +241,13 @@ export default async function InternshipHomePage({
             label: frInternships.home.tabPartners,
             href: `${INTERNSHIP_ROUTES.home}?onglet=partners`,
           },
-          // L'onglet « Mes candidatures » pointait vers INTERNSHIP_ROUTES.applications
-          // (`/stages/candidatures`), route qui N'EXISTE PAS : ISE-076 n'est pas livre.
-          // Un onglet qui mene a une 404 est un bouton decoratif (MASTER PROMPT §113).
-          // Il reviendra avec l'ecran, pas avant.
+          // ISE-076 est livre : l'onglet « Mes candidatures » retrouve sa
+          // destination reelle (`/stages/candidatures`).
+          {
+            id: 'applications',
+            label: frInternships.home.tabApplications,
+            href: INTERNSHIP_ROUTES.applications,
+          },
         ]}
       />
 
@@ -315,10 +319,17 @@ export default async function InternshipHomePage({
                 <li key={offer.offerId}>
                   <Card className="flex h-full flex-col gap-3">
                     <div className="flex items-start justify-between gap-3">
-                      <Badge tone="neutral">{frInternships.offer.badge}</Badge>
+                      <Badge tone="neutral">{internshipOfferTypeLabel(offer.offerType)}</Badge>
                       <RelevanceBadge relevance={offer.relevance} labels={RELEVANCE_LABELS} />
                     </div>
-                    <h3 className="text-h3 text-text-primary font-semibold">{offer.title}</h3>
+                    <h3 className="text-h3 text-text-primary font-semibold">
+                      <Link
+                        href={internshipOfferRoute(offer.offerId)}
+                        className="focus-visible:outline-active-blue hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2"
+                      >
+                        {offer.title}
+                      </Link>
+                    </h3>
                     <p className="text-caption text-text-secondary">
                       {[offer.organization, offer.city, offer.countryName]
                         .filter(Boolean)
@@ -334,12 +345,10 @@ export default async function InternshipHomePage({
                       </ul>
                     )}
                     <ReasonList reasons={offer.relevance.reasons.slice(0, 2)} />
-                    {/* ISE-073 et ISE-074 ne sont pas encore livres : aucun
-                        lien ne pointe vers un ecran inexistant (MASTER
-                        PROMPT §113, convention « À venir » de la barre
-                        laterale). */}
-                    <p className="text-caption text-text-muted mt-auto pt-2">
-                      {frInternships.common.detailComingSoon}
+                    <p className="mt-auto pt-2">
+                      <Link href={internshipOfferRoute(offer.offerId)} className={LINK_BUTTON}>
+                        {frInternships.home.viewOffer}
+                      </Link>
                     </p>
                     {offer.deadline === null ? null : (
                       <p className="text-caption text-warning">

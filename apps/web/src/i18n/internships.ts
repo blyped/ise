@@ -18,8 +18,27 @@ export const frInternships = {
     studentsOnlyBody:
       'La recherche de stage s’adresse aux profils élèves. Vous pouvez en revanche ouvrir une porte à la promotion sortante.',
     studentsOnlyAction: 'Aider la promotion sortante',
-    detailComingSoon:
-      'Le détail de l’offre et la préparation du dossier ne sont pas encore ouverts : aucun lien ne mène ici pour l’instant.',
+  },
+
+  /**
+   * Les quatre natures d'entrée du vivier (D-53). Le type est toujours
+   * affiché : une « possibilité d'accueil » n'est pas une offre formelle
+   * et l'écran ne la déguise jamais en offre.
+   */
+  offerType: {
+    official_offer: 'Offre officielle',
+    hosting_possibility: 'Possibilité d’accueil',
+    introduction_capacity: 'Introduction possible',
+    external_lead: 'Piste externe',
+  },
+  offerTypeHint: {
+    official_offer: 'Offre publiée avec l’accord de l’organisation.',
+    hosting_possibility:
+      'Un membre signale que son organisation pourrait accueillir un stagiaire. Ce n’est pas une offre formelle : les conditions restent à confirmer.',
+    introduction_capacity:
+      'Un membre peut introduire une candidature auprès de cette organisation, sans offre publiée.',
+    external_lead:
+      'Piste repérée hors du réseau ISE : vérifiez les informations auprès de la source avant de candidater.',
   },
 
   home: {
@@ -59,6 +78,7 @@ export const frInternships = {
     loadMore: 'Afficher plus de stages',
     emptyTitle: 'Aucun stage à afficher.',
     emptyBody: 'Élargissez les filtres ou consultez tous les stages.',
+    viewOffer: 'Voir le stage',
   },
 
   preferences: {
@@ -155,6 +175,7 @@ export const frInternships = {
       'Renseignez la date à laquelle vous avez réellement envoyé votre dossier. Sans cette date, aucun statut « envoyée » n’est posé.',
     declareDate: 'Date d’envoi',
     declareSubmit: 'Déclarer l’envoi',
+    needDraftFirst: 'Enregistrez d’abord votre dossier : la déclaration d’envoi s’appuie sur lui.',
     checklistTitle: 'État du dossier',
     checklistCv: 'CV prêt',
     checklistMessage: 'Message de candidature rédigé',
@@ -206,8 +227,14 @@ export const frInternships = {
     updateDate: 'Date de l’étape',
     updateNote: 'Note (facultative)',
     updateSubmit: 'Déclarer cette étape',
+    updateFinal:
+      'Cette candidature est dans un état final : aucune étape supplémentaire ne peut être déclarée.',
+    stepDone: 'Étape déclarée.',
+    sentDone: 'Envoi déclaré. Merci pour votre honnêteté : rien n’a été constaté à votre place.',
     helpersTitle: 'Le réseau dans cette candidature',
     helpersEmpty: 'Aucune contribution enregistrée pour l’instant.',
+    notesTitle: 'Notes personnelles',
+    historyEmpty: 'Aucune étape déclarée pour l’instant.',
     resultTitle: 'Le stage est obtenu ?',
     resultBody: 'Enregistrez le résultat pour mesurer l’impact concret du réseau.',
     resultAction: 'Enregistrer le résultat',
@@ -254,6 +281,8 @@ export const frInternships = {
     attributionHelp:
       'Sans contribution déclarée, aucun impact n’est attribué au réseau : rien n’est déduit à votre place.',
     helperTitle: 'Membre ayant contribué (facultatif)',
+    helperNone: 'Aucun membre en particulier',
+    done: 'Résultat enregistré.',
     agreementTitle: 'Convention',
     agreementNotStarted: 'Non démarrée',
     agreementInPreparation: 'En préparation',
