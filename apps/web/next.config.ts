@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { withSentryConfig } from '@sentry/nextjs';
 
 /**
  * Politique de securite du contenu (MASTER PROMPT §71).
@@ -43,6 +44,9 @@ const contentSecurityPolicy = [
   // bloquerait chaque visuel de la vitrine. `blob:` couvre les apercus
   // locaux du back-office avant televersement.
   `img-src 'self' data: blob: ${supabaseOrigin}`,
+  // Les evenements Sentry transitent par /monitoring (voir
+  // instrumentation-client.ts, tunnelRoute) : aucun domaine *.sentry.io a
+  // ajouter ici, 'self' suffit deja.
   `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace('https://', 'wss://')}`,
   "form-action 'self'",
   "frame-ancestors 'none'",
@@ -90,4 +94,27 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Coupe le bruit Sentry pendant les builds locaux ; le laisse parler en CI
+  // pour diagnostiquer un echec d'upload de source maps.
+  silent: !process.env.CI,
+
+  // Necessaire pour que les traces d'erreur des paquets @ise/* (transpiles
+  // via transpilePackages) restent lisibles cote Sentry.
+  widenClientFileUpload: true,
+
+  // Annote automatiquement les composants React dans les eventuels replays.
+  reactComponentAnnotation: { enabled: true },
+
+  // Les source maps sont uploadees a Sentry mais jamais servies au navigateur.
+  hideSourceMaps: true,
+
+  // Retire le logging de debug Sentry du bundle de production.
+  disableLogger: true,
+
+  // Route du proxy correspondant a tunnelRoute dans instrumentation-client.ts.
+  tunnelRoute: '/monitoring',
+});

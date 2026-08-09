@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { fr } from '@/i18n/fr';
 import { newCorrelationId } from '@/lib/correlation';
 import './globals.css';
@@ -11,6 +13,13 @@ import './globals.css';
  */
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   const correlationId = error.digest ?? newCorrelationId();
+
+  // Le rendu racine ayant echoue, `onRequestError` (instrumentation.ts) ne
+  // couvre pas forcement ce cas cote client : capture explicite ici, avec
+  // le meme identifiant de correlation que celui affiche a l'ecran.
+  useEffect(() => {
+    Sentry.captureException(error, { tags: { correlationId } });
+  }, [error, correlationId]);
 
   return (
     <html lang="fr">
