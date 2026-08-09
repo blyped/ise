@@ -102,6 +102,7 @@ export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
   '/projets',
   '/actualites',
   '/evenements',
+  '/administration',
 ];
 
 /** Retire la barre finale, sauf sur la racine. */

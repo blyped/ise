@@ -1263,3 +1263,48 @@ reste masquée : aucune colonne n'a été démasquée.
 ```
 ERROR:  P0001: CMS_TESTS_OK: 60 cas, 0 echec
 ```
+
+---
+
+## 12. Back-office Superadmin — cœur (migrations `0076`, `0077`)
+
+Les écrans `/administration/**` (SA-001 → SA-020, SA-038/SA-039) ne lisent **aucune** table
+directement : toutes les lectures et écritures passent par des fonctions `SECURITY DEFINER`
+préfixées `admin_*` (plus `moderate_network_call`, `moderate_opportunity`, `transition_report`,
+`transition_support_ticket`). Aucune politique RLS nouvelle n'a été ouverte pour ce lot.
+
+### Justification `SECURITY DEFINER` (D-101)
+
+| Fonction (0076 / 0077)                                                                                                                                                                                                     | Permission exigée                        | Pourquoi `SECURITY DEFINER`                                                                                                                                                         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_my_admin_permissions`, `admin_dashboard_counters`                                                                                                                                                                     | au moins une permission d'administration | lisent `private.role_permissions` et comptent des lignes que la RLS masque à l'appelant ; projections à colonnes énumérées                                                          |
+| `admin_list_profiles`, `admin_get_profile`                                                                                                                                                                                 | `profiles.read`                          | les privilèges de colonne d'`ise_profiles` sont révoqués (0020) ; l'e-mail du compte n'est projeté que pour `profiles.moderate`, l'indice e-mail vient de `mask_email_hint` (D-107) |
+| `admin_set_profile_status`                                                                                                                                                                                                 | `profiles.moderate`                      | machine d'états stricte, motif ≥ 10, trace `moderation_actions` + `private.audit_log`, refus journalisés                                                                            |
+| `admin_list_profile_claims`, `admin_get_profile_claim`, `admin_start_claim_review`                                                                                                                                         | `profiles.verify`                        | concordance calculée **en base** : l'adresse historique (`private.profile_contacts`) ne sort jamais en clair                                                                        |
+| `admin_list_promotions`, `admin_get_promotion`, `admin_upsert_promotion`, `admin_set_promotion_manager`, `admin_review_missing_member_suggestion`, `admin_list_promotion_suggestions`, `admin_review_promotion_suggestion` | `promotions.manage`                      | décomptes réels multi-tables ; synchronisation du rôle `promotion_manager` dans `private.user_roles`                                                                                |
+| `admin_get_missing_member_contact_hint` (0077)                                                                                                                                                                             | `promotions.manage`                      | seule porte de sortie de `private.missing_member_contact_hints` (donnée d'un tiers) ; **chaque lecture est journalisée**, y compris les refus                                       |
+| `admin_list_network_calls`, `admin_get_network_call`, `moderate_network_call` (0077)                                                                                                                                       | `calls.moderate`                         | file de modération hors brouillons ; décision motivée, trace `moderation_actions` + audit ; restauration possible                                                                   |
+| `admin_list_opportunities`, `admin_get_opportunity` (0077), `moderate_opportunity` (0056→0077)                                                                                                                             | `opportunities.manage`                   | file `moderation_status='pending'` ; rejet motivé obligatoire ; un brouillon rejeté **reste** `draft` (correctif du défaut `opportunities_published_state` révélé par G07)          |
+| `admin_list_roles`, `admin_get_profile_roles`, `admin_set_profile_role` (0077)                                                                                                                                             | `roles.manage`                           | seules portes d'accès à `private.roles` / `private.user_roles` (D-32) ; **jamais sur soi-même** (`cannot_target_self`), motif ≥ 10, attribution et retrait journalisés              |
+| `admin_list_profile_notes`, `admin_add_profile_note` (0077)                                                                                                                                                                | `profiles.moderate`                      | `private.admin_profile_notes` n'a ni politique ni GRANT : une note administrative n'est jamais visible d'un membre                                                                  |
+| `admin_list_reports`, `admin_get_report`, `transition_report` (0016→0076), `admin_record_moderation_action`                                                                                                                | `profiles.moderate`                      | machine d'états des signalements (trigger anti-`UPDATE` direct) ; actions à effet réel (avertir/suspendre/lever), jamais sur soi-même                                               |
+| `admin_list_support_tickets`, `admin_get_support_ticket`, `admin_reply_support_ticket`, `admin_assign_support_ticket`, `transition_support_ticket` (0016→0076)                                                             | `support.manage`                         | fil complet avec notes internes (invisibles du demandeur, cas E04) ; transitions fermées, notifications réelles au demandeur                                                        |
+
+Toutes déclarent `SET search_path = ''`, reçoivent `REVOKE ALL … FROM PUBLIC, anon` puis un
+`GRANT EXECUTE` explicite à `authenticated` (D-126), et paginent par curseur keyset scellé côté
+application (D-44, `lib/opaque-cursor.ts`).
+
+### Harnais
+
+`supabase/tests/rls/0030_admin_core_suite.sql` — auto-nettoyant :
+
+```
+ERROR:  P0001: ADMIN_CORE_TESTS_OK: 72 cas, 0 echec
+```
+
+Couverture : refus sans permission (A01-A13) · réclamations (B) · statuts de profil (C) ·
+signalements (D) · support et note interne (E) · promotions et délégués (F) · modération des
+appels et opportunités (G) · rôles — un `moderator` n'attribue pas, jamais sur soi-même,
+attribution/retrait journalisés (H) · notes administratives et indice de contact réservé à
+`promotions.manage`, lecture journalisée (I). `private.security_baseline_violations()` = 0 après
+`0077`.

@@ -285,7 +285,9 @@ describe('safeRedirect — liste blanche de routes', () => {
   });
 
   it('refuse un chemin interne inconnu', () => {
-    expectRefused('/administration', 'route-non-autorisee');
+    // `/administration` a rejoint MEMBER_ROUTE_PREFIXES avec le back-office
+    // Superadmin : c'est desormais une cible legitime d'apres-connexion.
+    expectRefused('/exploitation', 'route-non-autorisee');
     expectRefused('/api/cms/revalidation-landing', 'route-non-autorisee');
     expectRefused('/.well-known/x', 'route-non-autorisee');
   });

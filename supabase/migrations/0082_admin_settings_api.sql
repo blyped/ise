@@ -1,0 +1,364 @@
+-- =====================================================================
+-- 0082_admin_settings_api
+-- API serveur des paramètres plateforme et feature flags (écran SA-048).
+--
+-- Sources : migration 0018 (tables), 0050 (RLS `settings.manage`) ;
+-- MASTER PROMPT §40 (toute modification sensible est journalisée) ;
+-- docs/decisions.md D-30, D-100 (aucun secret en base), D-102, D-126.
+--
+-- POURQUOI une API alors que la RLS autorise déjà l'écriture directe :
+-- une écriture directe ne serait PAS journalisée. Ces fonctions sont la
+-- voie officielle du back-office : permission vérifiée, ancienne valeur
+-- capturée, événement d'audit écrit dans la même transaction.
+-- =====================================================================
+
+
+-- ---------------------------------------------------------------------
+-- 1. Lecture des paramètres (avec l'auteur de la dernière modification).
+-- ---------------------------------------------------------------------
+create or replace function public.admin_list_platform_settings()
+returns table (
+  key         text,
+  value       jsonb,
+  value_kind  text,
+  scope       text,
+  description text,
+  updated_by  text,
+  created_at  timestamptz,
+  updated_at  timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if (select auth.uid()) is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if not private.has_permission('settings.manage') then
+    raise exception 'not_authorized' using errcode = '42501';
+  end if;
+
+  return query
+  select s.key, s.value, s.value_kind, s.scope, s.description,
+         p.display_name, s.created_at, s.updated_at
+  from public.platform_settings s
+  left join public.ise_profiles p on p.id = s.updated_by_profile_id
+  order by s.key;
+end
+$$;
+
+revoke all on function public.admin_list_platform_settings() from public, anon;
+grant execute on function public.admin_list_platform_settings() to authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- 2. Création / modification d'un paramètre — journalisée avec ancienne
+--    et nouvelle valeur. Les clés évoquant un secret sont refusées par
+--    la contrainte de table (D-100) ; on la double d'un message métier.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_upsert_platform_setting(
+  p_key            text,
+  p_value          jsonb,
+  p_value_kind     text default 'json',
+  p_scope          text default 'admin',
+  p_description    text default null,
+  p_reason         text default null,
+  p_correlation_id text default null
+)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_me   uuid := private.current_profile_id();
+  v_old  public.platform_settings;
+  v_new  public.platform_settings;
+  v_is_new boolean;
+begin
+  if (select auth.uid()) is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if not private.has_permission('settings.manage') then
+    raise exception 'not_authorized' using errcode = '42501';
+  end if;
+  if coalesce(btrim(p_key), '') = '' or p_value is null then
+    raise exception 'validation_failed' using errcode = 'P0001';
+  end if;
+  if lower(p_key) ~ '(password|secret|token|api[_-]?key|apikey|private[_-]?key|service[_-]?role|credential)' then
+    -- D-100 : les secrets vivent dans l'environnement serveur, jamais ici.
+    raise exception 'settings_no_secret_allowed' using errcode = 'P0001';
+  end if;
+  if p_value_kind not in ('string', 'number', 'boolean', 'json')
+     or p_scope not in ('member', 'admin') then
+    raise exception 'validation_failed' using errcode = 'P0001';
+  end if;
+
+  select * into v_old from public.platform_settings where key = btrim(p_key) for update;
+  v_is_new := not found;
+
+  if v_is_new and coalesce(btrim(p_description), '') = '' then
+    -- Un paramètre sans description est illisible pour le suivant.
+    raise exception 'validation_failed' using errcode = 'P0001';
+  end if;
+
+  insert into public.platform_settings (key, value, value_kind, scope, description, updated_by_profile_id)
+  values (btrim(p_key), p_value, p_value_kind, p_scope,
+          coalesce(nullif(btrim(coalesce(p_description, '')), ''), '—'), v_me)
+  on conflict (key) do update
+    set value = excluded.value,
+        value_kind = excluded.value_kind,
+        scope = excluded.scope,
+        description = coalesce(nullif(btrim(coalesce(p_description, '')), ''), public.platform_settings.description),
+        updated_by_profile_id = excluded.updated_by_profile_id
+  returning * into v_new;
+
+  perform private.log_audit(
+    p_action => case when v_is_new then 'settings.created' else 'settings.updated' end,
+    p_object_type => 'platform_setting',
+    p_object_id => v_new.key,
+    p_context => jsonb_strip_nulls(jsonb_build_object(
+      'old_value', v_old.value,
+      'new_value', v_new.value,
+      'scope', v_new.scope,
+      'reason', nullif(btrim(coalesce(p_reason, '')), ''))),
+    p_correlation_id => p_correlation_id);
+
+  return jsonb_build_object('key', v_new.key, 'value', v_new.value,
+                            'created', v_is_new, 'updated_at', v_new.updated_at);
+end
+$$;
+
+revoke all on function public.admin_upsert_platform_setting(text, jsonb, text, text, text, text, text) from public, anon;
+grant execute on function public.admin_upsert_platform_setting(text, jsonb, text, text, text, text, text) to authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- 3. Suppression d'un paramètre — journalisée avec la valeur supprimée.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_delete_platform_setting(
+  p_key            text,
+  p_reason         text default null,
+  p_correlation_id text default null
+)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_old public.platform_settings;
+begin
+  if (select auth.uid()) is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if not private.has_permission('settings.manage') then
+    raise exception 'not_authorized' using errcode = '42501';
+  end if;
+
+  delete from public.platform_settings where key = btrim(coalesce(p_key, ''))
+  returning * into v_old;
+  if not found then
+    raise exception 'not_found' using errcode = 'P0002';
+  end if;
+
+  perform private.log_audit(
+    p_action => 'settings.deleted', p_object_type => 'platform_setting',
+    p_object_id => v_old.key,
+    p_context => jsonb_strip_nulls(jsonb_build_object(
+      'old_value', v_old.value,
+      'reason', nullif(btrim(coalesce(p_reason, '')), ''))),
+    p_correlation_id => p_correlation_id);
+
+  return jsonb_build_object('key', v_old.key, 'deleted', true);
+end
+$$;
+
+revoke all on function public.admin_delete_platform_setting(text, text, text) from public, anon;
+grant execute on function public.admin_delete_platform_setting(text, text, text) to authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- 4. Feature flags : lecture complète (la RLS membre ne montre que les
+--    drapeaux actifs ; le gestionnaire voit tout) et modification
+--    journalisée.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_list_feature_flags()
+returns table (
+  code               text,
+  name               text,
+  description        text,
+  is_enabled         boolean,
+  rollout_strategy   text,
+  target_role_code   text,
+  rollout_percentage smallint,
+  override_count     bigint,
+  created_at         timestamptz,
+  updated_at         timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if (select auth.uid()) is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if not private.has_permission('settings.manage') then
+    raise exception 'not_authorized' using errcode = '42501';
+  end if;
+
+  return query
+  select f.code, f.name, f.description, f.is_enabled, f.rollout_strategy,
+         f.target_role_code, f.rollout_percentage,
+         (select count(*) from public.feature_flag_overrides o where o.flag_code = f.code),
+         f.created_at, f.updated_at
+  from public.feature_flags f
+  order by f.code;
+end
+$$;
+
+revoke all on function public.admin_list_feature_flags() from public, anon;
+grant execute on function public.admin_list_feature_flags() to authenticated;
+
+
+create or replace function public.admin_upsert_feature_flag(
+  p_code               text,
+  p_name               text,
+  p_is_enabled         boolean,
+  p_rollout_strategy   text default 'off',
+  p_description        text default null,
+  p_target_role_code   text default null,
+  p_rollout_percentage smallint default null,
+  p_reason             text default null,
+  p_correlation_id     text default null
+)
+returns jsonb
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_old    public.feature_flags;
+  v_new    public.feature_flags;
+  v_is_new boolean;
+begin
+  if (select auth.uid()) is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if not private.has_permission('settings.manage') then
+    raise exception 'not_authorized' using errcode = '42501';
+  end if;
+  if coalesce(btrim(p_code), '') = '' or coalesce(btrim(p_name), '') = '' then
+    raise exception 'validation_failed' using errcode = 'P0001';
+  end if;
+  if p_rollout_strategy not in ('off', 'all', 'role', 'profile_list', 'percentage') then
+    raise exception 'validation_failed' using errcode = 'P0001';
+  end if;
+  -- Cohérence stratégie / cible, en amont des contraintes de table pour
+  -- produire un message métier plutôt qu'une erreur de contrainte brute.
+  if p_rollout_strategy = 'role' and coalesce(btrim(coalesce(p_target_role_code, '')), '') = '' then
+    raise exception 'validation_failed' using errcode = 'P0001';
+  end if;
+  if p_rollout_strategy = 'percentage'
+     and (p_rollout_percentage is null or p_rollout_percentage not between 0 and 100) then
+    raise exception 'validation_failed' using errcode = 'P0001';
+  end if;
+
+  select * into v_old from public.feature_flags where code = btrim(p_code) for update;
+  v_is_new := not found;
+
+  insert into public.feature_flags
+    (code, name, description, is_enabled, rollout_strategy, target_role_code, rollout_percentage)
+  values
+    (btrim(p_code), btrim(p_name), nullif(btrim(coalesce(p_description, '')), ''),
+     coalesce(p_is_enabled, false), p_rollout_strategy,
+     nullif(btrim(coalesce(p_target_role_code, '')), ''), p_rollout_percentage)
+  on conflict (code) do update
+    set name = excluded.name,
+        description = coalesce(excluded.description, public.feature_flags.description),
+        is_enabled = excluded.is_enabled,
+        rollout_strategy = excluded.rollout_strategy,
+        target_role_code = excluded.target_role_code,
+        rollout_percentage = excluded.rollout_percentage
+  returning * into v_new;
+
+  perform private.log_audit(
+    p_action => case when v_is_new then 'settings.flag_created' else 'settings.flag_updated' end,
+    p_object_type => 'feature_flag',
+    p_object_id => v_new.code,
+    p_context => jsonb_strip_nulls(jsonb_build_object(
+      'old_enabled', v_old.is_enabled,
+      'new_enabled', v_new.is_enabled,
+      'old_strategy', v_old.rollout_strategy,
+      'new_strategy', v_new.rollout_strategy,
+      'reason', nullif(btrim(coalesce(p_reason, '')), ''))),
+    p_correlation_id => p_correlation_id);
+
+  return jsonb_build_object('code', v_new.code, 'is_enabled', v_new.is_enabled,
+                            'created', v_is_new, 'updated_at', v_new.updated_at);
+end
+$$;
+
+revoke all on function public.admin_upsert_feature_flag(text, text, boolean, text, text, text, smallint, text, text) from public, anon;
+grant execute on function public.admin_upsert_feature_flag(text, text, boolean, text, text, text, smallint, text, text) to authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- 5. Historique des changements de paramètres : extraction du journal
+--    d'audit limitée aux objets de configuration. Accessible au porteur
+--    de `settings.manage` (son périmètre de travail) comme au porteur
+--    d'`audit.read`.
+-- ---------------------------------------------------------------------
+create or replace function public.admin_settings_history(
+  p_key       text    default null,
+  p_limit     integer default 50,
+  p_before_id bigint  default null
+)
+returns table (
+  id             bigint,
+  created_at     timestamptz,
+  action         text,
+  object_type    text,
+  object_id      text,
+  actor_name     text,
+  result         text,
+  context        jsonb,
+  correlation_id text
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_limit integer := least(greatest(coalesce(p_limit, 50), 1), 200);
+begin
+  if (select auth.uid()) is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if not (private.has_permission('settings.manage') or private.has_permission('audit.read')) then
+    raise exception 'not_authorized' using errcode = '42501';
+  end if;
+
+  return query
+  select a.id, a.created_at, a.action, a.object_type, a.object_id,
+         p.display_name, a.result, a.context, a.correlation_id
+  from private.audit_log a
+  left join public.ise_profiles p on p.id = a.actor_profile_id
+  where a.object_type in ('platform_setting', 'feature_flag')
+    and (p_key is null or a.object_id = p_key)
+    and (p_before_id is null or a.id < p_before_id)
+  order by a.id desc
+  limit v_limit;
+end
+$$;
+
+revoke all on function public.admin_settings_history(text, integer, bigint) from public, anon;
+grant execute on function public.admin_settings_history(text, integer, bigint) to authenticated;
