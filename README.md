@@ -14,7 +14,7 @@ pas de followers, pas de likes, pas de score social, pas de classement de person
 ## État du projet
 
 | Phase                           | Périmètre                                                                      | Statut         |
-| ------------------------------- | -------------------------------------------------------------------------------- | -------------- |
+| ------------------------------- | ------------------------------------------------------------------------------ | -------------- |
 | 0 — Audit                       | 199 maquettes inventoriées, matrice de traçabilité, ~140 arbitrages tranchés   | ✅ Terminée    |
 | 0 — Données                     | 68 migrations · 201 tables `public`, 24 `private`, 4 `analytics` · RLS partout | ✅ Terminée    |
 | 1 — Fondations                  | Monorepo, design system, moteur de matching, auth réelle, écrans système, CI   | ✅ Terminée    |
