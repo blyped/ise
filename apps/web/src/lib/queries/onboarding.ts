@@ -359,6 +359,8 @@ export interface MissingItem {
   blockKey: string;
   label: string;
   hint: string | null;
+  /** Poids reel du bloc dans `profile_completion_rules` (D-71). */
+  weight: number;
   completionRatio: number;
 }
 
@@ -377,6 +379,7 @@ export async function loadMissingItems(correlationId: string): Promise<Result<Mi
     block_key: string;
     label: string;
     hint: string | null;
+    weight: number | string;
     completion_ratio: number | string;
   }>;
 
@@ -386,6 +389,7 @@ export async function loadMissingItems(correlationId: string): Promise<Result<Mi
       blockKey: row.block_key,
       label: row.label,
       hint: row.hint,
+      weight: Number(row.weight),
       completionRatio: Number(row.completion_ratio),
     })),
   };

@@ -1,0 +1,14 @@
+# Normalisation des fins de ligne : tout le depot est en LF.
+# Fait taire les avertissements « LF will be replaced by CRLF » sous Windows
+# et garantit des empreintes identiques entre Windows, Linux et la CI.
+* text=auto eol=lf
+
+# Binaires : jamais de conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

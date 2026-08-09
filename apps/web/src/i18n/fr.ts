@@ -368,6 +368,66 @@ export const fr = {
       hint: 'Si vous pensez qu’il s’agit d’une erreur, contactez l’assistance en indiquant la référence ci-dessous.',
       primary: 'Retour à l’accueil',
     },
+    /**
+     * SYS-003 — Service temporairement indisponible.
+     * Affiché quand une fenêtre de maintenance RÉELLEMENT active (table
+     * `maintenance_windows`) ne concerne qu'un service. Aucun horaire ni
+     * pourcentage inventé (MASTER PROMPT §44) : seules les informations
+     * déclarées par la fenêtre sont affichées.
+     */
+    serviceUnavailable: {
+      title: 'Service temporairement indisponible',
+      body: '{service} n’est pas disponible pour le moment.',
+      rest: 'Le reste de Compétences ISE continue de fonctionner normalement.',
+      serviceLabel: 'Service concerné',
+      unavailableBadge: 'Indisponible',
+      restoring: 'Nous rétablissons l’accès dès que possible.',
+      retry: 'Réessayer',
+      continueHome: 'Continuer sur l’accueil',
+      othersTitle: 'Vous pouvez continuer à utiliser',
+      noQueue:
+        'Aucune action n’est mise en file d’attente pendant l’indisponibilité : rien n’est envoyé à votre insu.',
+      services: {
+        messaging: 'La messagerie',
+        search: 'La recherche',
+        notifications: 'Les notifications',
+        imports: 'Les imports de données',
+      },
+    },
+    /**
+     * SYS-004 — Maintenance en cours. Même règle : uniquement ce que la
+     * fenêtre déclare (titre, période planifiée, message, périmètre).
+     */
+    maintenance: {
+      title: 'Maintenance en cours',
+      body: 'Compétences ISE est momentanément indisponible pour une intervention planifiée.',
+      reassurance: 'Vos données restent protégées.',
+      windowTitle: 'Fenêtre de maintenance',
+      statusInProgress: 'En cours',
+      statusScheduled: 'Annoncée',
+      fromTo: 'Du {start} au {end}',
+      readOnly: 'Pendant cette fenêtre, la plateforme est en lecture seule.',
+      scopeLabel: 'Périmètre',
+      scopeAll: 'Toute la plateforme',
+      retry: 'Réessayer',
+      honesty:
+        'Seules les informations déclarées par l’équipe sont affichées ici : aucune progression ni heure de retour n’est estimée.',
+      upcomingTitle: 'Maintenance planifiée',
+    },
+    /**
+     * SYS-010 — Connexion perdue. Bandeau global `role="status"`,
+     * reprise automatique à la reconnexion. Aucune promesse de
+     * synchronisation d'actions hors ligne (§45-46 : mobile uniquement).
+     */
+    connectionLost: {
+      title: 'Connexion perdue',
+      body: 'Compétences ISE ne peut plus communiquer avec le serveur.',
+      hint: 'Vous pouvez continuer à consulter l’écran affiché ; les actions nécessitant un envoi échoueront tant que la connexion n’est pas rétablie. Aucune action n’est enregistrée hors connexion.',
+      retry: 'Réessayer maintenant',
+      retrying: 'Vérification de la connexion…',
+      stillOffline: 'Toujours hors connexion. Nous réessaierons automatiquement.',
+      restored: 'Connexion rétablie.',
+    },
   },
   /**
    * PUB-001 — Site public (ADDENDUM §7, §8, §52, §53).

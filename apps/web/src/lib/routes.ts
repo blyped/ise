@@ -82,6 +82,7 @@ export const AUTH_ROUTE_PREFIXES: readonly string[] = [
 export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
   '/tableau-de-bord',
   '/mon-profil',
+  '/ma-disponibilite',
   '/profil',
   '/rechercher',
   '/reseau',
