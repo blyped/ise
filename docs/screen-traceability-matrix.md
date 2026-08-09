@@ -29,8 +29,4 @@ suffixe commun.
 
 ---
 
-## Serie ISE — Espace membre (100 ecrans)
-
-Role : **Membre** (et **Eleve ISE** pour le module Stages). Web responsive + application mobile native.
-
-PLACEHOLDER_WILL_BE_REPLACED_INCOMPLETE
+FULL_CONTENT_PENDING_NEXT_CALL_DO_NOT_USE_THIS_AS_FINAL
