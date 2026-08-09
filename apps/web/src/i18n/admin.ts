@@ -31,7 +31,7 @@ export const frAdmin = {
     opportunities: 'Opportunités',
     moderation: 'Modération',
     support: 'Support',
-    imports: 'Imports & qualité',
+    incompleteProfiles: 'Profils incomplets',
     analytics: 'Analytics',
     settings: 'Paramètres plateforme',
     audit: "Journal d'audit",
