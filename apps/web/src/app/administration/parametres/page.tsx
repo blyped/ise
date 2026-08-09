@@ -8,7 +8,7 @@ import {
   loadSettingsHistory,
 } from '@/lib/admin-data/queries';
 import type { MaintenanceWindowItem } from '@/lib/admin-data/view';
-import { AdminPageHeader } from '../imports/_components/AdminPageHeader';
+import { AdminPageHeader } from '../_components/AdminPageHeader';
 import { MaintenanceForm, MaintenanceTransitions } from './MaintenanceForms';
 import { FlagForm, SettingForm } from './SettingsForms';
 

@@ -10,10 +10,15 @@ import type { AdminAccess, AdminPermission } from '@/lib/admin/permissions';
  * serveur, et chaque fonction `admin_*` la revalide en base.
  *
  * REGLE « rien de decoratif » (MASTER PROMPT §113) : seules les sections
- * LIVREES apparaissent. Les entrees du lot livre en parallele (imports /
- * analytics / parametres / audit, SA-040 -> SA-050) sont declarees dans
- * `DATA_LOT_NAV` et n'apparaissent que si `DATA_LOT_DELIVERED` est vrai —
- * a basculer a la reunion des deux lots.
+ * LIVREES apparaissent. Les entrees du lot livre en parallele (profils
+ * incomplets / analytics / parametres / audit) sont declarees dans
+ * `DATA_LOT_NAV` et n'apparaissent que si `DATA_LOT_DELIVERED` est vrai.
+ *
+ * L'import en masse (SA-040, SA-041, SA-042, SA-044, SA-045) est
+ * abandonne (decision C-06, docs/decisions.md) : l'unique jeu de donnees
+ * (recensement Excel) a ete importe directement en migration (0088) et
+ * toute integration future se fait par creation de profil individuel.
+ * Seul SA-043 (profils incomplets) survit, deplace hors de `/imports`.
  */
 export interface AdminNavItem {
   href: string;
@@ -37,26 +42,25 @@ const CORE_NAV: readonly AdminNavItem[] = [
 ];
 
 /**
- * Lot « donnees » livre en parallele (SA-040 -> SA-050) : une entree
- * n'apparait que lorsque sa section est REELLEMENT livree sous
- * `app/administration/**` — un lien vers un ecran absent serait un
- * bouton decoratif (MASTER PROMPT §113). Basculer le drapeau de la
- * section a sa livraison.
+ * Lot « donnees » livre en parallele : une entree n'apparait que
+ * lorsque sa section est REELLEMENT livree sous `app/administration/**`
+ * — un lien vers un ecran absent serait un bouton decoratif
+ * (MASTER PROMPT §113). Basculer le drapeau de la section a sa livraison.
  */
 const DATA_LOT_DELIVERED = {
-  imports: true,
+  incompleteProfiles: true,
   analytics: true,
   settings: true,
   audit: false, // SA-049/SA-050 : en cours de livraison par le lot « donnees ».
 } as const;
 
 const DATA_LOT_NAV: readonly AdminNavItem[] = [
-  ...(DATA_LOT_DELIVERED.imports
+  ...(DATA_LOT_DELIVERED.incompleteProfiles
     ? [
         {
-          href: ADMIN_ROUTES.imports,
-          label: frAdmin.nav.imports,
-          requires: ['imports.execute', 'imports.review'],
+          href: ADMIN_ROUTES.incompleteProfiles,
+          label: frAdmin.nav.incompleteProfiles,
+          requires: ['imports.review'],
         } satisfies AdminNavItem,
       ]
     : []),

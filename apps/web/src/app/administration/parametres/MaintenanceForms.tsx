@@ -7,7 +7,7 @@ import {
   AdminActionButton,
   AdminField,
   AdminForm,
-} from '../imports/_components/AdminForm';
+} from '../_components/AdminForm';
 import { saveMaintenanceAction, transitionMaintenanceAction } from './actions';
 
 const t = frAdminData.settings.maintenance;

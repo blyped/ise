@@ -2,7 +2,7 @@
 
 import { frAdminData } from '@/i18n/admin-data';
 import type { FeatureFlagItem, PlatformSettingItem } from '@/lib/admin-data/view';
-import { ADMIN_INPUT_CLASS, AdminField, AdminForm } from '../imports/_components/AdminForm';
+import { ADMIN_INPUT_CLASS, AdminField, AdminForm } from '../_components/AdminForm';
 import { saveFlagAction, saveSettingAction } from './actions';
 
 const t = frAdminData.settings;

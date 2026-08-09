@@ -5,7 +5,7 @@ import { newCorrelationId } from '@/lib/correlation';
 import { loadAnalyticsOverview, loadAnalyticsSeries } from '@/lib/admin-data/queries';
 import { ADMIN_DATA_ROUTES } from '@/lib/routes/admin-data';
 import type { SeriesPoint } from '@/lib/admin-data/view';
-import { AdminPageHeader } from '../imports/_components/AdminPageHeader';
+import { AdminPageHeader } from '../_components/AdminPageHeader';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: frAdminData.analytics.title };

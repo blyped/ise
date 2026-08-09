@@ -14,7 +14,7 @@ pas de followers, pas de likes, pas de score social, pas de classement de person
 ## État du projet
 
 | Phase                           | Périmètre                                                                      | Statut         |
-| ------------------------------- | ------------------------------------------------------------------------------ | -------------- |
+| -------------------------------- | ------------------------------------------------------------------------------ | -------------- |
 | 0 — Audit                       | 199 maquettes inventoriées, matrice de traçabilité, ~140 arbitrages tranchés   | ✅ Terminée    |
 | 0 — Données                     | 68 migrations · 201 tables `public`, 24 `private`, 4 `analytics` · RLS partout | ✅ Terminée    |
 | 1 — Fondations                  | Monorepo, design system, moteur de matching, auth réelle, écrans système, CI   | ✅ Terminée    |
@@ -22,7 +22,7 @@ pas de followers, pas de likes, pas de score social, pas de classement de person
 | 3 — Réseau                      | Recherche, matching, relations, introductions                                  | ✅ Terminée    |
 | 4–5 — Valeur & engagement       | Appels, opportunités, messagerie, notifications, paramètres, support           | 🟡 En cours    |
 | Site public & CMS               | PUB-001, CMS-001 → CMS-010, ISE du jour, partenaires, automatisations          | ✅ Terminée    |
-| 6–7 — Administration & OPS      | Superadmin (SA-001→050), imports, supervision (OPS)                            | ⬜ Schéma prêt |
+| 6–7 — Administration & OPS      | Superadmin (SA-001→050 ; import en masse abandonné, décision C-06), supervision (OPS abandonné, décision C-05) | ⬜ Schéma prêt |
 | Mobile                          | Expo / React Native                                                            | ⬜ À venir     |
 | 8–9 — Durcissement & production | Tests E2E, accessibilité, performance, déploiement                             | ⬜ À venir     |
 
@@ -50,7 +50,7 @@ pnpm dev                              # http://localhost:3000
 ### Commandes
 
 | Commande            | Effet                                  |
-| ------------------- | -------------------------------------- |
+| -------------------- | --------------------------------------- |
 | `pnpm dev`          | Serveur de développement               |
 | `pnpm build`        | Build de production                    |
 | `pnpm typecheck`    | TypeScript strict sur tout le monorepo |
@@ -95,7 +95,7 @@ React DOM et React Native restent séparés.
 PostgreSQL sur Supabase, en quatre schémas :
 
 | Schéma      | Contenu                                                        | Exposé au client                       |
-| ----------- | -------------------------------------------------------------- | -------------------------------------- |
+| ------------ | ---------------------------------------------------------------- | ---------------------------------------- |
 | `public`    | Données métier                                                 | Oui, **RLS active sur les 201 tables** |
 | `private`   | RBAC, coordonnées, imports bruts, notes administratives, audit | Non                                    |
 | `analytics` | Agrégats et vues matérialisées                                 | Non                                    |
@@ -153,7 +153,7 @@ Ces règles ont dicté le schéma et le code ; les enfreindre casse le produit.
 ## Documentation
 
 | Document                                                                   | Contenu                                               |
-| -------------------------------------------------------------------------- | ----------------------------------------------------- |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------- |
 | [`docs/decisions.md`](docs/decisions.md)                                   | Tous les arbitrages rendus, avec leur justification   |
 | [`docs/implementation-status.md`](docs/implementation-status.md)           | Avancement module par module, et ce qui manque        |
 | [`docs/db-conventions.md`](docs/db-conventions.md)                         | Conventions normatives de la base                     |
