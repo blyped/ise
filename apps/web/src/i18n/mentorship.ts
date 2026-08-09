@@ -226,12 +226,17 @@ export const frMentorship = {
     emptySentTitle: 'Aucune demande envoyée.',
     emptySentBody: 'Commencez par décrire votre objectif, puis choisissez un mentor.',
     loadMore: 'Afficher plus',
+    statusDraft: 'Brouillon',
     statusPending: 'En attente',
     statusAlternative: 'Autre format proposé',
     statusAccepted: 'Acceptée',
     statusDeclined: 'Déclinée',
     statusCancelled: 'Annulée',
     statusExpired: 'Expirée',
+    respondDone: 'Votre réponse est enregistrée.',
+    alternativeDone: 'Votre proposition d’un autre format est envoyée.',
+    alternativeAnswerDone: 'Votre réponse à la proposition est enregistrée.',
+    cancelDone: 'Votre demande est annulée.',
   },
 
   becomeMentor: {
@@ -275,6 +280,9 @@ export const frMentorship = {
     badgeCompleted: 'TERMINÉ',
     badgeStopped: 'ARRÊTÉ',
     badgePlanned: 'EN PRÉPARATION',
+    badgeCancelled: 'ANNULÉ',
+    start: 'Démarrer le mentorat',
+    cancelPlanned: 'Annuler avant le démarrage',
     started: 'Démarré le {date} · objectif : {format}',
     objectiveTitle: 'Objectif du mentorat',
     frameTitle: 'Cadre du mentorat',
@@ -331,6 +339,10 @@ export const frMentorship = {
     reviewBody: 'À la fin, vous pouvez noter les progrès réalisés et l’impact concret obtenu.',
     reviewAction: 'Préparer le bilan',
     reviewDone: 'Votre bilan est enregistré.',
+    itemDone: 'Enregistré.',
+    sessionDone: 'Échange enregistré.',
+    transitionDone: 'Statut du mentorat mis à jour.',
+    feedbackGiven: 'Votre bilan a déjà été enregistré pour ce mentorat.',
   },
 
   review: {
@@ -353,6 +365,7 @@ export const frMentorship = {
     reachedNo: 'Non',
     reachedHard: 'Difficile à évaluer',
     outcome: 'Résultat obtenu',
+    outcomeNone: 'Non précisé',
     comment: 'Quel conseil ou échange vous a été le plus utile ? (facultatif)',
     platformFeedback: 'Que pourrions-nous améliorer dans le dispositif ? (facultatif)',
     testimonialConsent: 'J’autorise la publication d’un témoignage.',
@@ -369,6 +382,75 @@ export const frMentorship = {
     one_month: '1 mois',
     three_months: '3 mois',
     six_months: '6 mois',
+  },
+
+  /**
+   * Les vingt objectifs de `mentorship_objective_codes()` (0075). La
+   * liste est le miroir exact de la base : aucun code n'est ajouté ni
+   * retiré côté écran.
+   */
+  objective: {
+    career_orientation: 'Orientation de carrière',
+    project_definition: 'Définition d’un projet professionnel',
+    first_job: 'Premier emploi',
+    internship_search: 'Recherche de stage',
+    career_progression: 'Progression de carrière',
+    sector_change: 'Changement de secteur',
+    professional_reconversion: 'Reconversion professionnelle',
+    senior_role_preparation: 'Préparation à un poste senior',
+    management_leadership: 'Management et leadership',
+    international_career: 'Carrière internationale',
+    international_organizations: 'Organisations internationales',
+    public_service: 'Service public',
+    entrepreneurship: 'Entrepreneuriat',
+    consulting: 'Conseil',
+    banking_finance: 'Banque et finance',
+    data_ai: 'Data et IA',
+    research_phd: 'Recherche et doctorat',
+    technical_skills: 'Compétences techniques',
+    professional_network: 'Réseau professionnel',
+    other: 'Autre',
+  },
+
+  /** Sujets d'accompagnement proposés au mentoré (vocabulaire partagé avec les domaines mentor). */
+  topic: {
+    leadership: 'Leadership',
+    management: 'Management',
+    career_strategy: 'Stratégie de carrière',
+    sector_insight: 'Connaissance d’un secteur',
+    technical_expertise: 'Expertise technique',
+    entrepreneurship: 'Entrepreneuriat',
+    international_mobility: 'Mobilité internationale',
+    public_sector: 'Secteur public',
+    data_ai: 'Data et IA',
+    communication: 'Communication',
+  },
+
+  /** Résultats de fin de mentorat (0010 : `mentorship_feedback.outcome_type`). */
+  outcome: {
+    objective_reached: 'Objectif atteint',
+    career_plan_clarified: 'Projet professionnel clarifié',
+    cv_improved: 'CV amélioré',
+    better_preparation: 'Meilleure préparation',
+    skills_developed: 'Compétences développées',
+    interview_obtained: 'Entretien obtenu',
+    internship_obtained: 'Stage obtenu',
+    job_obtained: 'Emploi obtenu',
+    new_opportunity: 'Nouvelle opportunité',
+    introduction_made: 'Introduction réalisée',
+    network_developed: 'Réseau développé',
+    company_created: 'Entreprise créée',
+    other: 'Autre',
+  },
+
+  /** Attentes possibles d'une demande (ISE-082). Codes stockés tels quels. */
+  expectation: {
+    career_advice: 'Conseil de carrière',
+    cv_review: 'Relecture de CV',
+    interview_preparation: 'Préparation aux entretiens',
+    sector_discovery: 'Découverte d’un secteur',
+    skill_development: 'Développement de compétences',
+    network_opening: 'Ouverture de réseau',
   },
 
   frequency: {
