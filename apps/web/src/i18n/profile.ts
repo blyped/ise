@@ -254,4 +254,371 @@ export const frProfile = {
     delete: 'Supprimer la compétence',
     deleted: 'La compétence a été retirée de votre profil.',
   },
+
+  /** ISE-024 — Secteurs, fonctions & expertises. */
+  positioning: {
+    title: 'Secteurs, fonctions & expertises',
+    subtitle:
+      'Affinez votre positionnement pour que le réseau comprenne où, comment et sur quoi vous intervenez.',
+    dimensionsTitle: 'Trois dimensions différentes',
+    dimensionsBody:
+      'Secteur = environnement d’activité · Fonction = rôle exercé · Expertise = savoir-faire mobilisable.',
+    sectorsTitle: 'Secteurs d’activité',
+    sectorsHint: 'Où intervenez-vous ?',
+    functionsTitle: 'Fonctions exercées',
+    functionsHint: 'Quel rôle jouez-vous ?',
+    expertiseTitle: 'Domaines d’expertise',
+    expertiseHint: 'Sur quoi peut-on vous solliciter ?',
+    selectedCount: '{count} sélectionné(s)',
+    addLabel: 'Ajouter',
+    addSectorPlaceholder: 'Ajouter un secteur…',
+    addFunctionPlaceholder: 'Ajouter une fonction…',
+    addExpertisePlaceholder: 'Ajouter un domaine…',
+    removeLabel: 'Retirer',
+    primaryLegend: 'Secteur principal',
+    primaryHint:
+      'Le secteur principal est mis en avant sur votre profil et dans la recherche. Il doit faire partie de vos secteurs sélectionnés.',
+    primaryBadge: 'Principal',
+    noPrimary: 'Aucun secteur principal',
+    searchImpactTitle: 'Impact sur la recherche',
+    searchImpactBody:
+      'Ces trois listes alimentent directement la recherche et les mises en relation : elles ne servent qu’à cela.',
+    saved: 'Votre positionnement a été enregistré.',
+  },
+
+  /** ISE-025 — Mes projets & réalisations. */
+  projects: {
+    title: 'Mes projets & réalisations',
+    subtitle:
+      'Montrez les réalisations qui permettent au réseau de comprendre ce que vous avez réellement accompli.',
+    add: 'Ajouter un projet',
+    count: '{count} réalisation(s) renseignée(s)',
+    emptyTitle: 'Aucun projet enregistré.',
+    emptyBody:
+      'Les projets donnent du contexte à vos compétences et montrent votre niveau d’intervention réel.',
+    outcomeLabel: 'Résultat :',
+    deleteConfirm: 'Supprimer ce projet ?',
+    deleted: 'Le projet a été supprimé.',
+    adviceTitle: 'Conseil',
+    adviceBody:
+      'Faites ressortir votre contribution personnelle et le résultat obtenu, pas seulement le nom du projet.',
+    linkLabel: 'Voir le lien associé',
+  },
+
+  /** ISE-026 — Ajouter / modifier un projet. */
+  projectForm: {
+    addTitle: 'Ajouter un projet',
+    editTitle: 'Modifier un projet',
+    subtitle:
+      'Présentez votre contribution personnelle et le résultat obtenu — pas seulement le nom du projet.',
+    backLink: 'Retour aux projets',
+    titleLabel: 'Nom du projet / réalisation',
+    titlePlaceholder: 'Ex. Refonte du dispositif de suivi-évaluation régional',
+    organizationLabel: 'Organisation / commanditaire',
+    organizationPlaceholder: 'Ex. Programme régional',
+    roleLabel: 'Votre rôle',
+    rolePlaceholder: 'Ex. Pilotage méthodologique',
+    startLabel: 'Début',
+    endLabel: 'Fin',
+    countryLabel: 'Pays / zone',
+    sectorLabel: 'Secteur',
+    sectorPlaceholder: 'Sélectionner un secteur',
+    summaryLabel: 'Votre contribution',
+    summaryPlaceholder:
+      'Conception du cadre de résultats, harmonisation des indicateurs, coordination avec les équipes pays…',
+    outcomeLabel: 'Résultat obtenu',
+    outcomePlaceholder:
+      'Ex. Reporting mensuel harmonisé dans 6 pays, avec une lecture commune des indicateurs.',
+    linkLabel: 'Lien associé (facultatif)',
+    linkPlaceholder: 'https://…',
+    questionsTitle: 'Un bon projet répond à 3 questions',
+    questions: [
+      'Qu’avez-vous personnellement fait ?',
+      'Dans quel contexte ?',
+      'Quel résultat observable ?',
+    ],
+    usefulTitle: 'Pourquoi c’est utile',
+    usefulBody:
+      'Les projets donnent du contexte à vos compétences et permettent au réseau de comprendre votre niveau d’intervention réel.',
+    usefulNoScore: 'Aucune note automatique.',
+    notFoundTitle: 'Ce projet n’existe plus.',
+    notFoundBody: 'Il a peut-être été supprimé. Revenez à la liste de vos projets.',
+  },
+
+  /** ISE-027 — Langues, zones d'expérience et outils. */
+  languagesZones: {
+    title: 'Langues & zones d’expérience',
+    subtitle:
+      'Indiquez les langues dans lesquelles vous pouvez travailler et les zones où vous avez une expérience réelle.',
+    languagesTitle: 'Langues de travail',
+    languagesHint: 'Déclarez votre niveau professionnel réel.',
+    languagesCount: '{count} langue(s) renseignée(s)',
+    addLanguagePlaceholder: 'Ajouter une langue…',
+    proficiencyLabel: 'Niveau',
+    proficiency: {
+      basic: 'Notions',
+      intermediate: 'Intermédiaire',
+      professional: 'Professionnel',
+      fluent: 'Courant',
+      native: 'Langue maternelle',
+    },
+    zonesTitle: 'Zones d’expérience professionnelle',
+    zonesHint: 'Pays où vous avez travaillé, conseillé ou piloté des projets.',
+    zonesCount: '{count} zone(s) renseignée(s)',
+    addZonePlaceholder: 'Ajouter un pays…',
+    toolsTitle: 'Outils & logiciels',
+    toolsHint:
+      'Les outils que vous maîtrisez réellement. Ils affinent la recherche par expertise technique.',
+    toolsCount: '{count} outil(s) renseigné(s)',
+    addToolPlaceholder: 'Ajouter un outil…',
+    toolLevel: {
+      none: 'Non déclaré',
+      notion: 'Notions',
+      intermediate: 'Intermédiaire',
+      advanced: 'Avancé',
+      expert: 'Expert',
+    },
+    realityTitle: 'Expérience réelle uniquement',
+    realityBody:
+      'Une mission courte peut justifier une zone ; un simple voyage ou une relation commerciale ne suffit pas. Ces données servent aux recherches géographiques et aux opportunités internationales.',
+    usefulTitle: 'Utilité réseau',
+    usefulItems: [
+      'missions & consortiums',
+      'introductions régionales',
+      'recherche par pays / langue',
+    ],
+    saved: 'Langues, zones et outils ont été enregistrés.',
+    removeLabel: 'Retirer',
+  },
+
+  /** ISE-028 — Mes recommandations. */
+  recommendations: {
+    title: 'Mes recommandations',
+    subtitle:
+      'Des témoignages contextualisés de membres qui ont réellement travaillé, collaboré ou échangé avec vous.',
+    request: 'Demander une recommandation',
+    receivedCount: '{count} recommandation(s) reçue(s)',
+    filters: { all: 'Toutes', visible: 'Visibles', toValidate: 'À valider', hidden: 'Masquées' },
+    filterLabel: 'Filtrer les recommandations',
+    status: { published: 'Visible', draft: 'À valider', hidden: 'Masquée' },
+    emptyTitle: 'Aucune recommandation reçue.',
+    emptyBody:
+      'Une recommandation repose sur une relation professionnelle réelle : demandez-en une à un membre avec qui vous avez travaillé.',
+    emptyFilterTitle: 'Aucune recommandation dans ce filtre.',
+    contextLabel: 'Contexte :',
+    skillLabel: 'Compétence :',
+    publish: 'Valider et afficher',
+    hide: 'Masquer',
+    unhide: 'Réafficher',
+    published: 'La recommandation est maintenant visible.',
+    hidden: 'La recommandation a été masquée.',
+    moderationHint:
+      'Vous contrôlez la visibilité des recommandations reçues. Vous ne pouvez jamais en modifier le texte.',
+    qualityTitle: 'Règle de qualité',
+    qualityBody:
+      'Une recommandation doit reposer sur une relation professionnelle réelle et préciser son contexte. Jamais un simple like : pas de score ni de classement public.',
+    receivedRequestsTitle: 'Demandes reçues',
+    receivedRequestsEmpty: 'Aucune demande en attente de votre réponse.',
+    sentRequestsTitle: 'Demandes envoyées',
+    sentRequestsEmpty: 'Aucune demande envoyée.',
+    requestStatus: {
+      pending: 'En attente',
+      accepted: 'Acceptée',
+      declined: 'Déclinée',
+      withdrawn: 'Retirée',
+      expired: 'Expirée',
+    },
+    accept: 'Rédiger la recommandation',
+    decline: 'Décliner',
+    declined: 'La demande a été déclinée.',
+    withdraw: 'Retirer la demande',
+    withdrawn: 'La demande a été retirée.',
+    acceptTitle: 'Rédiger une recommandation pour {name}',
+    acceptBodyLabel: 'Votre témoignage (40 à 2 000 caractères)',
+    acceptRelationshipLabel: 'Relation professionnelle',
+    acceptRelationshipPlaceholder: 'Ex. Collaboration sur le projet régional 2024',
+    acceptEngagementLabel: 'Mission ou contexte (facultatif)',
+    acceptSent:
+      'Votre recommandation a été transmise : elle sera visible après validation par son destinataire.',
+    freeToRespond:
+      'Le destinataire d’une demande reste libre : accepter et rédiger, décliner sans justification, ou ignorer. Aucune relance agressive.',
+  },
+
+  /** ISE-029 — Demander une recommandation. */
+  recommendationRequest: {
+    title: 'Demander une recommandation',
+    subtitle:
+      'Sollicitez une personne qui peut réellement témoigner de votre travail dans un contexte précis.',
+    backLink: 'Retour aux recommandations',
+    recipientLegend: 'À qui souhaitez-vous demander ?',
+    recipientHint:
+      'La liste propose vos relations acceptées : une recommandation repose sur une relation réelle.',
+    recipientEmpty:
+      'Vous n’avez pas encore de relation acceptée. Développez d’abord votre réseau : une recommandation vient d’une personne qui vous connaît.',
+    searchLabel: 'Rechercher dans mes relations',
+    searchPlaceholder: 'Rechercher un membre de votre réseau…',
+    searchAction: 'Rechercher',
+    contextLabel: 'Contexte de collaboration (facultatif)',
+    contextPlaceholder: 'Ex. Projet régional · 2024',
+    skillLabel: 'Compétence à recommander (facultatif)',
+    skillPlaceholder: 'Sélectionner une compétence déclarée',
+    relationshipLegend: 'Nature de la relation professionnelle',
+    relationship: {
+      project: 'Collaboration projet',
+      mission: 'Mission / client',
+      management: 'Management',
+      other: 'Autre',
+    },
+    messageLabel: 'Message personnel',
+    messagePlaceholder:
+      'Bonjour, nous avons collaboré sur… Si tu es à l’aise avec cela, pourrais-tu partager une recommandation sur ma contribution ? Merci.',
+    goodRequestTitle: 'Une bonne demande',
+    goodRequestItems: [
+      'vient d’une relation réelle',
+      'rappelle le contexte',
+      'vise une compétence précise',
+      'laisse la personne libre de répondre',
+    ],
+    afterTitle: 'Après envoi',
+    afterItems: ['accepter et rédiger', 'décliner sans justification', 'ignorer la demande'],
+    afterNote: 'Pas de relance agressive.',
+    targetedTitle: 'Demande ciblée',
+    targetedBody:
+      'Une seule personne recevra cette sollicitation. Aucun envoi groupé n’est effectué.',
+    submit: 'Envoyer la demande',
+    sent: 'Votre demande a été envoyée.',
+  },
+
+  /** ISE-030 — Complétion du profil. */
+  completion: {
+    title: 'Complétion du profil',
+    subtitle:
+      'Concentrez-vous sur les informations qui améliorent réellement votre visibilité et la qualité des mises en relation.',
+    scoreValue: '{value} %',
+    scoreCompleted: 'complété',
+    scoreUnknown: 'Complétion indisponible pour le moment.',
+    privacyNote: 'Ce score n’est pas public.',
+    privacyBody:
+      'Il sert uniquement à vous aider à prioriser les informations utiles. Il n’est jamais agrégé en classement ni affiché sur votre profil.',
+    prioritiesTitle: 'Priorités recommandées',
+    prioritiesEmpty: 'Toutes les sections mesurées sont complètes.',
+    weightStrong: 'Fort',
+    weightMedium: 'Moyen',
+    weightLight: 'Utile',
+    weightHint: 'Poids réel du bloc dans le calcul : {weight} / 100.',
+    complete: 'Compléter',
+    sectionsTitle: 'État des sections',
+    sectionComplete: 'Complet',
+    sectionPartial: 'À renforcer',
+    improvesTitle: 'Ce que la complétion améliore',
+    improvesItems: [
+      'La précision des résultats « Trouver un ISE »',
+      'La qualité de « Pourquoi ce profil ? »',
+      'La pertinence des opportunités et introductions proposées',
+    ],
+    controlTitle: 'Vous gardez le contrôle',
+    controlBody:
+      'Les champs secondaires peuvent rester vides sans bloquer le profil. Pas de pression pour atteindre 100 %. La pertinence prime sur l’exhaustivité.',
+    seeMissing: 'Voir les éléments manquants',
+  },
+
+  /** ISE-031 — Éléments manquants & suggestions. */
+  missing: {
+    title: 'Éléments manquants & suggestions',
+    subtitle:
+      'Priorisez uniquement les ajouts qui améliorent réellement la compréhension et la découvrabilité de votre profil.',
+    summaryCount: '{count} suggestion(s) utile(s)',
+    summaryNone: 'Aucune suggestion : toutes les sections mesurées sont complètes.',
+    noBlocking: 'Aucun blocage pour votre profil',
+    priorityTitle: 'À compléter en priorité',
+    priorityBadge: 'Priorité {rank}',
+    secondaryTitle: 'Peut attendre',
+    secondaryHint:
+      'Ces blocs comptent moins dans le calcul : complétez-les si vous le souhaitez, rien ne bloque sans eux.',
+    progressLabel: 'Complété à {value} %',
+    complete: 'Compléter',
+    usableTitle: 'Votre profil est déjà utilisable',
+    usableBody:
+      'Compléter n’est pas une fin en soi. Les suggestions sont calculées selon l’utilité pour la recherche, les opportunités et les mises en relation. Objectif : pertinence, pas 100 %.',
+    whyTitle: 'Pourquoi ces priorités ?',
+    whyBody:
+      'Les priorités suivent les pondérations réelles enregistrées en base (modifiables par l’équipe d’administration), jamais un classement entre membres.',
+    afterTitle: 'Après complétion',
+    afterBody:
+      'Les suggestions traitées disparaissent de cette liste. Elles ne reviendront que si une information devient obsolète. Pas de relance répétitive inutile.',
+  },
+
+  /** ISE-032 — Ma disponibilité. */
+  availability: {
+    title: 'Ma disponibilité',
+    subtitle:
+      'Indiquez comment vous souhaitez contribuer au réseau et dans quelles conditions vous pouvez être sollicité.',
+    edit: 'Modifier ma disponibilité',
+    availableBadge: 'Disponible',
+    unavailableBadge: 'Non disponible',
+    summaryActive: '{count} forme(s) d’aide active(s) sur {total}',
+    summaryNone: 'Aucune forme d’aide activée pour le moment.',
+    updatedAt: 'Mise à jour le {date}',
+    staleHint: 'À actualiser prochainement',
+    typesTitle: 'Comment je peux aider le réseau',
+    active: 'Actif',
+    inactive: 'Inactif',
+    notDeclared: 'Non déclaré',
+    preferencesTitle: 'Préférences de sollicitation',
+    channelLabel: 'Canal',
+    channel: {
+      message: 'Message sur la plateforme',
+      email: 'E-mail',
+      call: 'Appel',
+      video: 'Visio',
+    },
+    delayLabel: 'Délai idéal',
+    delayValue: '{count} jour(s)',
+    frequencyLabel: 'Fréquence max.',
+    frequencyValue: '{count} sollicitation(s) / mois',
+    visibilityLabel: 'Visibilité',
+    mixedValues: 'Valeurs différentes selon la forme d’aide',
+    notProvided: 'Non renseigné',
+    noteTitle: 'Note',
+    obligationTitle: 'Rappel utile',
+    obligationBody:
+      'Votre disponibilité n’est jamais une obligation d’accepter. Vous gardez le dernier mot sur chaque sollicitation.',
+    obligationReminder: 'Pensez à l’actualiser régulièrement.',
+    visibleTitle: 'Visible pour le réseau',
+    visibleBody: 'Sans afficher votre agenda détaillé.',
+    emptyTitle: 'Aucune disponibilité déclarée.',
+    emptyBody:
+      'Déclarez les formes d’aide que vous acceptez pour que le réseau sache comment vous solliciter — sans jamais vous engager à accepter.',
+  },
+
+  /** ISE-033 — Modifier ma disponibilité. */
+  availabilityForm: {
+    title: 'Modifier ma disponibilité',
+    subtitle:
+      'Ajustez les sollicitations que vous souhaitez recevoir et les conditions dans lesquelles vous pouvez aider.',
+    backLink: 'Retour à ma disponibilité',
+    typesLegend: 'Comment pouvez-vous aider ?',
+    typesHint:
+      'Les {count} formes d’aide proviennent du référentiel de la plateforme : activez celles qui vous correspondent.',
+    preferencesTitle: 'Préférences de sollicitation',
+    preferencesHint: 'Ces préférences s’appliquent à toutes les formes d’aide actives.',
+    frequencyLabel: 'Fréquence max. (sollicitations / mois)',
+    delayLabel: 'Délai idéal (jours)',
+    channelLabel: 'Canal préféré',
+    channelPlaceholder: 'Sélectionner un canal',
+    noteLabel: 'Note facultative',
+    notePlaceholder: 'Ex. Disponibilité variable selon les périodes de mission.',
+    visibilityLabel: 'Qui peut voir ma disponibilité ?',
+    publicTitle: 'Ce qui est visible',
+    publicItems: [
+      'les formes d’aide acceptées',
+      'vos préférences de sollicitation',
+      'votre note éventuelle',
+    ],
+    publicPrivate: 'Votre agenda détaillé reste privé.',
+    lastWordTitle: 'Vous gardez le dernier mot',
+    lastWordBody:
+      'Être « disponible » ne signifie jamais que vous acceptez automatiquement une mission, une introduction ou un échange. Chaque sollicitation reste à valider.',
+    saved: 'Votre disponibilité a été enregistrée.',
+  },
 } as const;
