@@ -12,7 +12,7 @@ Légende : ✅ terminé · 🟡 partiel · ⬜ non démarré · ▪️ sans obje
 ## 0. Les faits mesurés
 
 | Mesure                                                     | Valeur relevée                                                                                                                        |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Routes web (`page.tsx`)                                    | **177** (+ `auth/callback`, `api/cms/revalidation-landing`) = **179**                                                                 |
 | dont routes publiques                                      | 6 (`/`, `/connexion`, `/creer-compte`, `/mot-de-passe-oublie`, `/reinitialiser-mot-de-passe`, + `/auth/callback`)                     |
 | dont routes membre authentifiées                           | 158                                                                                                                                   |
@@ -30,7 +30,7 @@ Légende : ✅ terminé · 🟡 partiel · ⬜ non démarré · ▪️ sans obje
 | Tables `public` sans aucune politique                      | **3** — `domain_events`, `notification_deliveries`, `profile_search_documents` (volontaire)                                           |
 | Fonctions `public` / `private`                             | 289 / 115                                                                                                                             |
 | Fonctions exécutables par `anon`                           | **10**, exactement la liste blanche de D-125                                                                                          |
-| Buckets Storage                                            | 9 — 8 privés (0027) + `landing-media` public (0068, D-134)                                                                           |
+| Buckets Storage                                            | 9 — 8 privés (0027) + `landing-media` public (0068, D-134)                                                                            |
 | Tâches `cron.job`                                          | **4**, toutes `active` (`cms_expire_content`, `cms_publish_scheduled`, `cms_select_featured_profile`, `cms_publish_featured_profile`) |
 | `private.security_baseline_violations()`                   | **0 ligne** ✅                                                                                                                        |
 | `private.storage_baseline_violations()`                    | **0 ligne** ✅                                                                                                                        |
