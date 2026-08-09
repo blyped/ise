@@ -17,7 +17,7 @@ import { signUpFormSchema, signUpInputFrom } from './schema';
  *
  * Creer un compte ne cree PAS un profil ISE (MASTER PROMPT §6) : le prenom et
  * le nom sont seulement conserves dans les metadonnees du compte, et serviront
- * a la reclamation du profil référencé.
+ * a la reclamation du profil referencé.
  */
 export async function signUpAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const correlationId = newCorrelationId();
