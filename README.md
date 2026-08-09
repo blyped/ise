@@ -99,7 +99,7 @@ PostgreSQL sur Supabase, en quatre schémas :
 | `public`    | Données métier                                                 | Oui, **RLS active sur les 201 tables** |
 | `private`   | RBAC, coordonnées, imports bruts, notes administratives, audit | Non                                    |
 | `analytics` | Agrégats et vues matérialisées                                 | Non                                    |
-| `auth`      | Géré par Supabase                                              | —                                      |
+| `auth`      | Géré par Supabase                                              | —                                       |
 
 RLS est **fermée par défaut** : une table sans politique est totalement inaccessible. Trois tables
 le restent volontairement (`domain_events`, `notification_deliveries`, `profile_search_documents`),
