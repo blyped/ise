@@ -2,13 +2,7 @@ import { adminRpc, type AdminRpcResult } from './rpc';
 import {
   toAnalyticsOverview,
   toAnalyticsSegmentation,
-  toDataQualityIssueItem,
-  toDuplicateCandidateItem,
   toFeatureFlagItem,
-  toImportBatchDetail,
-  toImportBatchRow,
-  toImportRowItem,
-  toImportsOverview,
   toIncompleteProfileItem,
   toMaintenanceWindowItem,
   toPlatformSettingItem,
@@ -16,13 +10,7 @@ import {
   toSettingsHistoryEntry,
   type AnalyticsOverview,
   type AnalyticsSegmentation,
-  type DataQualityIssueItem,
-  type DuplicateCandidateItem,
   type FeatureFlagItem,
-  type ImportBatchDetail,
-  type ImportBatchRow,
-  type ImportRowItem,
-  type ImportsOverview,
   type IncompleteProfileItem,
   type MaintenanceWindowItem,
   type PlatformSettingItem,
@@ -40,77 +28,7 @@ function mapRows<T>(mapper: (value: unknown) => T | null): (payload: unknown) =>
   return (payload) => (Array.isArray(payload) ? payload.flatMap((row) => mapper(row) ?? []) : []);
 }
 
-/* ----------------------------- Imports ---------------------------- */
-
-export function loadImportsOverview(
-  correlationId: string,
-): Promise<AdminRpcResult<ImportsOverview>> {
-  return adminRpc('admin_imports_overview', {}, correlationId, toImportsOverview);
-}
-
-export function loadImportBatches(
-  correlationId: string,
-  status: string | null = null,
-  limit = 50,
-): Promise<AdminRpcResult<ImportBatchRow[]>> {
-  return adminRpc(
-    'admin_list_import_batches',
-    { p_limit: limit, p_status: status },
-    correlationId,
-    mapRows(toImportBatchRow),
-  );
-}
-
-export function loadImportBatchDetail(
-  batchId: string,
-  correlationId: string,
-): Promise<AdminRpcResult<ImportBatchDetail | null>> {
-  return adminRpc('admin_get_import_batch', { p_batch_id: batchId }, correlationId, (payload) =>
-    toImportBatchDetail(payload),
-  );
-}
-
-export function loadImportRows(
-  batchId: string,
-  correlationId: string,
-  status: string | null = null,
-  limit = 200,
-): Promise<AdminRpcResult<ImportRowItem[]>> {
-  return adminRpc(
-    'admin_list_import_rows',
-    { p_batch_id: batchId, p_status: status, p_limit: limit },
-    correlationId,
-    mapRows(toImportRowItem),
-  );
-}
-
-export function loadDuplicateCandidates(
-  batchId: string,
-  correlationId: string,
-  status: string | null = null,
-  limit = 100,
-): Promise<AdminRpcResult<DuplicateCandidateItem[]>> {
-  return adminRpc(
-    'admin_list_duplicate_candidates',
-    { p_batch_id: batchId, p_status: status, p_limit: limit },
-    correlationId,
-    mapRows(toDuplicateCandidateItem),
-  );
-}
-
-export function loadDataQualityIssues(
-  correlationId: string,
-  batchId: string | null = null,
-  severity: string | null = null,
-  limit = 200,
-): Promise<AdminRpcResult<DataQualityIssueItem[]>> {
-  return adminRpc(
-    'admin_list_data_quality_issues',
-    { p_batch_id: batchId, p_severity: severity, p_status: 'open', p_limit: limit },
-    correlationId,
-    mapRows(toDataQualityIssueItem),
-  );
-}
+/* ------------------------- Profils incomplets ---------------------- */
 
 export function loadIncompleteProfiles(
   correlationId: string,

@@ -3,9 +3,12 @@
  *
  * La liste couvre les DEUX lots livres en parallele : le coeur
  * (tableau de bord, membres, reclamations, promotions, moderation,
- * support) et le lot imports / analytics / parametres / audit. La
- * navigation du layout partage s'appuie sur ce module unique pour que
- * toutes les sections soient atteignables (MASTER PROMPT §89).
+ * support) et le lot profils incomplets / analytics / parametres /
+ * audit. La navigation du layout partage s'appuie sur ce module unique
+ * pour que toutes les sections soient atteignables (MASTER PROMPT §89).
+ *
+ * L'import en masse (SA-040 -> SA-042, SA-044, SA-045) est abandonne
+ * (decision C-06, docs/decisions.md) : plus aucune route n'y correspond.
  */
 export const ADMIN_ROUTES = {
   root: '/administration',
@@ -29,8 +32,9 @@ export const ADMIN_ROUTES = {
   /** SA-038 — File des tickets support. */
   support: '/administration/support',
 
-  /** Lot livre en parallele : imports / analytics / parametres / audit. */
-  imports: '/administration/imports',
+  /** SA-043 — Profils incomplets, priorisation. */
+  incompleteProfiles: '/administration/profils-incomplets',
+  /** Lot livre en parallele : analytics / parametres / audit. */
   analytics: '/administration/analytics',
   settings: '/administration/parametres',
   audit: '/administration/audit',
