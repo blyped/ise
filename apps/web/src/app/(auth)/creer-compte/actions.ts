@@ -8,6 +8,7 @@ import { newCorrelationId } from '@/lib/correlation';
 import { authErrorMessage } from '@/lib/auth-errors';
 import { failure, fieldErrorsFromZod, success, type FormState } from '@/lib/form-state';
 import { ROUTES } from '@/lib/routes';
+import { safeRedirect } from '@/lib/public/safe-redirect';
 import { fr, t } from '@/i18n/fr';
 import { signUpFormSchema, signUpInputFrom } from './schema';
 
@@ -16,7 +17,7 @@ import { signUpFormSchema, signUpInputFrom } from './schema';
  *
  * Creer un compte ne cree PAS un profil ISE (MASTER PROMPT §6) : le prenom et
  * le nom sont seulement conserves dans les metadonnees du compte, et serviront
- * a la reclamation du profil referencé.
+ * a la reclamation du profil référencé.
  */
 export async function signUpAction(_previous: FormState, formData: FormData): Promise<FormState> {
   const correlationId = newCorrelationId();
@@ -33,11 +34,18 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
   const env = publicEnv();
   const supabase = await createSupabaseServerClient();
 
+  // ISE-070 (suite) : une personne invitee sans compte doit retomber sur
+  // l'invitation, pas sur le tableau de bord (meme mecanisme que ISE-001).
+  const next = safeRedirect(formData.get('redirectTo'), {
+    source: 'ISE-002 (action)',
+    correlationId,
+  });
+
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${env.NEXT_PUBLIC_SITE_URL}${ROUTES.authCallback}?suivant=${encodeURIComponent(ROUTES.dashboard)}`,
+      emailRedirectTo: `${env.NEXT_PUBLIC_SITE_URL}${ROUTES.authCallback}?redirectTo=${encodeURIComponent(next)}`,
       data: {
         first_name: parsed.data.firstName,
         last_name: parsed.data.lastName,
@@ -52,7 +60,7 @@ export async function signUpAction(_previous: FormState, formData: FormData): Pr
 
   // Confirmation d'e-mail desactivee cote projet : la session existe deja.
   if (data.session) {
-    redirect(ROUTES.dashboard);
+    redirect(next);
   }
 
   return success(t(fr.auth.signUp.confirmationBody, { email: parsed.data.email }));

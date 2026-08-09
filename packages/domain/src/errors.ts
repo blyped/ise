@@ -21,6 +21,8 @@ export const BUSINESS_ERRORS = {
   claim_not_found: "Cette réclamation n'existe plus ou n'est pas accessible.",
   profile_not_found: "Ce profil n'existe plus ou n'est plus réclamable.",
   profile_not_claimable: 'Ce profil ne peut pas être réclamé.',
+  invitation_invalid: "Cette invitation n'existe pas ou n'est plus valable.",
+  invitation_expired: 'Cette invitation a expiré. Demandez-en une nouvelle à la personne qui vous a invité.',
   invalid_claim_method: "Cette méthode de vérification n'est pas disponible pour ce profil.",
   rate_limited: 'Vous avez atteint la limite autorisée. Réessayez plus tard.',
   intermediary_not_connected:

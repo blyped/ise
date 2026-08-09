@@ -164,6 +164,7 @@ export const frPromotions = {
     modeLinkHint: 'Vous partagez vous-même un lien unique.',
     modeEmail: 'Par e-mail',
     modeEmailHint: 'Compétences ISE prépare l’invitation pour cette adresse.',
+    emailSubject: 'Vous êtes invité(e) à rejoindre {promotion} sur Compétences ISE',
     emailLabel: 'Adresse e-mail de {name}',
     emailHelp:
       'L’adresse n’est jamais enregistrée en clair : seule son empreinte est conservée, pour éviter les doublons.',
@@ -187,6 +188,16 @@ export const frPromotions = {
     trackingNote: 'Vous serez informé si le profil est réclamé.',
     whatsappNote:
       'La plateforme n’envoie aucun message WhatsApp automatiquement : le partage du lien reste manuel.',
+  },
+
+  /** ISE-070 (suite) — ecran de recuperation cote invite. */
+  redeem: {
+    title: 'Rejoindre {promotion}',
+    subtitle: 'Un profil de référence existe déjà à votre nom sur Compétences ISE.',
+    cta: 'Rejoindre ma promotion',
+    pending: 'Association en cours…',
+    note: 'Votre profil existant sera rattaché à ce compte. Vous pourrez ensuite vérifier et compléter vos informations.',
+    loadErrorTitle: 'Impossible de charger cette invitation.',
   },
 
   invitations: {

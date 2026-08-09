@@ -21,6 +21,13 @@ export const ROUTES = {
   claimVerification: '/reclamer-mon-profil/verification',
 
   /**
+   * ISE-070 (suite) — Recuperation d'une invitation de promotion. Route
+   * membre (pas publique) : la personne invitee doit d'abord avoir un
+   * compte pour que le jeton puisse etre rattache a son `user_id`.
+   */
+  invitation: '/invitation',
+
+  /**
    * ADDENDUM §46 — Point d'invalidation ciblee du cache de PUB-001.
    * Appelable par le CMS apres une publication. Protege par un secret
    * partage, jamais par une session : c'est un appel machine.
@@ -31,6 +38,11 @@ export const ROUTES = {
 /** ISE-006 — Confirmer l'association d'un profil precis. */
 export function claimConfirmRoute(profileId: string): string {
   return `${ROUTES.claimSearch}/${encodeURIComponent(profileId)}`;
+}
+
+/** ISE-070 (suite) — Ecran de recuperation d'une invitation, jeton en clair. */
+export function invitationRoute(token: string): string {
+  return `${ROUTES.invitation}/${encodeURIComponent(token)}`;
 }
 
 /**
@@ -95,6 +107,7 @@ export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
   '/aide',
   '/bienvenue',
   '/reclamer-mon-profil',
+  '/invitation',
   '/collaborer',
   '/promotions',
   '/stages',

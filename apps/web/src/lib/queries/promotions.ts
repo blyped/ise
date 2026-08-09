@@ -217,6 +217,37 @@ export async function createPromotionInvitation(
   );
 }
 
+/** ISE-070 (suite) — apercu d'une invitation avant confirmation par l'invite. */
+export interface InvitationPreview {
+  invitedFirstName: string | null;
+  promotionLabel: string | null;
+  expiresAt: string | null;
+}
+
+export async function getPromotionInvitationPreview(
+  token: string,
+  correlationId: string,
+): Promise<QueryResult<InvitationPreview>> {
+  return callRpc('get_promotion_invitation_preview', { p_token: token }, correlationId, (payload) => {
+    const value = asObject(payload);
+    return {
+      invitedFirstName: str(value['invited_first_name']),
+      promotionLabel: str(value['promotion_label']),
+      expiresAt: str(value['expires_at']),
+    };
+  });
+}
+
+/** ISE-070 (suite) — rattache le profil cible au compte courant. */
+export async function redeemPromotionInvitation(
+  token: string,
+  correlationId: string,
+): Promise<QueryResult<{ profileId: string | null }>> {
+  return callRpc('redeem_promotion_invitation', { p_token: token }, correlationId, (payload) => ({
+    profileId: str(asObject(payload)['profile_id']),
+  }));
+}
+
 export async function revokePromotionInvitation(
   invitationId: string,
   correlationId: string,

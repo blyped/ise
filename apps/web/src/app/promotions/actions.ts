@@ -2,18 +2,33 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { t } from '@/i18n/fr';
+import { frPromotions } from '@/i18n/promotions';
 import { newCorrelationId } from '@/lib/correlation';
 import { checkbox, errorUrl, field, requiredField, successUrl } from '@/lib/collaborate-feedback';
+import { serverEnv } from '@/lib/env';
+import { sendEmail } from '@/lib/email/resend';
 import {
   createPromotionInvitation,
   revokePromotionInvitation,
   suggestMissingMember,
 } from '@/lib/queries/promotions';
+import { invitationRoute } from '@/lib/routes';
 import {
   promotionInvitationsRoute,
   promotionInviteRoute,
   promotionReferencedMemberRoute,
 } from '@/lib/routes/promotions';
+
+/** Echappement minimal avant interpolation dans un corps d'e-mail HTML. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 /**
  * Server Actions de la tranche PROMOTIONS.
@@ -82,10 +97,45 @@ export async function createInvitationAction(formData: FormData): Promise<void> 
     redirect(errorUrl(back, result.error.code, correlationId));
   }
 
+  const token = result.data.token ?? '';
+
+  // Envoi reel (ADDENDUM email) : uniquement en mode « e-mail », et sans
+  // jamais faire echouer l'action si Resend est indisponible — le jeton
+  // reste affiche a l'inviteur juste apres, qui garde la main (mode lien).
+  if (channel === 'email' && email !== null && token.length > 0) {
+    try {
+      const invitedFirstName = field(formData, 'invitedFirstName') ?? '';
+      const promotionLabel = field(formData, 'promotionLabel') ?? '';
+      const link = `${serverEnv().NEXT_PUBLIC_SITE_URL}${invitationRoute(token)}`;
+      const bodyText = t(frPromotions.invite.previewBody, {
+        name: invitedFirstName,
+        promotion: promotionLabel,
+      });
+      const sent = await sendEmail({
+        to: email,
+        subject: t(frPromotions.invite.emailSubject, { promotion: promotionLabel }),
+        html:
+          `<p>${escapeHtml(bodyText)}</p>` +
+          `<p><a href="${link}">${escapeHtml(frPromotions.invite.previewCta)}</a></p>`,
+        text: `${bodyText}\n\n${frPromotions.invite.previewCta} : ${link}`,
+      });
+      if (!sent.ok) {
+        console.error('[ISE] invitation — envoi e-mail en echec', { correlationId });
+      }
+    } catch (error) {
+      // L'invitation existe deja en base : un souci d'environnement sur
+      // l'e-mail ne doit jamais faire perdre le jeton a l'inviteur, qui
+      // reste affiche juste apres (mode lien de secours).
+      console.error('[ISE] invitation — envoi e-mail en erreur', {
+        correlationId,
+        message: error instanceof Error ? error.message : 'inconnu',
+      });
+    }
+  }
+
   revalidatePath(back);
   // Le jeton ne transite que par l'URL de retour, une seule fois, vers
   // l'emetteur lui-meme. Il n'est ecrit dans aucun journal.
-  const token = result.data.token ?? '';
   redirect(`${back}?etat=ok&msg=invited&jeton=${encodeURIComponent(token)}`);
 }
 

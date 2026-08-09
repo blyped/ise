@@ -76,7 +76,11 @@ export default async function SignInPage({
           <p className="text-body-sm text-text-secondary text-center">
             {fr.auth.signIn.noAccount}{' '}
             <Link
-              href={ROUTES.signUp}
+              href={
+                cameFromResource
+                  ? `${ROUTES.signUp}?redirectTo=${encodeURIComponent(next)}`
+                  : ROUTES.signUp
+              }
               className="text-primary hover:text-primary-hover focus-visible:outline-active-blue font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
             >
               {fr.auth.signIn.createAccount}

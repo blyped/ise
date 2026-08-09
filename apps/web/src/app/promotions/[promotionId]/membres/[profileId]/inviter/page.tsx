@@ -12,6 +12,8 @@ import {
 } from '@/lib/routes/promotions';
 import { newCorrelationId } from '@/lib/correlation';
 import { readFeedback } from '@/lib/collaborate-feedback';
+import { publicEnv } from '@/lib/env';
+import { invitationRoute } from '@/lib/routes';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { loadViewerContext } from '@/lib/queries/viewer';
 import { loadReferencedMember } from '@/lib/queries/promotions';
@@ -120,7 +122,7 @@ export default async function InvitePage({
           <span className="flex flex-col gap-3">
             <span>{frPromotions.invite.tokenBody}</span>
             <code className="rounded-base border-border bg-surface text-body-sm text-text-primary block overflow-x-auto border px-4 py-3">
-              {token}
+              {`${publicEnv().NEXT_PUBLIC_SITE_URL}${invitationRoute(token)}`}
             </code>
             <span className="text-caption">
               {frPromotions.invite.tokenExpiry.replace(
@@ -146,6 +148,11 @@ export default async function InvitePage({
             <form action={createInvitationAction} className="flex flex-col gap-5">
               <input type="hidden" name="promotionId" value={promotionId} />
               <input type="hidden" name="profileId" value={member.profileId} />
+              {/* Personnalisation du corps de l'e-mail uniquement : la
+                  fonction SQL ne fait confiance a aucun de ces deux champs
+                  pour l'autorisation, seulement au jeton (0087). */}
+              <input type="hidden" name="invitedFirstName" value={firstName} />
+              <input type="hidden" name="promotionLabel" value={member.promotionLabel} />
 
               <fieldset className="flex flex-col gap-3">
                 <legend className="text-body-sm text-text-primary font-medium">

@@ -17,7 +17,7 @@ import { useZodForm } from '@/lib/use-zod-form';
 import { signUpAction } from './actions';
 import { signUpFormSchema, signUpInputFrom } from './schema';
 
-export function SignUpForm() {
+export function SignUpForm({ next }: { next: string }) {
   const [state, formAction, isPending] = useActionState(signUpAction, initialFormState);
   const { clientErrors, clearField, onSubmit } = useZodForm(signUpFormSchema, signUpInputFrom);
   const [showPassword, setShowPassword] = useState(false);
@@ -40,6 +40,8 @@ export function SignUpForm() {
 
   return (
     <form action={formAction} onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+      <input type="hidden" name="redirectTo" value={next} />
+
       {state.status === 'error' && state.message ? (
         <Alert variant="error" title={state.message}>
           {fr.common.correlationLabel} : {state.correlationId}
