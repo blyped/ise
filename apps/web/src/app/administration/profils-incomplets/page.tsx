@@ -10,7 +10,7 @@ export const metadata = { title: frAdminData.incompleteProfiles.title };
 const t = frAdminData.incompleteProfiles;
 
 /**
- * SA-043 — Profils incomplets, priorisisés par NOMBRE de champs critiques
+ * SA-043 — Profils incomplets, priorisés par NOMBRE de champs critiques
  * manquants. Le score de complétion individuel reste privé (D-72) : cet
  * écran liste des manques factuels, outil de qualité de données.
  */
