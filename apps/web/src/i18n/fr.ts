@@ -57,6 +57,11 @@ export const fr = {
         'Si vous êtes ISE, recherchez votre nom et votre promotion avant de créer un nouveau profil.',
       noAccount: 'Pas encore de compte ?',
       createAccount: 'Créer mon compte',
+      orDivider: 'ou',
+      googleButton: 'Continuer avec Google',
+      googlePending: 'Redirection vers Google…',
+      googleUnavailable:
+        'La connexion avec Google est momentanément indisponible. Utilisez votre e-mail et votre mot de passe.',
       passwordUpdated:
         'Votre mot de passe a été mis à jour. Connectez-vous avec votre nouveau mot de passe.',
       sessionExpired: 'Votre session a expiré. Reconnectez-vous pour continuer.',

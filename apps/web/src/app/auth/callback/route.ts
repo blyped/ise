@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { newCorrelationId } from '@/lib/correlation';
-import { ROUTES } from '@/lib/routes';
+import { MEMBER_ROUTE_PREFIXES, matchesRoutePrefix, ROUTES } from '@/lib/routes';
 
 const OTP_TYPES: readonly EmailOtpType[] = [
   'signup',
@@ -24,9 +24,38 @@ const OTP_TYPES: readonly EmailOtpType[] = [
  */
 const ALLOWED_CALLBACK_TARGETS: readonly string[] = [ROUTES.dashboard, ROUTES.resetPassword];
 
+/**
+ * ADDENDUM Google OAuth — la connexion par mot de passe (ISE-001) autorise
+ * n'importe quelle route membre en retour via `safeRedirect` ; ce point
+ * d'atterrissage restait limite a deux cibles fixes (email de confirmation,
+ * reinitialisation). Un flux OAuth transite lui aussi par ici et doit
+ * pouvoir revenir sur la ressource demandee avant la redirection vers
+ * Google : la liste blanche des prefixes membre couvre ce cas, sans rouvrir
+ * de redirection ouverte (toujours liste blanche, jamais l'entree brute).
+ */
 function safeNext(value: string | null): string {
   if (value === null) return ROUTES.dashboard;
-  return ALLOWED_CALLBACK_TARGETS.includes(value) ? value : ROUTES.dashboard;
+  if (ALLOWED_CALLBACK_TARGETS.includes(value)) return value;
+  return matchesRoutePrefix(value, MEMBER_ROUTE_PREFIXES) ? value : ROUTES.dashboard;
+}
+
+/**
+ * Amorce le tout premier compte administrateur (migration 0086) si l'e-mail
+ * qui vient de se connecter figure dans la liste blanche
+ * `private.platform_bootstrap_admins`. No-op silencieux pour tout autre
+ * compte : le tri se fait cote SQL, ceci n'est qu'un appel systematique et
+ * inoffensif apres toute connexion reussie (mot de passe, Google, lien).
+ */
+async function runAdminBootstrap(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+): Promise<void> {
+  const { error } = await supabase.rpc('bootstrap_admin_profile');
+  if (error) {
+    console.error('[ISE] amorçage admin', {
+      correlationId: newCorrelationId(),
+      code: error.code,
+    });
+  }
 }
 
 /**
@@ -47,7 +76,10 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(next, origin));
+    if (!error) {
+      await runAdminBootstrap(supabase);
+      return NextResponse.redirect(new URL(next, origin));
+    }
     console.error('[ISE] échange du code de session', {
       correlationId: newCorrelationId(),
       code: error.code,
@@ -57,7 +89,10 @@ export async function GET(request: NextRequest) {
       type: rawType as EmailOtpType,
       token_hash: tokenHash,
     });
-    if (!error) return NextResponse.redirect(new URL(next, origin));
+    if (!error) {
+      await runAdminBootstrap(supabase);
+      return NextResponse.redirect(new URL(next, origin));
+    }
     console.error('[ISE] vérification du lien e-mail', {
       correlationId: newCorrelationId(),
       code: error.code,

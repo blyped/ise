@@ -18,6 +18,7 @@ import { ROUTES } from '@/lib/routes';
 import { initialFormState } from '@/lib/form-state';
 import { useZodForm } from '@/lib/use-zod-form';
 import { signInAction } from './actions';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 function toInput(formData: FormData) {
   return {
@@ -117,6 +118,14 @@ export function SignInForm({ next }: { next: string }) {
       >
         {fr.auth.signIn.submit}
       </Button>
+
+      <div className="flex items-center gap-4" role="separator" aria-label={fr.auth.signIn.orDivider}>
+        <span className="h-px flex-1 bg-[#E2E8F0]" aria-hidden="true" />
+        <span className="text-caption text-text-muted">{fr.auth.signIn.orDivider}</span>
+        <span className="h-px flex-1 bg-[#E2E8F0]" aria-hidden="true" />
+      </div>
+
+      <GoogleSignInButton next={next} />
     </form>
   );
 }
