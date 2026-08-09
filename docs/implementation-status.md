@@ -47,7 +47,7 @@ Légende : ✅ terminé · 🟡 partiel · ⬜ non démarré · ▪️ sans obje
 ## 1. Vue d'ensemble par module (MASTER PROMPT §106)
 
 | Module                                            | Écrans                 | Backend     | RLS | Tests                                 | Web          | Mobile | Risques                                                                                                                                                                                                                                                                                               | Statut |
-| ------------------------------------------------- | ---------------------- | ----------- | --- | ------------------------------------- | ------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| -------------------------------------------------- | ---------------------- | ----------- | --- | -------------------------------------- | ------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
 | Fondations (design system, monorepo, CI)          | —                      | ✅          | ▪️  | ✅ 411 unitaires                      | ✅           | ⬜     | Aucun test E2E n'a jamais été exécuté (bac à sable sans accès `*.supabase.co`)                                                                                                                                                                                                                        | 🟡     |
 | Écrans système                                    | SYS-001→010            | ▪️          | ▪️  | ⬜                                    | ✅ 10/10     | ⬜     | SYS-003/004 ne s'affichent que sur une `maintenance_window` réellement déclarée ; SYS-010 est un bandeau global (`role=status`) ; aucun test E2E                                                                                                                                                      | 🟡     |
 | Identité — accès, réclamation, onboarding         | ISE-001→015            | ✅          | ✅  | 🟡 SQL 0002                           | ✅ 15/15     | ⬜     | Aucun compte réel n'a jamais été créé ; aucun test E2E                                                                                                                                                                                                                                                | 🟡     |
@@ -68,7 +68,7 @@ Légende : ✅ terminé · 🟡 partiel · ⬜ non démarré · ▪️ sans obje
 | Site public (landing)                             | PUB-001                | ✅          | ✅  | ✅ SQL 0021, 0023 · 141 unitaires web | ✅ 1/1       | ▪️     | **Toutes les sections rendent leur état vide** : 0 média, 0 actualité, 0 événement, 0 partenaire, statistiques à zéro                                                                                                                                                                                 | 🟡     |
 | CMS (back-office du site public)                  | CMS-001→010            | ✅          | ✅  | ✅ SQL 0021, 0022                     | ✅ 13 routes | ▪️     | Variantes d'image non générées (D-133/D-140) ; aucun contenu n'a été saisi                                                                                                                                                                                                                            | 🟡     |
 | Superadmin — cœur (revue, modération, support)    | SA-001→020, SA-038→039 | ✅          | ✅  | ✅ SQL 0030 (72 cas)                  | 🟡 22/50     | ▪️     | Lot cœur livré sous `/administration` (0076+0077) : tableau de bord, membres & rôles, réclamations, promotions, appels, opportunités, modération, support. Restent : doublons/fusion (SA-005), création de profil référencé (SA-007), campagnes d'invitation (SA-011→015), suivis/bilans (SA-021→037) | ⬜     |
-| Imports & qualité des données                     | SA-040→045             | ✅ (schéma) | ⬜  | ⬜                                    | ⬜           | ▪️     | Aucun fichier d'annuaire réel fourni ; aucun pipeline exécuté                                                                                                                                                                                                                                         | ⬜     |
+| Profils incomplets (SA-043)                       | SA-043                 | ✅ | ✅  | ✅                                    | ✅           | ▪️     | Import en masse (SA-040/041/042/044/045) abandonné (décision C-06) : le recensement Excel a été importé directement en migration (0088), 255 profils. SA-043 déplacé vers `/administration/profils-incomplets`.                                                                                    | ⬜     |
 | Analytics                                         | SA-046→047             | 🟡          | ⬜  | ⬜                                    | ⬜           | ▪️     | Schéma `analytics` posé, 4 tables + 1 vue matérialisée, **aucun agrégat calculé sur des données réelles**                                                                                                                                                                                             | ⬜     |
 | OPS — supervision technique (**abandonné**, C-05) | OPS-001→028            | ⬜          | ⬜  | ⬜                                    | ▪️ 0/28      | ▪️     | Abandonné par décision du porteur (C-05) : supervision via Supabase/Vercel                                                                                                                                                                                                                            | ▪️     |
 | Application mobile                                | toutes séries          | ▪️          | ▪️  | ⬜                                    | ▪️           | ⬜     | `apps/mobile` n'est pas créé                                                                                                                                                                                                                                                                          | ⬜     |
@@ -99,16 +99,16 @@ fichiers ont été édités après application, ce que le README du dossier inte
 ### Référentiels seedés
 
 | Référentiel                          | Volume (relevé en base) |
-| ------------------------------------ | ----------------------- |
-| Pays (ISO 3166-1, libellés français) | 249                     |
-| Compétences                          | 543                     |
-| Catégories / domaines de compétences | 92 / 18                 |
-| Alias de compétences                 | 125                     |
-| Secteurs                             | 35                      |
-| Fonctions professionnelles           | 36                      |
-| Promotions ISE                       | 72                      |
-| Types de notification                | 33                      |
-| Sections CMS (seed de 0057)          | 9                       |
+| ------------------------------------- | ------------------------ |
+| Pays (ISO 3166-1, libellés français) | 249                      |
+| Compétences                          | 543                      |
+| Catégories / domaines de compétences | 92 / 18                  |
+| Alias de compétences                 | 125                      |
+| Secteurs                             | 35                       |
+| Fonctions professionnelles           | 36                       |
+| Promotions ISE                       | 72                       |
+| Types de notification                | 33                       |
+| Sections CMS (seed de 0057)          | 9                        |
 
 ---
 
@@ -220,8 +220,10 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
 3. ~~Livrer un back-office minimal de revue~~ — **fait** : `/administration/reclamations` arbitre
    les réclamations (SA-004/SA-006, fonctions atomiques `approve_profile_claim` /
    `reject_profile_claim`, harnais 0030).
-4. **Importer un jeu d'annuaire réel** (SA-040 → SA-042) : tous les écrans livrés sont aujourd'hui
-   des états vides.
+4. ~~Importer un jeu d'annuaire réel~~ — **fait le 2026-08-09, autrement** : le recensement Excel
+   (275 réponses, 255 profils après dédoublonnage) a été importé directement en migration
+   (`0088_import_ise_census`), en contournant le module SA-040 → SA-042. Décision C-06 (docs/decisions.md) :
+   ce module est abandonné, plus aucun état vide à combler par ce biais.
 5. **Brancher un consommateur d'événements de domaine** (notifications in-app d'abord) : sinon les
    19 modules livrés sont muets.
 6. ~~Livrer les écrans manquants de Stages (5) et de Mentorat (6)~~ — **fait le 2026-08-09**
