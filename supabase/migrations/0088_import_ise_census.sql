@@ -1,1 +1,6 @@
-PLACEHOLDER
+-- 0088_import_ise_census.sql — DEPRECATED PLACEHOLDER, VOIR FICHIERS PART1..6
+-- Ce fichier a ete pousse par erreur avec un contenu vide lors d'un
+-- premier commit. Le contenu reel de la migration 0088 se trouve dans
+-- les 6 fichiers 0088_import_ise_census_part1.sql a part6.sql, qui
+-- correspondent chacun a un appel apply_migration reellement execute
+-- sur la base (memes noms de migration cote Supabase).
