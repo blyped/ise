@@ -1,7 +1,13 @@
 import Link from 'next/link';
-import { Alert, ErrorState } from '@ise/ui-web';
+import { Alert, Card, CardHeader, CardTitle, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
-import { ADMIN_ROUTES, adminMemberRoute } from '@/lib/routes/admin';
+import { frAdminOpportunities } from '@/i18n/admin-opportunities';
+import {
+  ADMIN_ROUTES,
+  adminMemberRoute,
+  adminOpportunityCandidatesRoute,
+  adminOpportunityClosureRoute,
+} from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
 import { loadAdminOpportunity } from '@/lib/admin/queries';
@@ -21,7 +27,8 @@ const BACK_LINK =
 /**
  * SA-020 — Detail d'une opportunite pour validation : contenu, source
  * (URL verifiable), historique des decisions, approbation / rejet motive
- * via `moderate_opportunity`.
+ * via `moderate_opportunity`. Donne aussi acces au suivi des
+ * candidatures (SA-021) et a la cloture / bilan d'impact (SA-022).
  */
 export default async function AdminOpportunityDetailPage({
   params,
@@ -31,6 +38,7 @@ export default async function AdminOpportunityDetailPage({
   const access = await requireAdminPermission('opportunities.manage');
   const { opportunityId } = await params;
   const correlationId = newCorrelationId();
+
   const detail = await loadAdminOpportunity(opportunityId, correlationId);
 
   const shell = (children: React.ReactNode) => (
@@ -92,6 +100,21 @@ export default async function AdminOpportunityDetailPage({
           </div>
         </PageHeader>
       </div>
+
+      <SectionCard title={frAdminOpportunities.detail.manageTitle}>
+        <div className="flex flex-wrap gap-5">
+          <Link href={adminOpportunityCandidatesRoute(opportunity.opportunityId)} className={BACK_LINK}>
+            {frAdminOpportunities.nav.candidates} →
+          </Link>
+          {opportunity.status === 'active' ||
+          opportunity.status === 'paused' ||
+          opportunity.status === 'expired' ? (
+            <Link href={adminOpportunityClosureRoute(opportunity.opportunityId)} className={BACK_LINK}>
+              {frAdminOpportunities.nav.closure} →
+            </Link>
+          ) : null}
+        </div>
+      </SectionCard>
 
       {opportunity.openReports > 0 ? (
         <Alert

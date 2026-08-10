@@ -96,3 +96,13 @@ export function adminCallRoute(callId: string): string {
 export function adminOpportunityRoute(opportunityId: string): string {
   return `${ADMIN_ROUTES.opportunities}/${encodeURIComponent(opportunityId)}`;
 }
+
+/** SA-021 — Candidatures recues pour une opportunite (supervision). */
+export function adminOpportunityCandidatesRoute(opportunityId: string): string {
+  return `${adminOpportunityRoute(opportunityId)}/candidatures`;
+}
+
+/** SA-022 — Cloture d'une opportunite et bilan d'impact. */
+export function adminOpportunityClosureRoute(opportunityId: string): string {
+  return `${adminOpportunityRoute(opportunityId)}/cloture`;
+}
