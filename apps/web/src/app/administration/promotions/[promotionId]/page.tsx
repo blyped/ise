@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { Alert, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
-import { ADMIN_ROUTES } from '@/lib/routes/admin';
+import { frAdminCampaigns } from '@/i18n/admin-campaigns';
+import { ADMIN_ROUTES, adminCampaignsRoute, adminPromotionInvitationsRoute } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
 import { loadAdminPromotion } from '@/lib/admin/queries';
@@ -30,9 +31,10 @@ const MANAGER_ROLES = ['delegate', 'co_delegate', 'referent'] as const;
 /**
  * SA-009 — Detail d'une promotion : decomptes reels, edition, delegues
  * (le role `promotion_manager` est synchronise par la base), invitations
- * (decomptes reels — aucune campagne fictive), membres manquants
- * signales (ISE-069) avec indice de contact lisible UNIQUEMENT ici,
- * lecture journalisee (`admin_get_missing_member_contact_hint`, 0077).
+ * (decomptes reels — aucune campagne fictive) avec liens vers le suivi
+ * detaille (SA-011) et les campagnes d'invitation (SA-012->015), membres
+ * manquants signales (ISE-069) avec indice de contact lisible UNIQUEMENT
+ * ici, lecture journalisee (`admin_get_missing_member_contact_hint`, 0077).
  */
 export default async function AdminPromotionDetailPage({
   params,
@@ -224,6 +226,14 @@ export default async function AdminPromotionDetailPage({
             ))}
           </dl>
         )}
+        <div className="flex flex-wrap gap-5">
+          <Link href={adminPromotionInvitationsRoute(promotion.promotionId)} className={BACK_LINK}>
+            {frAdminCampaigns.nav.invitations} →
+          </Link>
+          <Link href={adminCampaignsRoute(promotion.promotionId)} className={BACK_LINK}>
+            {frAdminCampaigns.nav.campaigns} →
+          </Link>
+        </div>
       </SectionCard>
 
       <SectionCard title={frAdmin.promotions.detail.missingTitle}>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { EmptyState, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
 import { frAdminCampaigns } from '@/i18n/admin-campaigns';
-import { ADMIN_ROUTES, adminCampaignNewRoute, adminCampaignRoute, adminPromotionRoute } from '@/lib/routes/admin';
+import { ADMIN_ROUTES, adminCampaignNewRoute, adminCampaignRoute, adminCampaignsRoute, adminPromotionRoute } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
 import { loadAdminCampaigns } from '@/lib/admin/queries-campaigns';
@@ -99,7 +99,7 @@ export default async function AdminCampaignsPage({
                 }
                 actions={
                   <Link href={adminCampaignRoute(promotionId, campaign.campaignId)} className={BACK_LINK}>
-                    {frAdmin.common.back === 'Retour' ? 'Ouvrir' : 'Ouvrir'}
+                    Ouvrir
                   </Link>
                 }
               />
@@ -107,7 +107,7 @@ export default async function AdminCampaignsPage({
           </RowList>
           <CursorPager
             shownCount={rows.length}
-            nextHref={nextPageHref(ADMIN_ROUTES.promotions, {}, nextCursor)}
+            nextHref={nextPageHref(adminCampaignsRoute(promotionId), {}, nextCursor)}
           />
         </>
       )}
