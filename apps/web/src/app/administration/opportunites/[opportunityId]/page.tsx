@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Alert, Card, CardHeader, CardTitle, ErrorState } from '@ise/ui-web';
+import { Alert, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
 import { frAdminOpportunities } from '@/i18n/admin-opportunities';
 import {
