@@ -18,8 +18,9 @@ import {
   requiredText,
   runAdminAction,
   text,
+  validationError,
 } from '@/lib/admin/action-support';
-import { failure, success, validationError, type FormState } from '@/lib/form-state';
+import { failure, success, type FormState } from '@/lib/form-state';
 
 /** Echappement minimal avant interpolation dans un corps d'e-mail HTML (memes regles que promotions/actions.ts). */
 function escapeHtml(value: string): string {
