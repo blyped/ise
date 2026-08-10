@@ -12,9 +12,12 @@
  */
 export const ADMIN_ROUTES = {
   root: '/administration',
-
   /** SA-002 — Membres & profils. */
   members: '/administration/membres',
+  /** SA-005 — Doublons potentiels de profils. */
+  memberDuplicates: '/administration/membres/doublons',
+  /** SA-007 — Creation d'un profil reference. */
+  memberNew: '/administration/membres/nouveau',
   /** SA-006 — Revue des reclamations de profil. */
   claims: '/administration/reclamations',
   /** SA-008 — Promotions. */
@@ -31,7 +34,6 @@ export const ADMIN_ROUTES = {
   moderation: '/administration/moderation',
   /** SA-038 — File des tickets support. */
   support: '/administration/support',
-
   /** SA-043 — Profils incomplets, priorisation. */
   incompleteProfiles: '/administration/profils-incomplets',
   /** Lot livre en parallele : analytics / parametres / audit. */

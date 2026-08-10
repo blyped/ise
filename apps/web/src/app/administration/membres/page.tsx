@@ -34,6 +34,11 @@ const DETAIL_LINK =
  * statut / reclamation / verification / promotion, recherche tolerante
  * par nom (`admin_list_profiles`, permission `profiles.read`).
  * Aucun total global ni pagination numerotee (D-151).
+ *
+ * L'en-tete propose aussi, quand la permission le permet, les deux
+ * actions livrees a part (SA-005 doublons, SA-007 creation) plutot que
+ * de les glisser dans la navigation principale (elles restent des
+ * sous-actions de "Membres", pas des sections a part entiere).
  */
 export default async function AdminMembersPage({
   searchParams,
@@ -42,7 +47,6 @@ export default async function AdminMembersPage({
 }) {
   const access = await requireAdminPermission('profiles.read');
   const params = await searchParams;
-
   const filters = {
     query: paramValue(params, 'recherche'),
     status: paramOneOf(params, 'statut', PROFILE_STATUSES),
@@ -52,7 +56,6 @@ export default async function AdminMembersPage({
   };
   const cursor = paramValue(params, 'curseur');
   const correlationId = newCorrelationId();
-
   const page = await loadAdminProfiles(filters, cursor, correlationId);
 
   const shell = (children: React.ReactNode) => (
@@ -65,7 +68,22 @@ export default async function AdminMembersPage({
     </AdminShell>
   );
 
-  const header = <PageHeader title={frAdmin.members.title} subtitle={frAdmin.members.subtitle} />;
+  const header = (
+    <PageHeader title={frAdmin.members.title} subtitle={frAdmin.members.subtitle}>
+      <div className="flex flex-wrap gap-4">
+        {access.can('profiles.edit') ? (
+          <Link href={ADMIN_ROUTES.memberNew} className={DETAIL_LINK}>
+            + Nouveau profil référencé
+          </Link>
+        ) : null}
+        {access.can('profiles.moderate') ? (
+          <Link href={ADMIN_ROUTES.memberDuplicates} className={DETAIL_LINK}>
+            Doublons potentiels
+          </Link>
+        ) : null}
+      </div>
+    </PageHeader>
+  );
 
   if (!page.ok) {
     return shell(
@@ -92,7 +110,6 @@ export default async function AdminMembersPage({
   return shell(
     <div className="flex flex-col gap-8">
       {header}
-
       <FilterBar
         action={ADMIN_ROUTES.members}
         search={{
@@ -130,7 +147,6 @@ export default async function AdminMembersPage({
           },
         ]}
       />
-
       {rows.length === 0 ? (
         <EmptyState title={frAdmin.members.empty} description={frAdmin.members.emptyBody} />
       ) : (
@@ -171,7 +187,6 @@ export default async function AdminMembersPage({
               />
             ))}
           </RowList>
-
           <CursorPager
             shownCount={rows.length}
             nextHref={nextPageHref(ADMIN_ROUTES.members, filterValues, nextCursor)}
