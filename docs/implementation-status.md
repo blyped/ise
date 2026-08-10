@@ -67,7 +67,7 @@ L�gende : ? termin� � ?? partiel � ? non d�marr� � ?? sans objet
 | Aide & support                                    | ISE-100                | ?          | ?  | ? SQL 0014, 0018                     | ? 5 routes  | ?     | Aucun SLA affich� (D-85) ; aucun agent de support n'existe                                                                                                                                                                                                                                            | ??     |
 | Site public (landing)                             | PUB-001                | ?          | ?  | ? SQL 0021, 0023 � 141 unitaires web | ? 1/1       | ??     | **Toutes les sections rendent leur �tat vide** : 0 m�dia, 0 actualit�, 0 �v�nement, 0 partenaire, statistiques � z�ro                                                                                                                                                                                 | ??     |
 | CMS (back-office du site public)                  | CMS-001?010            | ?          | ?  | ? SQL 0021, 0022                     | ? 13 routes | ??     | Variantes d'image non g�n�r�es (D-133/D-140) ; aucun contenu n'a �t� saisi                                                                                                                                                                                                                            | ??     |
-| Superadmin — cœur (revue, modération, support)    | SA-001→020, SA-038→039, SA-011→015 | ✅ | ✅ | ✅ SQL 0030 (72 cas)    | 🟡 27/50     | 🟡     | Lot cœur livré sous `/administration` (0076+0077+0092+0093) : tableau de bord, membres & rôles, réclamations, promotions (délégués, invitations, campagnes d'invitation), appels, opportunités, modération, support. Restent : suivis/bilans (SA-021→033) ; SA-034→037 couverts par SA-018/CMS (decision C-07) | 🟡     |
+| Superadmin — cœur (revue, modération, support)    | SA-001→020, SA-038→039, SA-011→015, SA-021→022 | ✅ | ✅ | ✅ SQL 0030 (72 cas)    | 🟡 29/50     | 🟡     | Lot cœur livré sous `/administration` (0076+0077+0092+0093) : tableau de bord, membres & rôles, réclamations, promotions (délégués, invitations, campagnes d'invitation), appels, opportunités (modération, candidatures, clôture/bilan), support. Restent : suivis/bilans (SA-023→033) ; SA-034→037 couverts par SA-018/CMS (decision C-07) | 🟡     |
 | Profils incomplets (SA-043)                       | SA-043                 | ? | ?  | ?                                    | ?           | ??     | Import en masse (SA-040/041/042/044/045) abandonn� (d�cision C-06) : le recensement Excel a �t� import� directement en migration (0088), 255 profils. SA-043 d�plac� vers `/administration/profils-incomplets`.                                                                                    | ?     |
 | Analytics                                         | SA-046?047             | ??          | ?  | ?                                    | ?           | ??     | Sch�ma `analytics` pos�, 4 tables + 1 vue mat�rialis�e, **aucun agr�gat calcul� sur des donn�es r�elles**                                                                                                                                                                                             | ?     |
 | OPS � supervision technique (**abandonn�**, C-05) | OPS-001?028            | ?          | ?  | ?                                    | ?? 0/28      | ??     | Abandonn� par d�cision du porteur (C-05) : supervision via Supabase/Vercel                                                                                                                                                                                                                            | ??     |
@@ -160,10 +160,8 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
 - **Superadmin : le c�ur est livr�** (`/administration`, migrations 0076 + 0077, harnais 0030 �
   72 cas, 0 �chec) : tableau de bord � compteurs r�els, membres & profils (statuts, r�les
   `roles.manage` jamais sur soi-m�me, notes administratives en `private`), **revue des
-  opportunités, signalements et support, ainsi que les campagnes d'invitation de promotion
+  (SA-011→015, migrations 0092+0093, et SA-021→022). Restent sans écran : SA-023→037 (suivis, bilans,
   (SA-011→015, migrations 0092+0093). Restent sans écran : SA-021→037 (suivis, bilans,
-  projets/communautés/événements/contenus — la partie éditoriale est couverte par le CMS).
-  (cr�ation de profil r�f�renc�), SA-011?015 (campagnes d'invitation), SA-021?037 (suivis, bilans,
   projets/communaut�s/�v�nements/contenus � la partie �ditoriale est couverte par le CMS).
 - **OPS (OPS-001 ? OPS-028) : abandonn�** par d�cision du porteur (C-05). Aucune table de supervision, d'incident ou
   d'astreinte. Le module n'a pas commenc�.
@@ -231,6 +229,6 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
 7. **Livrer ISE-024 ? ISE-033**, SYS-003, SYS-004, SYS-007, SYS-010.
 8. **R�aligner les 20 migrations divergentes** � non pas en �ditant les fichiers, mais en
    d�cidant explicitement quelle version fait foi et en consignant la d�cision.
-9. Compléter le chantier **Superadmin** : le cœur (SA-001→020, SA-038→039, SA-011→015) est livré ; restent SA-021→033. SA-034→037 couverts par l'existant (décision C-07). OPS est abandonné (C-05).
+9. Compléter le chantier **Superadmin** : le cœur (SA-001→020, SA-038→039, SA-011→015, SA-021→022) est livré ; restent SA-023→033. SA-034→037 couverts par l'existant (décision C-07). OPS est abandonné (C-05).
 10. Cr�er `apps/mobile`.
 
