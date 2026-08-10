@@ -1,109 +1,109 @@
-# État d'implémentation — Compétences ISE
+# ï¿½tat d'implï¿½mentation ï¿½ Compï¿½tences ISE
 
-**Réécrit le 8 août 2026, actualisé le 9 août 2026 (tranches ISE-024?033, ISE-073?083 et SYS-003/004/007/010), à partir de mesures, pas de déclarations.** Chaque chiffre de ce document
-a été relevé sur le dépôt (`find`, `pnpm test`, `pnpm build`) ou sur la base réelle (requêtes SQL
-sur le projet Supabase). Format imposé par le MASTER PROMPT §106. Un module n'est jamais déclaré
-terminé sans satisfaire la Definition of Done (§107, §108).
+**Rï¿½ï¿½crit le 8 aoï¿½t 2026, actualisï¿½ le 9 aoï¿½t 2026 (tranches ISE-024?033, ISE-073?083 et SYS-003/004/007/010), ï¿½ partir de mesures, pas de dï¿½clarations.** Chaque chiffre de ce document
+a ï¿½tï¿½ relevï¿½ sur le dï¿½pï¿½t (`find`, `pnpm test`, `pnpm build`) ou sur la base rï¿½elle (requï¿½tes SQL
+sur le projet Supabase). Format imposï¿½ par le MASTER PROMPT ï¿½106. Un module n'est jamais dï¿½clarï¿½
+terminï¿½ sans satisfaire la Definition of Done (ï¿½107, ï¿½108).
 
-Légende : ? terminé · ?? partiel · ? non démarré · ?? sans objet
+Lï¿½gende : ? terminï¿½ ï¿½ ?? partiel ï¿½ ? non dï¿½marrï¿½ ï¿½ ?? sans objet
 
 ---
 
-## 0. Les faits mesurés
+## 0. Les faits mesurï¿½s
 
-| Mesure                                                     | Valeur relevée                                                                                                                        |
+| Mesure                                                     | Valeur relevï¿½e                                                                                                                        |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Routes web (`page.tsx`)                                    | **177** (+ `auth/callback`, `api/cms/revalidation-landing`) = **179**                                                                 |
 | dont routes publiques                                      | 6 (`/`, `/connexion`, `/creer-compte`, `/mot-de-passe-oublie`, `/reinitialiser-mot-de-passe`, + `/auth/callback`)                     |
-| dont routes membre authentifiées                           | 158                                                                                                                                   |
+| dont routes membre authentifiï¿½es                           | 158                                                                                                                                   |
 | dont routes CMS (`/cms/**`)                                | 13                                                                                                                                    |
-| Écrans couverts par une route réelle                       | **121 sur 199**                                                                                                                       |
-| Migrations dans le dépôt                                   | **82** fichiers (`0001` ? `0085`, **`0069`, `0078`, `0079` n'ont jamais été attribués**)                                              |
-| Migrations en base (`schema_migrations`)                   | **82** — aucune entrée orpheline, aucun fichier orphelin                                                                              |
-| Numéros de migration en double                             | **aucun**                                                                                                                             |
+| ï¿½crans couverts par une route rï¿½elle                       | **121 sur 199**                                                                                                                       |
+| Migrations dans le dï¿½pï¿½t                                   | **82** fichiers (`0001` ? `0085`, **`0069`, `0078`, `0079` n'ont jamais ï¿½tï¿½ attribuï¿½s**)                                              |
+| Migrations en base (`schema_migrations`)                   | **82** ï¿½ aucune entrï¿½e orpheline, aucun fichier orphelin                                                                              |
+| Numï¿½ros de migration en double                             | **aucun**                                                                                                                             |
 | Harnais de tests SQL                                       | **34** (`supabase/tests/rls/` 32 + `supabase/tests/search/` 2)                                                                        |
-| Numéros de harnais en double                               | `0001` et `0002` — mais dans **deux répertoires distincts**, donc sans collision réelle                                               |
+| Numï¿½ros de harnais en double                               | `0001` et `0002` ï¿½ mais dans **deux rï¿½pertoires distincts**, donc sans collision rï¿½elle                                               |
 | Tables `public`                                            | **202**                                                                                                                               |
-| Tables `private` / `analytics`                             | 24 / 4 (+ 1 vue matérialisée `analytics.promotion_metrics`)                                                                           |
-| Tables `public` sans RLS activée                           | **0**                                                                                                                                 |
-| Politiques RLS (schéma `public`)                           | **440**                                                                                                                               |
-| Tables `public` sans aucune politique                      | **3** — `domain_events`, `notification_deliveries`, `profile_search_documents` (volontaire)                                           |
+| Tables `private` / `analytics`                             | 24 / 4 (+ 1 vue matï¿½rialisï¿½e `analytics.promotion_metrics`)                                                                           |
+| Tables `public` sans RLS activï¿½e                           | **0**                                                                                                                                 |
+| Politiques RLS (schï¿½ma `public`)                           | **440**                                                                                                                               |
+| Tables `public` sans aucune politique                      | **3** ï¿½ `domain_events`, `notification_deliveries`, `profile_search_documents` (volontaire)                                           |
 | Fonctions `public` / `private`                             | 289 / 115                                                                                                                             |
-| Fonctions exécutables par `anon`                           | **10**, exactement la liste blanche de D-125                                                                                          |
-| Buckets Storage                                            | 9 — 8 privés (0027) + `landing-media` public (0068, D-134)                                                                            |
-| Tâches `cron.job`                                          | **4**, toutes `active` (`cms_expire_content`, `cms_publish_scheduled`, `cms_select_featured_profile`, `cms_publish_featured_profile`) |
+| Fonctions exï¿½cutables par `anon`                           | **10**, exactement la liste blanche de D-125                                                                                          |
+| Buckets Storage                                            | 9 ï¿½ 8 privï¿½s (0027) + `landing-media` public (0068, D-134)                                                                            |
+| Tï¿½ches `cron.job`                                          | **4**, toutes `active` (`cms_expire_content`, `cms_publish_scheduled`, `cms_select_featured_profile`, `cms_publish_featured_profile`) |
 | `private.security_baseline_violations()`                   | **0 ligne** ?                                                                                                                        |
 | `private.storage_baseline_violations()`                    | **0 ligne** ?                                                                                                                        |
-| Tests unitaires (`pnpm test`)                              | **460** — `@ise/domain` 137, `@ise/validation` 124, `@ise/web` 199                                                                    |
-| `pnpm typecheck`                                           | ? 7 tâches, 0 erreur                                                                                                                 |
-| `pnpm build`                                               | ? 1 tâche, 0 erreur                                                                                                                  |
-| `pnpm format:check`                                        | ? « All matched files use Prettier code style! »                                                                                     |
+| Tests unitaires (`pnpm test`)                              | **460** ï¿½ `@ise/domain` 137, `@ise/validation` 124, `@ise/web` 199                                                                    |
+| `pnpm typecheck`                                           | ? 7 tï¿½ches, 0 erreur                                                                                                                 |
+| `pnpm build`                                               | ? 1 tï¿½che, 0 erreur                                                                                                                  |
+| `pnpm format:check`                                        | ? ï¿½ All matched files use Prettier code style! ï¿½                                                                                     |
 | Comptes dans `auth.users`                                  | **0**                                                                                                                                 |
 | Profils dans `ise_profiles`                                | **0**                                                                                                                                 |
 | Contenus CMS saisis (`news`, `events`, `cms_media_assets`) | **0 / 0 / 0**                                                                                                                         |
 
 ---
 
-## 1. Vue d'ensemble par module (MASTER PROMPT §106)
+## 1. Vue d'ensemble par module (MASTER PROMPT ï¿½106)
 
-| Module                                            | Écrans                 | Backend     | RLS | Tests                                 | Web          | Mobile | Risques                                                                                                                                                                                                                                                                                               | Statut |
+| Module                                            | ï¿½crans                 | Backend     | RLS | Tests                                 | Web          | Mobile | Risques                                                                                                                                                                                                                                                                                               | Statut |
 | ------------------------------------------------- | ---------------------- | ----------- | --- | ------------------------------------- | ------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Fondations (design system, monorepo, CI)          | —                      | ?          | ??  | ? 411 unitaires                      | ?           | ?     | Aucun test E2E n'a jamais été exécuté (bac à sable sans accès `*.supabase.co`)                                                                                                                                                                                                                        | ??     |
-| Écrans système                                    | SYS-001?010            | ??          | ??  | ?                                    | ? 10/10     | ?     | SYS-003/004 ne s'affichent que sur une `maintenance_window` réellement déclarée ; SYS-010 est un bandeau global (`role=status`) ; aucun test E2E                                                                                                                                                      | ??     |
-| Identité — accès, réclamation, onboarding         | ISE-001?015            | ?          | ?  | ?? SQL 0002                           | ? 15/15     | ?     | Aucun compte réel n'a jamais été créé ; aucun test E2E                                                                                                                                                                                                                                                | ??     |
-| Profil & disponibilité                            | ISE-016?033            | ?          | ?  | ? SQL 0003 (30 cas), 0032 (19 cas)   | ? 18/18     | ?     | Dépôt de photo et de CV non ouvert (D-117) ; aucune notification de demande de recommandation câblée ; aucun test E2E                                                                                                                                                                                 | ??     |
-| Recherche & découverte                            | ISE-034?037            | ?          | ?  | ? SQL 0001–0002 (search)             | ? 4/4       | ?     | Annuaire vide : la recherche fonctionne mais ne renvoie rien ; aucun test E2E                                                                                                                                                                                                                         | ??     |
-| Relations & introductions                         | ISE-038?046            | ?          | ?  | ? SQL 0004                           | ? 9/9       | ?     | Filtres d'ISE-040 non livrés (F-05) ; aucune notification câblée ; aucun test E2E                                                                                                                                                                                                                     | ??     |
-| Appels au réseau                                  | ISE-047?054            | ?          | ?  | ? SQL 0005, 0019                     | ? 8/8       | ?     | Ciblage nominatif absent ; aucune notification ; aucun test E2E                                                                                                                                                                                                                                       | ??     |
-| Opportunités                                      | ISE-055?066            | ?          | ?  | ? SQL 0006, 0020                     | ? 12/12     | ?     | Modération SA-020 livrée (`/administration/opportunites`) ; dépôt de CV non ouvert ; aucun test E2E                                                                                                                                                                                                   | ??     |
-| Promotions                                        | ISE-067?071            | ?          | ?  | ? SQL 0024                           | ? 5/5       | ?     | Aucune donnée d'annuaire : les espaces promotion sont vides                                                                                                                                                                                                                                           | ??     |
-| Stages                                            | ISE-072?077            | ?          | ?  | ? SQL 0007, 0025                     | ? 6/6       | ?     | Écrans ISE-073?077 livrés (détail, candidature, relecture, suivi, résultat) ; aucun test E2E ; aucune offre réelle en base                                                                                                                                                                            | ??     |
-| Mentorat                                          | ISE-078?083            | ?          | ?  | ? SQL 0008, 0026                     | ? 6/6       | ?     | Écrans ISE-078?083 livrés (`/mentorat` et sous-routes) ; carte `/collaborer` réactivée ; aucun mentor réel en base ; aucun test E2E                                                                                                                                                                   | ??     |
-| Communautés                                       | ISE-084?087            | ?          | ?  | ? SQL 0009, 0027                     | ? 4/4       | ?     | Création de communauté non ouverte (C-k) ; pièces jointes non ouvertes (C-i)                                                                                                                                                                                                                          | ??     |
-| Projets & consortiums                             | ISE-088?091            | ?          | ?  | ? SQL 0010, 0028                     | ? 4/4       | ?     | Assistant de création de projet non livré (P-f)                                                                                                                                                                                                                                                       | ??     |
-| Actualités & événements                           | ISE-092?096            | ?          | ?  | ? SQL 0011, 0029                     | ? 5/5       | ?     | 0 actualité et 0 événement en base ; proposition d'actualité non ouverte (N-i)                                                                                                                                                                                                                        | ??     |
-| Messagerie                                        | ISE-097                | ?          | ?  | ? SQL 0012, 0016                     | ? 3 routes  | ?     | **Realtime non vérifié contre la base réelle** ; aucun message n'a jamais transité                                                                                                                                                                                                                    | ??     |
-| Notifications & paramètres                        | ISE-098?099            | ?          | ?  | ? SQL 0013, 0017                     | ? 7 routes  | ?     | **33 types seedés, aucun consommateur d'événement, aucun envoi.** Le centre de notifications lit une table vide                                                                                                                                                                                       | ??     |
-| Aide & support                                    | ISE-100                | ?          | ?  | ? SQL 0014, 0018                     | ? 5 routes  | ?     | Aucun SLA affiché (D-85) ; aucun agent de support n'existe                                                                                                                                                                                                                                            | ??     |
-| Site public (landing)                             | PUB-001                | ?          | ?  | ? SQL 0021, 0023 · 141 unitaires web | ? 1/1       | ??     | **Toutes les sections rendent leur état vide** : 0 média, 0 actualité, 0 événement, 0 partenaire, statistiques à zéro                                                                                                                                                                                 | ??     |
-| CMS (back-office du site public)                  | CMS-001?010            | ?          | ?  | ? SQL 0021, 0022                     | ? 13 routes | ??     | Variantes d'image non générées (D-133/D-140) ; aucun contenu n'a été saisi                                                                                                                                                                                                                            | ??     |
-| Superadmin — cœur (revue, modération, support)    | SA-001?020, SA-038?039 | ?          | ?  | ? SQL 0030 (72 cas)                  | ?? 22/50     | ??     | Lot cœur livré sous `/administration` (0076+0077) : tableau de bord, membres & rôles, réclamations, promotions, appels, opportunités, modération, support. Restent : campagnes d'invitation (SA-011?015), suivis/bilans (SA-021?033) ; SA-034?037 couverts par SA-018/CMS (decision C-07) | ?     |
-| Profils incomplets (SA-043)                       | SA-043                 | ? | ?  | ?                                    | ?           | ??     | Import en masse (SA-040/041/042/044/045) abandonné (décision C-06) : le recensement Excel a été importé directement en migration (0088), 255 profils. SA-043 déplacé vers `/administration/profils-incomplets`.                                                                                    | ?     |
-| Analytics                                         | SA-046?047             | ??          | ?  | ?                                    | ?           | ??     | Schéma `analytics` posé, 4 tables + 1 vue matérialisée, **aucun agrégat calculé sur des données réelles**                                                                                                                                                                                             | ?     |
-| OPS — supervision technique (**abandonné**, C-05) | OPS-001?028            | ?          | ?  | ?                                    | ?? 0/28      | ??     | Abandonné par décision du porteur (C-05) : supervision via Supabase/Vercel                                                                                                                                                                                                                            | ??     |
-| Application mobile                                | toutes séries          | ??          | ??  | ?                                    | ??           | ?     | `apps/mobile` n'est pas créé                                                                                                                                                                                                                                                                          | ?     |
+| Fondations (design system, monorepo, CI)          | ï¿½                      | ?          | ??  | ? 411 unitaires                      | ?           | ?     | Aucun test E2E n'a jamais ï¿½tï¿½ exï¿½cutï¿½ (bac ï¿½ sable sans accï¿½s `*.supabase.co`)                                                                                                                                                                                                                        | ??     |
+| ï¿½crans systï¿½me                                    | SYS-001?010            | ??          | ??  | ?                                    | ? 10/10     | ?     | SYS-003/004 ne s'affichent que sur une `maintenance_window` rï¿½ellement dï¿½clarï¿½e ; SYS-010 est un bandeau global (`role=status`) ; aucun test E2E                                                                                                                                                      | ??     |
+| Identitï¿½ ï¿½ accï¿½s, rï¿½clamation, onboarding         | ISE-001?015            | ?          | ?  | ?? SQL 0002                           | ? 15/15     | ?     | Aucun compte rï¿½el n'a jamais ï¿½tï¿½ crï¿½ï¿½ ; aucun test E2E                                                                                                                                                                                                                                                | ??     |
+| Profil & disponibilitï¿½                            | ISE-016?033            | ?          | ?  | ? SQL 0003 (30 cas), 0032 (19 cas)   | ? 18/18     | ?     | Dï¿½pï¿½t de photo et de CV non ouvert (D-117) ; aucune notification de demande de recommandation cï¿½blï¿½e ; aucun test E2E                                                                                                                                                                                 | ??     |
+| Recherche & dï¿½couverte                            | ISE-034?037            | ?          | ?  | ? SQL 0001ï¿½0002 (search)             | ? 4/4       | ?     | Annuaire vide : la recherche fonctionne mais ne renvoie rien ; aucun test E2E                                                                                                                                                                                                                         | ??     |
+| Relations & introductions                         | ISE-038?046            | ?          | ?  | ? SQL 0004                           | ? 9/9       | ?     | Filtres d'ISE-040 non livrï¿½s (F-05) ; aucune notification cï¿½blï¿½e ; aucun test E2E                                                                                                                                                                                                                     | ??     |
+| Appels au rï¿½seau                                  | ISE-047?054            | ?          | ?  | ? SQL 0005, 0019                     | ? 8/8       | ?     | Ciblage nominatif absent ; aucune notification ; aucun test E2E                                                                                                                                                                                                                                       | ??     |
+| Opportunitï¿½s                                      | ISE-055?066            | ?          | ?  | ? SQL 0006, 0020                     | ? 12/12     | ?     | Modï¿½ration SA-020 livrï¿½e (`/administration/opportunites`) ; dï¿½pï¿½t de CV non ouvert ; aucun test E2E                                                                                                                                                                                                   | ??     |
+| Promotions                                        | ISE-067?071            | ?          | ?  | ? SQL 0024                           | ? 5/5       | ?     | Aucune donnï¿½e d'annuaire : les espaces promotion sont vides                                                                                                                                                                                                                                           | ??     |
+| Stages                                            | ISE-072?077            | ?          | ?  | ? SQL 0007, 0025                     | ? 6/6       | ?     | ï¿½crans ISE-073?077 livrï¿½s (dï¿½tail, candidature, relecture, suivi, rï¿½sultat) ; aucun test E2E ; aucune offre rï¿½elle en base                                                                                                                                                                            | ??     |
+| Mentorat                                          | ISE-078?083            | ?          | ?  | ? SQL 0008, 0026                     | ? 6/6       | ?     | ï¿½crans ISE-078?083 livrï¿½s (`/mentorat` et sous-routes) ; carte `/collaborer` rï¿½activï¿½e ; aucun mentor rï¿½el en base ; aucun test E2E                                                                                                                                                                   | ??     |
+| Communautï¿½s                                       | ISE-084?087            | ?          | ?  | ? SQL 0009, 0027                     | ? 4/4       | ?     | Crï¿½ation de communautï¿½ non ouverte (C-k) ; piï¿½ces jointes non ouvertes (C-i)                                                                                                                                                                                                                          | ??     |
+| Projets & consortiums                             | ISE-088?091            | ?          | ?  | ? SQL 0010, 0028                     | ? 4/4       | ?     | Assistant de crï¿½ation de projet non livrï¿½ (P-f)                                                                                                                                                                                                                                                       | ??     |
+| Actualitï¿½s & ï¿½vï¿½nements                           | ISE-092?096            | ?          | ?  | ? SQL 0011, 0029                     | ? 5/5       | ?     | 0 actualitï¿½ et 0 ï¿½vï¿½nement en base ; proposition d'actualitï¿½ non ouverte (N-i)                                                                                                                                                                                                                        | ??     |
+| Messagerie                                        | ISE-097                | ?          | ?  | ? SQL 0012, 0016                     | ? 3 routes  | ?     | **Realtime non vï¿½rifiï¿½ contre la base rï¿½elle** ; aucun message n'a jamais transitï¿½                                                                                                                                                                                                                    | ??     |
+| Notifications & paramï¿½tres                        | ISE-098?099            | ?          | ?  | ? SQL 0013, 0017                     | ? 7 routes  | ?     | **33 types seedï¿½s, aucun consommateur d'ï¿½vï¿½nement, aucun envoi.** Le centre de notifications lit une table vide                                                                                                                                                                                       | ??     |
+| Aide & support                                    | ISE-100                | ?          | ?  | ? SQL 0014, 0018                     | ? 5 routes  | ?     | Aucun SLA affichï¿½ (D-85) ; aucun agent de support n'existe                                                                                                                                                                                                                                            | ??     |
+| Site public (landing)                             | PUB-001                | ?          | ?  | ? SQL 0021, 0023 ï¿½ 141 unitaires web | ? 1/1       | ??     | **Toutes les sections rendent leur ï¿½tat vide** : 0 mï¿½dia, 0 actualitï¿½, 0 ï¿½vï¿½nement, 0 partenaire, statistiques ï¿½ zï¿½ro                                                                                                                                                                                 | ??     |
+| CMS (back-office du site public)                  | CMS-001?010            | ?          | ?  | ? SQL 0021, 0022                     | ? 13 routes | ??     | Variantes d'image non gï¿½nï¿½rï¿½es (D-133/D-140) ; aucun contenu n'a ï¿½tï¿½ saisi                                                                                                                                                                                                                            | ??     |
+| Superadmin â€” cÅ“ur (revue, modÃ©ration, support)    | SA-001â†’020, SA-038â†’039, SA-011â†’015 | âœ… | âœ… | âœ… SQL 0030 (72 cas)    | ðŸŸ¡ 27/50     | ðŸŸ¡     | Lot cÅ“ur livrÃ© sous `/administration` (0076+0077+0092+0093) : tableau de bord, membres & rÃ´les, rÃ©clamations, promotions (dÃ©lÃ©guÃ©s, invitations, campagnes d'invitation), appels, opportunitÃ©s, modÃ©ration, support. Restent : suivis/bilans (SA-021â†’033) ; SA-034â†’037 couverts par SA-018/CMS (decision C-07) | ðŸŸ¡     |
+| Profils incomplets (SA-043)                       | SA-043                 | ? | ?  | ?                                    | ?           | ??     | Import en masse (SA-040/041/042/044/045) abandonnï¿½ (dï¿½cision C-06) : le recensement Excel a ï¿½tï¿½ importï¿½ directement en migration (0088), 255 profils. SA-043 dï¿½placï¿½ vers `/administration/profils-incomplets`.                                                                                    | ?     |
+| Analytics                                         | SA-046?047             | ??          | ?  | ?                                    | ?           | ??     | Schï¿½ma `analytics` posï¿½, 4 tables + 1 vue matï¿½rialisï¿½e, **aucun agrï¿½gat calculï¿½ sur des donnï¿½es rï¿½elles**                                                                                                                                                                                             | ?     |
+| OPS ï¿½ supervision technique (**abandonnï¿½**, C-05) | OPS-001?028            | ?          | ?  | ?                                    | ?? 0/28      | ??     | Abandonnï¿½ par dï¿½cision du porteur (C-05) : supervision via Supabase/Vercel                                                                                                                                                                                                                            | ??     |
+| Application mobile                                | toutes sï¿½ries          | ??          | ??  | ?                                    | ??           | ?     | `apps/mobile` n'est pas crï¿½ï¿½                                                                                                                                                                                                                                                                          | ?     |
 
 ---
 
-## 2. Base de données
+## 2. Base de donnï¿½es
 
-**82 migrations** dans le dépôt (`0001` ? `0085`, les numéros `0069`, `0078` et `0079` n'ont
-jamais été attribués), **82 entrées** en base. Aucun fichier sans entrée, aucune entrée sans fichier, aucun numéro en
-double. Le contrôle d'équivalence dépôt ? base est détaillé dans `docs/migration-integrity.md` :
-**54 migrations conformes, 20 divergentes** après normalisation — les écarts observés portent sur
-des libellés de `comment on` et des formes de code équivalentes, mais ils prouvent que des
-fichiers ont été édités après application, ce que le README du dossier interdit.
+**82 migrations** dans le dï¿½pï¿½t (`0001` ? `0085`, les numï¿½ros `0069`, `0078` et `0079` n'ont
+jamais ï¿½tï¿½ attribuï¿½s), **82 entrï¿½es** en base. Aucun fichier sans entrï¿½e, aucune entrï¿½e sans fichier, aucun numï¿½ro en
+double. Le contrï¿½le d'ï¿½quivalence dï¿½pï¿½t ? base est dï¿½taillï¿½ dans `docs/migration-integrity.md` :
+**54 migrations conformes, 20 divergentes** aprï¿½s normalisation ï¿½ les ï¿½carts observï¿½s portent sur
+des libellï¿½s de `comment on` et des formes de code ï¿½quivalentes, mais ils prouvent que des
+fichiers ont ï¿½tï¿½ ï¿½ditï¿½s aprï¿½s application, ce que le README du dossier interdit.
 
-- **202 tables** dans `public`, **24** dans `private`, **4** dans `analytics`, 1 vue matérialisée.
-- **RLS activée et forcée sur les 202 tables** de `public` ; **440 politiques**.
-- **3 tables sans politique** — `domain_events`, `notification_deliveries`,
-  `profile_search_documents` — fermées volontairement (voir `docs/rls.md`).
-- Le rôle `anon` n'a **aucun** privilège de table. Il exécute exactement **10 fonctions**
-  (`get_landing_*` × 9 + `record_public_landing_event`), la liste blanche de D-125, vérifiée
-  mécaniquement par le contrôle `anon_function_grant`.
-- Aucune fonction `SECURITY DEFINER` sans `search_path` figé.
+- **202 tables** dans `public`, **24** dans `private`, **4** dans `analytics`, 1 vue matï¿½rialisï¿½e.
+- **RLS activï¿½e et forcï¿½e sur les 202 tables** de `public` ; **440 politiques**.
+- **3 tables sans politique** ï¿½ `domain_events`, `notification_deliveries`,
+  `profile_search_documents` ï¿½ fermï¿½es volontairement (voir `docs/rls.md`).
+- Le rï¿½le `anon` n'a **aucun** privilï¿½ge de table. Il exï¿½cute exactement **10 fonctions**
+  (`get_landing_*` ï¿½ 9 + `record_public_landing_event`), la liste blanche de D-125, vï¿½rifiï¿½e
+  mï¿½caniquement par le contrï¿½le `anon_function_grant`.
+- Aucune fonction `SECURITY DEFINER` sans `search_path` figï¿½.
 - `private.security_baseline_violations()` et `private.storage_baseline_violations()` renvoient
   **0 ligne**.
-- **4 tâches `pg_cron` réellement planifiées et actives** (D-129).
+- **4 tï¿½ches `pg_cron` rï¿½ellement planifiï¿½es et actives** (D-129).
 
-### Référentiels seedés
+### Rï¿½fï¿½rentiels seedï¿½s
 
-| Référentiel                          | Volume (relevé en base) |
+| Rï¿½fï¿½rentiel                          | Volume (relevï¿½ en base) |
 | ------------------------------------ | ----------------------- |
-| Pays (ISO 3166-1, libellés français) | 249                     |
-| Compétences                          | 543                     |
-| Catégories / domaines de compétences | 92 / 18                 |
-| Alias de compétences                 | 125                     |
+| Pays (ISO 3166-1, libellï¿½s franï¿½ais) | 249                     |
+| Compï¿½tences                          | 543                     |
+| Catï¿½gories / domaines de compï¿½tences | 92 / 18                 |
+| Alias de compï¿½tences                 | 125                     |
 | Secteurs                             | 35                      |
 | Fonctions professionnelles           | 36                      |
 | Promotions ISE                       | 72                      |
@@ -114,123 +114,123 @@ fichiers ont été édités après application, ce que le README du dossier interdit.
 
 ## 3. Code applicatif
 
-- `packages/design-tokens` — palette, typographie, espacement, rayons, ombres, grille, points de
-  rupture ; variables CSS Tailwind v4 et preset partagé.
-- `packages/domain` — moteur de matching déterministe et explicable, machines d'états, matrice
-  rôles × permissions, règles de visibilité. **137 tests**.
-- `packages/validation` — schémas Zod (auth, onboarding, profil, sections de profil,
-  positionnement / projets / langues / recommandations / disponibilité (`profile-extras`),
-  réseau). **124 tests**.
-- `packages/ui-web` — composants accessibles avec leurs états.
+- `packages/design-tokens` ï¿½ palette, typographie, espacement, rayons, ombres, grille, points de
+  rupture ; variables CSS Tailwind v4 et preset partagï¿½.
+- `packages/domain` ï¿½ moteur de matching dï¿½terministe et explicable, machines d'ï¿½tats, matrice
+  rï¿½les ï¿½ permissions, rï¿½gles de visibilitï¿½. **137 tests**.
+- `packages/validation` ï¿½ schï¿½mas Zod (auth, onboarding, profil, sections de profil,
+  positionnement / projets / langues / recommandations / disponibilitï¿½ (`profile-extras`),
+  rï¿½seau). **124 tests**.
+- `packages/ui-web` ï¿½ composants accessibles avec leurs ï¿½tats.
 - `packages/db-types`, `packages/config`.
-- `apps/web` — Next.js, App Router, **179 routes**. En-têtes de sécurité, middleware de session,
-  aucune clé `service_role` côté client. **199 tests** (landing, redirections sûres, rendu,
-  fiabilité, métadonnées d'image CMS, conflits de programmation, statuts de collaboration).
-- `apps/mobile` — **n'existe pas**.
+- `apps/web` ï¿½ Next.js, App Router, **179 routes**. En-tï¿½tes de sï¿½curitï¿½, middleware de session,
+  aucune clï¿½ `service_role` cï¿½tï¿½ client. **199 tests** (landing, redirections sï¿½res, rendu,
+  fiabilitï¿½, mï¿½tadonnï¿½es d'image CMS, conflits de programmation, statuts de collaboration).
+- `apps/mobile` ï¿½ **n'existe pas**.
 
 ---
 
 ## 4. Ce qui n'existe pas encore
 
-Cette section est la partie utile du document. Elle ne contient que des manques constatés.
+Cette section est la partie utile du document. Elle ne contient que des manques constatï¿½s.
 
-### Aucune donnée réelle nulle part
+### Aucune donnï¿½e rï¿½elle nulle part
 
-- **`auth.users` contient 0 ligne.** Aucun compte n'a jamais été créé. Le parcours
-  ISE-001 ? ISE-002 ? ISE-005 ? ISE-007 ? ISE-008…014 n'a jamais été déroulé de bout en bout
-  contre la base réelle. Tous les écrans membre sont donc livrés **sans avoir jamais été vus
+- **`auth.users` contient 0 ligne.** Aucun compte n'a jamais ï¿½tï¿½ crï¿½ï¿½. Le parcours
+  ISE-001 ? ISE-002 ? ISE-005 ? ISE-007 ? ISE-008ï¿½014 n'a jamais ï¿½tï¿½ dï¿½roulï¿½ de bout en bout
+  contre la base rï¿½elle. Tous les ï¿½crans membre sont donc livrï¿½s **sans avoir jamais ï¿½tï¿½ vus
   fonctionner avec une session**.
-- **`ise_profiles` contient 0 ligne.** L'annuaire n'a pas été importé. La recherche, le matching,
-  les promotions, les introductions et les appels au réseau fonctionnent tous sur un ensemble
-  vide. Aucun profil de démonstration n'a été créé (MASTER PROMPT §78).
-- **0 actualité, 0 événement, 0 opportunité, 0 média CMS, 0 événement de domaine.** La landing
-  publique rend intégralement ses états vides, et le CMS liste des tables vides.
+- **`ise_profiles` contient 0 ligne.** L'annuaire n'a pas ï¿½tï¿½ importï¿½. La recherche, le matching,
+  les promotions, les introductions et les appels au rï¿½seau fonctionnent tous sur un ensemble
+  vide. Aucun profil de dï¿½monstration n'a ï¿½tï¿½ crï¿½ï¿½ (MASTER PROMPT ï¿½78).
+- **0 actualitï¿½, 0 ï¿½vï¿½nement, 0 opportunitï¿½, 0 mï¿½dia CMS, 0 ï¿½vï¿½nement de domaine.** La landing
+  publique rend intï¿½gralement ses ï¿½tats vides, et le CMS liste des tables vides.
 
 ### Aucun test de bout en bout
 
-- **Aucun test E2E n'a jamais été exécuté.** `apps/web/e2e/public-redirect.spec.ts` existe et est
-  câblé dans `.github/workflows/e2e.yml`, mais n'a jamais tourné (le bac à sable n'a pas d'accès
-  à `*.supabase.co`). C'est le maillon manquant de la Definition of Done sur **toutes** les
-  tranches déclarées livrées.
+- **Aucun test E2E n'a jamais ï¿½tï¿½ exï¿½cutï¿½.** `apps/web/e2e/public-redirect.spec.ts` existe et est
+  cï¿½blï¿½ dans `.github/workflows/e2e.yml`, mais n'a jamais tournï¿½ (le bac ï¿½ sable n'a pas d'accï¿½s
+  ï¿½ `*.supabase.co`). C'est le maillon manquant de la Definition of Done sur **toutes** les
+  tranches dï¿½clarï¿½es livrï¿½es.
 - Les 411 tests unitaires ne touchent jamais la base. Les 31 harnais SQL touchent la base mais
   jamais l'interface.
 
 ### Modules entiers sans interface
 
-- **Superadmin : le cœur est livré** (`/administration`, migrations 0076 + 0077, harnais 0030 —
-  72 cas, 0 échec) : tableau de bord à compteurs réels, membres & profils (statuts, rôles
-  `roles.manage` jamais sur soi-même, notes administratives en `private`), **revue des
-  réclamations** (approbation / rejet motivé via les fonctions atomiques), promotions (délégués,
-  invitations, membres manquants avec indice de contact journalisé), modération des appels et des
-  opportunités, signalements et support. Restent sans écran : SA-005 (fusion de doublons), SA-007
-  (création de profil référencé), SA-011?015 (campagnes d'invitation), SA-021?037 (suivis, bilans,
-  projets/communautés/événements/contenus — la partie éditoriale est couverte par le CMS).
-- **OPS (OPS-001 ? OPS-028) : abandonné** par décision du porteur (C-05). Aucune table de supervision, d'incident ou
-  d'astreinte. Le module n'a pas commencé.
-- **Mentorat (ISE-078 ? ISE-083) : livré le 2026-08-09.** `/mentorat` (accueil), `/mentorat/besoin`,
+- **Superadmin : le cï¿½ur est livrï¿½** (`/administration`, migrations 0076 + 0077, harnais 0030 ï¿½
+  72 cas, 0 ï¿½chec) : tableau de bord ï¿½ compteurs rï¿½els, membres & profils (statuts, rï¿½les
+  `roles.manage` jamais sur soi-mï¿½me, notes administratives en `private`), **revue des
+  opportunitÃ©s, signalements et support, ainsi que les campagnes d'invitation de promotion
+  (SA-011â†’015, migrations 0092+0093). Restent sans Ã©cran : SA-021â†’037 (suivis, bilans,
+  projets/communautÃ©s/Ã©vÃ©nements/contenus â€” la partie Ã©ditoriale est couverte par le CMS).
+  (crï¿½ation de profil rï¿½fï¿½rencï¿½), SA-011?015 (campagnes d'invitation), SA-021?037 (suivis, bilans,
+  projets/communautï¿½s/ï¿½vï¿½nements/contenus ï¿½ la partie ï¿½ditoriale est couverte par le CMS).
+- **OPS (OPS-001 ? OPS-028) : abandonnï¿½** par dï¿½cision du porteur (C-05). Aucune table de supervision, d'incident ou
+  d'astreinte. Le module n'a pas commencï¿½.
+- **Mentorat (ISE-078 ? ISE-083) : livrï¿½ le 2026-08-09.** `/mentorat` (accueil), `/mentorat/besoin`,
   `/mentorat/mentors` (+ fiche et demande), `/mentorat/demandes` (accepter / autre format D-54 /
-  décliner sans motif), `/mentorat/[mentorshipId]` (+ `/bilan`), `/mentorat/devenir-mentor`.
-  La carte « Mentorat » de `/collaborer` est redevenue cliquable.
-- **Stages (ISE-073 ? ISE-077) : livré le 2026-08-09.** `/stages/[offerId]` (+ `/candidature`,
-  `/relecture`), `/stages/candidatures` (+ détail et `/resultat`) ; l'onglet « Mes candidatures »
-  de `/stages` est rétabli. Les sept Server Actions de `stages/actions.ts` sont désormais toutes
-  branchées sur des écrans réels.
-- **Profil (ISE-024 ? ISE-033) : 10 écrans manquants** — secteurs/fonctions/expertises, projets
-  et réalisations, langues et zones d'expérience, recommandations, complétion, disponibilité.
+  dï¿½cliner sans motif), `/mentorat/[mentorshipId]` (+ `/bilan`), `/mentorat/devenir-mentor`.
+  La carte ï¿½ Mentorat ï¿½ de `/collaborer` est redevenue cliquable.
+- **Stages (ISE-073 ? ISE-077) : livrï¿½ le 2026-08-09.** `/stages/[offerId]` (+ `/candidature`,
+  `/relecture`), `/stages/candidatures` (+ dï¿½tail et `/resultat`) ; l'onglet ï¿½ Mes candidatures ï¿½
+  de `/stages` est rï¿½tabli. Les sept Server Actions de `stages/actions.ts` sont dï¿½sormais toutes
+  branchï¿½es sur des ï¿½crans rï¿½els.
+- **Profil (ISE-024 ? ISE-033) : 10 ï¿½crans manquants** ï¿½ secteurs/fonctions/expertises, projets
+  et rï¿½alisations, langues et zones d'expï¿½rience, recommandations, complï¿½tion, disponibilitï¿½.
 
-### Rien n'est envoyé à personne
+### Rien n'est envoyï¿½ ï¿½ personne
 
-- **Aucune Edge Function, aucune file d'attente, aucun worker.** Les événements de domaine sont
-  bien écrits dans `public.domain_events`, **aucun consommateur ne les lit**. Personne n'est
-  prévenu d'une invitation reçue, d'un appel publié, d'une candidature ou d'un message.
-- Les **33 types de notification** sont seedés ; `notification_deliveries` n'a aucune politique
+- **Aucune Edge Function, aucune file d'attente, aucun worker.** Les ï¿½vï¿½nements de domaine sont
+  bien ï¿½crits dans `public.domain_events`, **aucun consommateur ne les lit**. Personne n'est
+  prï¿½venu d'une invitation reï¿½ue, d'un appel publiï¿½, d'une candidature ou d'un message.
+- Les **33 types de notification** sont seedï¿½s ; `notification_deliveries` n'a aucune politique
   RLS et aucune ligne.
-- Les **alertes de recherche enregistrées** (ISE-036) sont persistées ; le service qui les
-  déclenche n'existe pas — l'écran le dit et n'annonce aucun délai.
+- Les **alertes de recherche enregistrï¿½es** (ISE-036) sont persistï¿½es ; le service qui les
+  dï¿½clenche n'existe pas ï¿½ l'ï¿½cran le dit et n'annonce aucun dï¿½lai.
 - **Aucune expiration automatique** : `connection_requests.expires_at` (30 j) et
-  `introduction_requests.expires_at` (14 j) sont posés, aucune tâche ne fait passer les lignes en
-  `expired`. Les 4 tâches `pg_cron` actives sont **toutes** des tâches CMS.
+  `introduction_requests.expires_at` (14 j) sont posï¿½s, aucune tï¿½che ne fait passer les lignes en
+  `expired`. Les 4 tï¿½ches `pg_cron` actives sont **toutes** des tï¿½ches CMS.
 
 ### Fichiers
 
-- Les 8 buckets privés de `0027` existent avec leurs politiques ; **aucun écran ne dépose ni ne
+- Les 8 buckets privï¿½s de `0027` existent avec leurs politiques ; **aucun ï¿½cran ne dï¿½pose ni ne
   relit de fichier**. `verification-documents`, `profile-documents` (CV), `avatars`,
   `message-attachments`, `support-attachments`, `project-assets` et `admin-imports` sont vides et
-  sans parcours. Seul `landing-media` a un parcours de dépôt (CMS-008), et il n'a rien reçu.
-- Les **variantes d'image** (Desktop / Mobile / vignette) ne sont pas générées : aucun encodeur
-  côté serveur (D-133, amendé par D-140).
+  sans parcours. Seul `landing-media` a un parcours de dï¿½pï¿½t (CMS-008), et il n'a rien reï¿½u.
+- Les **variantes d'image** (Desktop / Mobile / vignette) ne sont pas gï¿½nï¿½rï¿½es : aucun encodeur
+  cï¿½tï¿½ serveur (D-133, amendï¿½ par D-140).
 
-### Intégrité documentaire
+### Intï¿½gritï¿½ documentaire
 
-- **20 migrations sur 74 divergent** entre le fichier du dépôt et le SQL réellement appliqué
-  (voir `docs/migration-integrity.md`). Les écarts constatés sont non structurels, mais la règle
-  « aucun fichier ne doit jamais être modifié après son application » n'a pas été respectée.
-- La migration `0067_cms_backoffice_api.sql` est enregistrée en base sous le nom
-  **`cms_backoffice_api`**, sans son préfixe numérique. C'est la seule entrée non préfixée.
-- Le numéro **`0069` n'existe pas** : ni fichier, ni entrée en base. Trou assumé.
+- **20 migrations sur 74 divergent** entre le fichier du dï¿½pï¿½t et le SQL rï¿½ellement appliquï¿½
+  (voir `docs/migration-integrity.md`). Les ï¿½carts constatï¿½s sont non structurels, mais la rï¿½gle
+  ï¿½ aucun fichier ne doit jamais ï¿½tre modifiï¿½ aprï¿½s son application ï¿½ n'a pas ï¿½tï¿½ respectï¿½e.
+- La migration `0067_cms_backoffice_api.sql` est enregistrï¿½e en base sous le nom
+  **`cms_backoffice_api`**, sans son prï¿½fixe numï¿½rique. C'est la seule entrï¿½e non prï¿½fixï¿½e.
+- Le numï¿½ro **`0069` n'existe pas** : ni fichier, ni entrï¿½e en base. Trou assumï¿½.
 
 ---
 
-## 5. Prochaines étapes, par ordre de priorité
+## 5. Prochaines ï¿½tapes, par ordre de prioritï¿½
 
-1. **Créer un premier compte réel** et dérouler ISE-001 ? ISE-014 contre la base. Tant que
-   `auth.users` est vide, aucune tranche ne peut prétendre à la Definition of Done.
-2. **Exécuter les tests E2E** depuis un environnement ayant accès à `*.supabase.co`, puis écrire
-   ceux des parcours critiques (réclamation, onboarding, recherche, connexion, candidature).
-3. ~~Livrer un back-office minimal de revue~~ — **fait** : `/administration/reclamations` arbitre
-   les réclamations (SA-004/SA-006, fonctions atomiques `approve_profile_claim` /
+1. **Crï¿½er un premier compte rï¿½el** et dï¿½rouler ISE-001 ? ISE-014 contre la base. Tant que
+   `auth.users` est vide, aucune tranche ne peut prï¿½tendre ï¿½ la Definition of Done.
+2. **Exï¿½cuter les tests E2E** depuis un environnement ayant accï¿½s ï¿½ `*.supabase.co`, puis ï¿½crire
+   ceux des parcours critiques (rï¿½clamation, onboarding, recherche, connexion, candidature).
+3. ~~Livrer un back-office minimal de revue~~ ï¿½ **fait** : `/administration/reclamations` arbitre
+   les rï¿½clamations (SA-004/SA-006, fonctions atomiques `approve_profile_claim` /
    `reject_profile_claim`, harnais 0030).
-4. ~~Importer un jeu d'annuaire réel~~ — **fait le 2026-08-09, autrement** : le recensement Excel
-   (275 réponses, 255 profils après dédoublonnage) a été importé directement en migration
-   (`0088_import_ise_census`), en contournant le module SA-040 ? SA-042. Décision C-06 (docs/decisions.md) :
-   ce module est abandonné, plus aucun état vide à combler par ce biais.
-5. **Brancher un consommateur d'événements de domaine** (notifications in-app d'abord) : sinon les
-   19 modules livrés sont muets.
-6. ~~Livrer les écrans manquants de Stages (5) et de Mentorat (6)~~ — **fait le 2026-08-09**
-   (ISE-073 ? ISE-083, harnais 0025/0026 rejoués verts).
+4. ~~Importer un jeu d'annuaire rï¿½el~~ ï¿½ **fait le 2026-08-09, autrement** : le recensement Excel
+   (275 rï¿½ponses, 255 profils aprï¿½s dï¿½doublonnage) a ï¿½tï¿½ importï¿½ directement en migration
+   (`0088_import_ise_census`), en contournant le module SA-040 ? SA-042. Dï¿½cision C-06 (docs/decisions.md) :
+   ce module est abandonnï¿½, plus aucun ï¿½tat vide ï¿½ combler par ce biais.
+5. **Brancher un consommateur d'ï¿½vï¿½nements de domaine** (notifications in-app d'abord) : sinon les
+   19 modules livrï¿½s sont muets.
+6. ~~Livrer les ï¿½crans manquants de Stages (5) et de Mentorat (6)~~ ï¿½ **fait le 2026-08-09**
+   (ISE-073 ? ISE-083, harnais 0025/0026 rejouï¿½s verts).
 7. **Livrer ISE-024 ? ISE-033**, SYS-003, SYS-004, SYS-007, SYS-010.
-8. **Réaligner les 20 migrations divergentes** — non pas en éditant les fichiers, mais en
-   décidant explicitement quelle version fait foi et en consignant la décision.
-9. Compléter le chantier **Superadmin** : le cœur (SA-001?020, SA-038?039) est livré ; restent SA-011?015 et SA-021?033. SA-034?037 couverts par l'existant (décision C-07). OPS est abandonné (C-05).
-10. Créer `apps/mobile`.
+8. **Rï¿½aligner les 20 migrations divergentes** ï¿½ non pas en ï¿½ditant les fichiers, mais en
+   dï¿½cidant explicitement quelle version fait foi et en consignant la dï¿½cision.
+9. ComplÃ©ter le chantier **Superadmin** : le cÅ“ur (SA-001â†’020, SA-038â†’039, SA-011â†’015) est livrÃ© ; restent SA-021â†’033. SA-034â†’037 couverts par l'existant (dÃ©cision C-07). OPS est abandonnÃ© (C-05).
+10. Crï¿½er `apps/mobile`.
 
