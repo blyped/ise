@@ -57,6 +57,26 @@ export function adminPromotionRoute(promotionId: number | string): string {
   return `${ADMIN_ROUTES.promotions}/${encodeURIComponent(String(promotionId))}`;
 }
 
+/** SA-011 — Suivi (oversight) des invitations d'une promotion. */
+export function adminPromotionInvitationsRoute(promotionId: number | string): string {
+  return `${adminPromotionRoute(promotionId)}/invitations`;
+}
+
+/** SA-012 — Campagnes d'invitation d'une promotion. */
+export function adminCampaignsRoute(promotionId: number | string): string {
+  return `${adminPromotionRoute(promotionId)}/campagnes`;
+}
+
+/** SA-012 — Creation d'une campagne d'invitation. */
+export function adminCampaignNewRoute(promotionId: number | string): string {
+  return `${adminCampaignsRoute(promotionId)}/nouvelle`;
+}
+
+/** SA-013/SA-014/SA-015 — Detail d'une campagne (apercu, suivi, bilan). */
+export function adminCampaignRoute(promotionId: number | string, campaignId: string): string {
+  return `${adminCampaignsRoute(promotionId)}/${encodeURIComponent(campaignId)}`;
+}
+
 /** SA-018 / SA-039 — Detail d'un signalement. */
 export function adminReportRoute(reportId: string): string {
   return `${ADMIN_ROUTES.moderation}/${encodeURIComponent(reportId)}`;
