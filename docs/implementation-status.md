@@ -161,7 +161,6 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
   72 cas, 0 �chec) : tableau de bord � compteurs r�els, membres & profils (statuts, r�les
   `roles.manage` jamais sur soi-m�me, notes administratives en `private`), **revue des
   (SA-011→015, migrations 0092+0093, et SA-021→022). Restent sans écran : SA-023→037 (suivis, bilans,
-  (SA-011→015, migrations 0092+0093). Restent sans écran : SA-021→037 (suivis, bilans,
   projets/communaut�s/�v�nements/contenus � la partie �ditoriale est couverte par le CMS).
 - **OPS (OPS-001 ? OPS-028) : abandonn�** par d�cision du porteur (C-05). Aucune table de supervision, d'incident ou
   d'astreinte. Le module n'a pas commenc�.
