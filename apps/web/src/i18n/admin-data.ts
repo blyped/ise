@@ -221,6 +221,8 @@ export const frAdminData = {
     colResult: 'Résultat',
     colDetail: 'Détail',
     see: 'Voir',
+    shownCount: (count: number) =>
+      count > 1 ? `${count} entrées affichées` : `${count} entrée affichée`,
     result: {
       success: 'Succès',
       failure: 'Échec',
