@@ -31,6 +31,7 @@ export const frAdmin = {
     opportunities: 'Opportunités',
     projects: 'Projets & consortiums',
     communities: 'Communautés',
+    events: 'Événements',
     moderation: 'Modération',
     support: 'Support',
     incompleteProfiles: 'Profils incomplets',
@@ -85,7 +86,7 @@ export const frAdmin = {
     openQueue: 'Ouvrir la file',
   },
 
-  /** Vocabulaires fermes (0003). */
+  /** Vocabulaires fermés (0003). */
   profileStatus: {
     referenced: 'Référencé',
     active: 'Actif',
@@ -726,11 +727,21 @@ export const frAdmin = {
     community_post_not_found: "Cette publication n'existe plus.",
     community_comment_not_found: "Ce commentaire n'existe plus.",
     invalid_slug: 'Le slug doit être en minuscules, composé de lettres, chiffres et tirets uniquement (ex. : mon-slug).',
-    slug_already_exists: 'Ce slug est déjà utilisé par une autre communauté.',
+    slug_already_exists: 'Ce slug est déjà utilisé.',
     community_missing_required_field: 'Le nom, le slug et la description sont obligatoires.',
     community_discriminant_required: 'Ce type de communauté exige un pays ou un secteur associé.',
     community_merge_target_required: 'Indiquez la communauté cible de la fusion (différente de la communauté d’origine).',
     invalid_community_status: 'Cette transition de statut n’est pas possible pour cette communauté.',
     invalid_moderation_action: 'Cette action de modération n’est pas possible dans l’état actuel de ce contenu.',
+    // SA-030 -> 033 — événements (0100).
+    event_not_found: "Cet événement n'existe plus.",
+    event_missing_required_field: 'Le titre, le slug, le type d’événement et la date de début sont obligatoires.',
+    invalid_event_type: "Ce type d'événement n'existe pas ou n'est plus actif.",
+    event_organizer_target_required: 'Indiquez l’organisateur correspondant au type choisi (profil, promotion, communauté, projet ou nom externe).',
+    event_dates_invalid: 'La date de fin doit être postérieure ou égale à la date de début.',
+    event_missing_location: 'Renseignez la ville ou le lieu avant de publier cet événement (format en présentiel ou hybride).',
+    event_missing_online_url: 'Renseignez le lien de connexion avant de publier cet événement (format en ligne ou hybride).',
+    event_cancellation_reason_required: 'Le motif d’annulation est obligatoire (au moins 5 caractères).',
+    event_registration_not_found: "Cette inscription n'existe plus.",
   } as Record<string, string>,
 } as const;
