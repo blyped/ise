@@ -35,9 +35,9 @@ Légende : ✅ terminé — 🟡 partiel — ⬜ non démarré — ⬛ sans obje
 | `private.security_baseline_violations()`                   | **0 ligne** ✅                                                                                                                        |
 | `private.storage_baseline_violations()`                    | **0 ligne** ✅                                                                                                                        |
 | Tests unitaires (`pnpm test`)                              | **460** — `@ise/domain` 137, `@ise/validation` 124, `@ise/web` 199                                                                    |
-| `pnpm typecheck`                                           | ✅ 7 tâches, 0 erreur                                                                                                                 |
-| `pnpm build`                                               | ✅ 1 tâche, 0 erreur                                                                                                                  |
-| `pnpm format:check`                                        | ✅ — « All matched files use Prettier code style! »                                                                                     |
+| `pnpm typecheck`                                            | ✅ 7 tâches, 0 erreur                                                                                                                 |
+| `pnpm build`                                                | ✅ 1 tâche, 0 erreur                                                                                                                  |
+| `pnpm format:check`                                         | ✅ — « All matched files use Prettier code style! »                                                                                     |
 | Comptes dans `auth.users`                                  | **0**                                                                                                                                 |
 | Profils dans `ise_profiles`                                | **0**                                                                                                                                 |
 | Contenus CMS saisis (`news`, `events`, `cms_media_assets`) | **0 / 0 / 0**                                                                                                                         |
@@ -67,7 +67,7 @@ Légende : ✅ terminé — 🟡 partiel — ⬜ non démarré — ⬛ sans obje
 | Aide & support                                    | ISE-100                | ✅          | ✅  | ✅ SQL 0014, 0018                     | ✅ 5 routes  | ⬜     | Aucun SLA affiché (D-85) ; aucun agent de support n'existe                                                                                                                                                                                                                                            | 🟡     |
 | Site public (landing)                             | PUB-001                | ✅          | ✅  | ✅ SQL 0021, 0023 — 141 unitaires web | ✅ 1/1       | ⬛     | **Toutes les sections rendent leur état vide** : 0 média, 0 actualité, 0 événement, 0 partenaire, statistiques à zéro                                                                                                                                                                                 | 🟡     |
 | CMS (back-office du site public)                  | CMS-001→010            | ✅          | ✅  | ✅ SQL 0021, 0022                     | ✅ 13 routes | ⬛     | Variantes d'image non générées (D-133/D-140) ; aucun contenu n'a été saisi                                                                                                                                                                                                                            | 🟡     |
-| Superadmin — cœur (revue, modération, support)    | SA-001→020, SA-038→039, SA-011→015, SA-021→022, SA-023→026 | ✅ | ✅ | ✅ SQL 0030 (72 cas), RLS 0035 (23 cas)    | 🟡 33/50     | 🟡     | Lot cœur livré sous `/administration` (0076+0077+0092+0093) : tableau de bord, membres & rôles, réclamations, promotions (délégués, invitations, campagnes d'invitation), appels, opportunités (modération, candidatures, clôture/bilan), support, projets & consortiums (SA-023→026, migrations 0094-0098, admin_list/create_project, admin_set_project_status, admin_list/review_consortium_request, admin_close_project). Restent : communautés/événements (SA-027→033) ; SA-034→037 couverts par SA-018/CMS (decision C-07) | 🟡     |
+| Superadmin — cœur (revue, modération, support)    | SA-001→020, SA-038→039, SA-011→015, SA-021→022, SA-023→029 | ✅ | ✅ | ✅ SQL 0030 (72 cas), RLS 0035 (23 cas), RLS 0036 (42 cas) | 🟡 36/50     | 🟡     | Lot cœur livré sous `/administration` (0076+0077+0092+0093) : tableau de bord, membres & rôles, réclamations, promotions (délégués, invitations, campagnes d'invitation), appels, opportunités (modération, candidatures, clôture/bilan), support, projets & consortiums (SA-023→026, migrations 0094-0098, admin_list/create_project, admin_set_project_status, admin_list/review_consortium_request, admin_close_project), et communautés (SA-027→029, migration 0099, admin_list/create_community, admin_update_community, admin_set_community_status, admin_list_community_posts, admin_moderate_community_post ; SA-029 fusionné dans l'écran de détail SA-028, décision D-156). Restent : événements (SA-030→033) ; SA-034→037 couverts par SA-018/CMS (decision C-07) | 🟡     |
 | Profils incomplets (SA-043)                       | SA-043                 | ✅ | ✅  | ⬜                                    | ⬜           | ⬛     | Import en masse (SA-040/041/042/044/045) abandonné (décision C-06) : le recensement Excel a été importé directement en migration (0088), 255 profils. SA-043 déplacé vers `/administration/profils-incomplets`.                                                                                    | 🟡     |
 | Analytics                                         | SA-046→047             | 🟡          | ✅  | ⬜                                    | ✅           | ⬛     | Schéma `analytics` posé, 4 tables + 1 vue matérialisée, **aucun agrégat calculé sur des données réelles**                                                                                                                                                                                             | 🟡     |
 | OPS — supervision technique (**abandonné**, C-05) | OPS-001→028            | ⬜          | ⬜  | ⬜                                    | ⬛ 0/28      | ⬛     | Abandonné par décision du porteur (C-05) : supervision via Supabase/Vercel                                                                                                                                                                                                                            | ⬛     |
@@ -99,16 +99,16 @@ fichiers ont été édités après application, ce que le README du dossier inte
 ### Référentiels seedés
 
 | Référentiel                          | Volume (relevé en base) |
-| ------------------------------------ | ----------------------- |
-| Pays (ISO 3166-1, libellés français) | 249                     |
-| Compétences                          | 543                     |
-| Catégories / domaines de compétences | 92 / 18                 |
-| Alias de compétences                 | 125                     |
-| Secteurs                             | 35                      |
-| Fonctions professionnelles           | 36                      |
-| Promotions ISE                       | 72                      |
-| Types de notification                | 33                      |
-| Sections CMS (seed de 0057)          | 9                       |
+| ------------------------------------ | ------------------------ |
+| Pays (ISO 3166-1, libellés français) | 249                       |
+| Compétences                          | 543                       |
+| Catégories / domaines de compétences | 92 / 18                   |
+| Alias de compétences                 | 125                       |
+| Secteurs                             | 35                        |
+| Fonctions professionnelles           | 36                        |
+| Promotions ISE                       | 72                        |
+| Types de notification                | 33                        |
+| Sections CMS (seed de 0057)          | 9                         |
 
 ---
 
@@ -160,9 +160,11 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
 - **Superadmin : le cœur est livré** (`/administration`, migrations 0076 + 0077, harnais 0030 —
   72 cas, 0 échec) : tableau de bord — compteurs réels, membres & profils (statuts, rôles
   `roles.manage` jamais sur soi-même, notes administratives en `private`), **revue des
-  (SA-011→015, migrations 0092+0093, et SA-021→022), et projets & consortiums (SA-023→026,
-  migrations 0094-0098, RLS 0035 — 23 cas, 0 échec).** Restent sans écran : SA-027→037 (communautés,
-  événements, contenus — la partie éditoriale est couverte par le CMS).
+  (SA-011→015, migrations 0092+0093, et SA-021→022), projets & consortiums (SA-023→026,
+  migrations 0094-0098, RLS 0035 — 23 cas, 0 échec), et communautés (SA-027→029, migration 0099,
+  RLS 0036 — 42 cas, 0 échec ; SA-029 fusionné dans l'écran de détail SA-028, décision D-156).**
+  Restent sans écran : SA-030→037 (événements, contenus — la partie éditoriale est couverte par
+  le CMS).
 - **OPS (OPS-001 → OPS-028) : abandonné** par décision du porteur (C-05). Aucune table de supervision, d'incident ou
   d'astreinte. Le module n'a pas commencé.
 - **Mentorat (ISE-078 → ISE-083) : livré le 2026-08-09.** `/mentorat` (accueil), `/mentorat/besoin`,
@@ -229,5 +231,5 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
 7. **Livrer ISE-024 → ISE-033**, SYS-003, SYS-004, SYS-007, SYS-010.
 8. **Réaligner les 20 migrations divergentes** — non pas en éditant les fichiers, mais en
    décidant explicitement quelle version fait foi et en consignant la décision.
-9. Compléter le chantier **Superadmin** : le cœur (SA-001→020, SA-038→039, SA-011→015, SA-021→022, SA-023→026) est livré ; restent SA-027→033. SA-034→037 couverts par l'existant (décision C-07). OPS est abandonné (C-05).
+9. Compléter le chantier **Superadmin** : le cœur (SA-001→020, SA-038→039, SA-011→015, SA-021→022, SA-023→029) est livré ; restent SA-030→033. SA-034→037 couverts par l'existant (décision C-07). OPS est abandonné (C-05).
 10. Créer `apps/mobile`.
