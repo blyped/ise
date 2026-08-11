@@ -66,7 +66,7 @@ const DATA_LOT_DELIVERED = {
   incompleteProfiles: true,
   analytics: true,
   settings: true,
-  audit: false, // SA-049/SA-050 : en cours de livraison par le lot « donnees ».
+  audit: true, // SA-049/SA-050 : livre (0083 deja en base ; ecrans /administration/audit).
 } as const;
 
 const DATA_LOT_NAV: readonly AdminNavItem[] = [

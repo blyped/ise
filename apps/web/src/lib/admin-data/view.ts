@@ -1,4 +1,4 @@
-import { asArray, asObject, bool, num, str } from '@/lib/network-view';
+import { asArray, asObject, bool, num, str, strings } from '@/lib/network-view';
 
 /**
  * Projections du back-office « données » (SA-043, SA-046 → SA-048) : conversion
@@ -326,5 +326,94 @@ export function toSettingsHistoryEntry(value: unknown): SettingsHistoryEntry | n
     actorName: str(raw['actor_name']),
     result: str(raw['result']) ?? 'success',
     context: asObject(raw['context']),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* SA-049 / SA-050 — Journal d'audit                                    */
+/* ------------------------------------------------------------------ */
+
+export interface AuditLogEntry {
+  id: number;
+  createdAt: string | null;
+  actorKind: string;
+  actorUserId: string | null;
+  actorProfileId: string | null;
+  actorName: string | null;
+  action: string;
+  objectType: string;
+  objectId: string | null;
+  result: string;
+  errorCode: string | null;
+  correlationId: string | null;
+  requestIp: string | null;
+  userAgent: string | null;
+  context: Record<string, unknown>;
+}
+
+/**
+ * `private.read_audit_log()` (0028, surchargee par 0083) renvoie les
+ * MEMES colonnes pour `admin_read_audit_log` (liste) et
+ * `admin_get_audit_entry` (detail, 0083) : un mapper unique suffit — la
+ * fiche SA-050 n'ajoute aucune donnee que la ligne de liste SA-049 ne
+ * porte deja (D-158, docs/decisions.md).
+ */
+export function toAuditLogEntry(value: unknown): AuditLogEntry | null {
+  const raw = asObject(value);
+  const id = num(raw['id']);
+  const action = str(raw['action']);
+  const objectType = str(raw['object_type']);
+  if (id === null || action === null || objectType === null) return null;
+  return {
+    id,
+    createdAt: str(raw['created_at']),
+    actorKind: str(raw['actor_kind']) ?? 'system',
+    actorUserId: str(raw['actor_user_id']),
+    actorProfileId: str(raw['actor_profile_id']),
+    actorName: str(raw['actor_name']),
+    action,
+    objectType,
+    objectId: str(raw['object_id']),
+    result: str(raw['result']) ?? 'success',
+    errorCode: str(raw['error_code']),
+    correlationId: str(raw['correlation_id']),
+    requestIp: str(raw['request_ip']),
+    userAgent: str(raw['user_agent']),
+    context: asObject(raw['context']),
+  };
+}
+
+export interface AuditActorOption {
+  profileId: string;
+  name: string;
+}
+
+export interface AuditOverview {
+  actions7d: number;
+  failures7d: number;
+  distinctActors7d: number;
+  totalEntries: number;
+  /** Valeurs REELLEMENT presentes dans le journal — jamais un vocabulaire invente. */
+  actions: string[];
+  objectTypes: string[];
+  actors: AuditActorOption[];
+}
+
+export function toAuditOverview(value: unknown): AuditOverview {
+  const raw = asObject(value);
+  return {
+    actions7d: num(raw['actions_7d']) ?? 0,
+    failures7d: num(raw['failures_7d']) ?? 0,
+    distinctActors7d: num(raw['distinct_actors_7d']) ?? 0,
+    totalEntries: num(raw['total_entries']) ?? 0,
+    actions: strings(raw['actions']),
+    objectTypes: strings(raw['object_types']),
+    actors: asArray(raw['actors']).flatMap((entry) => {
+      const item = asObject(entry);
+      const profileId = str(item['profile_id']);
+      const name = str(item['name']);
+      if (profileId === null || name === null) return [];
+      return [{ profileId, name }];
+    }),
   };
 }
