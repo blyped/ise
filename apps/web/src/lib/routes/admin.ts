@@ -30,6 +30,10 @@ export const ADMIN_ROUTES = {
   calls: '/administration/appels',
   /** SA-019 — File de moderation des opportunites. */
   opportunities: '/administration/opportunites',
+  /** SA-023 -> 026 — Projets & consortiums. */
+  projects: '/administration/projets',
+  /** SA-023 — Creation d'un projet. */
+  projectNew: '/administration/projets/nouveau',
   /** SA-018 / SA-038 — Moderation & signalements. */
   moderation: '/administration/moderation',
   /** SA-038 — File des tickets support. */
@@ -105,4 +109,14 @@ export function adminOpportunityCandidatesRoute(opportunityId: string): string {
 /** SA-022 — Cloture d'une opportunite et bilan d'impact. */
 export function adminOpportunityClosureRoute(opportunityId: string): string {
   return `${adminOpportunityRoute(opportunityId)}/cloture`;
+}
+
+/**
+ * SA-024/025/026 — Fiche d'un projet : statut adaptatif (publication,
+ * demandes de consortium, cloture). Un seul ecran, meme principe que la
+ * fiche campagne SA-013/014/015 : pas de decoupage en routes distinctes
+ * quand une seule fiche suffit a couvrir tout le cycle de vie.
+ */
+export function adminProjectRoute(projectId: string): string {
+  return `${ADMIN_ROUTES.projects}/${encodeURIComponent(projectId)}`;
 }

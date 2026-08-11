@@ -29,6 +29,7 @@ export const frAdmin = {
     promotions: 'Promotions',
     calls: 'Appels au réseau',
     opportunities: 'Opportunités',
+    projects: 'Projets & consortiums',
     moderation: 'Modération',
     support: 'Support',
     incompleteProfiles: 'Profils incomplets',
@@ -711,5 +712,13 @@ export const frAdmin = {
     opportunity_not_found: "Cette opportunité n'existe plus.",
     target_profile_required: 'Cette action exige un membre destinataire identifié.',
     permission_denied: "Vous n'avez pas accès à cette action.",
+    // SA-023 -> 026 — projets & consortiums (0094).
+    profile_not_found: 'Ce profil est introuvable.',
+    owner_not_eligible: 'Ce profil ne peut pas porter de projet (statut non éligible).',
+    missing_required_field: 'Le titre, le résumé et le résultat attendu sont obligatoires.',
+    project_not_found: "Ce projet n'existe plus.",
+    invalid_status: "Ce statut n'est pas valide ici.",
+    invalid_transition: "Cette transition n'est pas possible dans l'état actuel du projet.",
+    request_not_found: "Cette demande de consortium n'existe plus.",
   } as Record<string, string>,
 } as const;
