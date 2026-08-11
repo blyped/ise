@@ -29,14 +29,4 @@ suffixe commun.
 
 ---
 
-## Serie ISE — Espace membre (100 ecrans)
-
-Role : **Membre** (et **Eleve ISE** pour le module Stages). Web responsive + application mobile native.
-
-[ISE-TABLE-UNCHANGED-SEE-NOTE]
-
----
-
-## Serie SA — Back-office Superadmin (50 ecrans)
-
-[SA-TABLE-PARTIAL]
+RESTORE_IN_PROGRESS_SEE_TASK_36
