@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Compétences ISE",
+    "slug": "competences-ise-mobile",
+    "scheme": "competences-ise",
+    "owner": "optimum-conseil",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "backgroundColor": "#F7F9FC",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "org.competencesise.mobile"
+    },
+    "android": {
+      "package": "org.competencesise.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B214A"
+      }
+    },
+    "extra": {
+      "eas": {}
+    }
+  }
+}

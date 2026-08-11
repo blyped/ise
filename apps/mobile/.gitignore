@@ -1,0 +1,18 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+
+# Signing / credentials — jamais dans Git (MASTER PROMPT §76)
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
