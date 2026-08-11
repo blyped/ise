@@ -42,6 +42,27 @@ const styles = StyleSheet.create({
     gap: space[2],
   },
   label: {
+    ...textStyle.bodySm,
+    color: colors.textPrimary,
+    fontWeight: '600',
+  },
+  input: {
+    ...textStyle.body,
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: rounded.base,
+    paddingHorizontal: space[5],
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
+  },
+  inputFocused: {
+    borderColor: colors.actionBlue,
+  },
+  inputError: {
+    borderColor: colors.error,
+  },
+  error: {
     ...textStyle.caption,
     color: colors.error,
   },
