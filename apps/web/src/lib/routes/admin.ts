@@ -38,6 +38,10 @@ export const ADMIN_ROUTES = {
   communities: '/administration/communautes',
   /** SA-027 — Creation d'une communaute. */
   communityNew: '/administration/communautes/nouvelle',
+  /** SA-030 -> 033 — Evenements. */
+  events: '/administration/evenements',
+  /** SA-030 — Creation d'un evenement. */
+  eventNew: '/administration/evenements/nouveau',
   /** SA-018 / SA-038 — Moderation & signalements. */
   moderation: '/administration/moderation',
   /** SA-038 — File des tickets support. */
@@ -132,4 +136,15 @@ export function adminProjectRoute(projectId: string): string {
  */
 export function adminCommunityRoute(communityId: string): string {
   return `${ADMIN_ROUTES.communities}/${encodeURIComponent(communityId)}`;
+}
+
+/**
+ * SA-031/032/033 — Fiche d'un evenement : statut adaptatif (edition,
+ * cycle de vie, suivi des inscriptions/presence, bilan et instantane
+ * d'impact apres l'evenement). Meme principe que `adminProjectRoute`
+ * et `adminCommunityRoute` : un seul ecran couvre tout le cycle de vie
+ * operationnel plutot que d'etre fragmente en routes distinctes.
+ */
+export function adminEventRoute(eventId: string): string {
+  return `${ADMIN_ROUTES.events}/${encodeURIComponent(eventId)}`;
 }
