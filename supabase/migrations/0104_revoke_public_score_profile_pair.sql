@@ -1,0 +1,16 @@
+-- 0104_revoke_public_score_profile_pair
+-- Suite de 0103 : le privilege EXECUTE detecte par private.security_baseline_violations()
+-- provenait en realite du grant implicite a PUBLIC (comportement par defaut de
+-- Postgres a la creation d'une fonction), pas d'un grant direct a `anon`. Le
+-- retrait explicite fait en 0103 etait donc sans effet : `anon` continuait de
+-- recevoir EXECUTE via son appartenance a PUBLIC. 0062_anon_execute_hardening
+-- avait deja retire ce privilege par defaut sur 53 fonctions ; private.score_profile_pair
+-- (introduite en 0031, avant le durcissement de 0062) n'en faisait pas partie.
+--
+-- private.score_profile_pair n'est jamais appelee directement par un role
+-- client : le schema `private` n'est pas expose par PostgREST, et les seules
+-- fonctions publiques qui l'invoquent (moteur de dedoublonnage admin) sont
+-- SECURITY DEFINER et s'executent donc avec les privileges du proprietaire
+-- (postgres), pas ceux de l'appelant. Aucun GRANT a `authenticated` n'est donc
+-- necessaire apres ce retrait.
+revoke execute on function private.score_profile_pair(uuid, uuid) from public;

@@ -1,0 +1,13 @@
+-- 0103_revoke_anon_score_profile_pair
+-- Constat trouve via private.security_baseline_violations() (garde-fou CI,
+-- doit renvoyer 0 ligne : 0026_security_baseline_reassert) pendant l'audit de
+-- durcissement. `private.score_profile_pair(uuid, uuid)` -- utilisee par le
+-- moteur de dedoublonnage admin (0089) -- n'est pas SECURITY DEFINER et avait
+-- neanmoins EXECUTE accorde a `anon`, en dehors de la liste blanche des 10
+-- fonctions "public-safe" de D-125. La fonction lit private.profile_contacts
+-- (email/telephone normalises) et compare deux profils : un oracle de
+-- correspondance PII n'a aucune raison d'etre appelable sans authentification.
+-- anon n'a de toute facon pas USAGE sur le schema `private` depuis 0026, donc
+-- l'appel echouait deja en pratique ; ce retrait ferme neanmoins l'ecart avec
+-- la ligne de base documentee et remet le garde-fou a 0 ligne.
+revoke execute on function private.score_profile_pair(uuid, uuid) from anon;
