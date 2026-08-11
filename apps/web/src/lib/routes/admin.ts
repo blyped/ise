@@ -34,6 +34,10 @@ export const ADMIN_ROUTES = {
   projects: '/administration/projets',
   /** SA-023 — Creation d'un projet. */
   projectNew: '/administration/projets/nouveau',
+  /** SA-027 -> 029 — Communautes. */
+  communities: '/administration/communautes',
+  /** SA-027 — Creation d'une communaute. */
+  communityNew: '/administration/communautes/nouvelle',
   /** SA-018 / SA-038 — Moderation & signalements. */
   moderation: '/administration/moderation',
   /** SA-038 — File des tickets support. */
@@ -119,4 +123,13 @@ export function adminOpportunityClosureRoute(opportunityId: string): string {
  */
 export function adminProjectRoute(projectId: string): string {
   return `${ADMIN_ROUTES.projects}/${encodeURIComponent(projectId)}`;
+}
+
+/**
+ * SA-028/029 — Fiche d'une communaute : statut adaptatif (edition,
+ * cycle de vie, moderation des publications). Meme principe que
+ * `adminProjectRoute` : un seul ecran couvre tout le cycle de vie.
+ */
+export function adminCommunityRoute(communityId: string): string {
+  return `${ADMIN_ROUTES.communities}/${encodeURIComponent(communityId)}`;
 }

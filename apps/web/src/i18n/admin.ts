@@ -30,6 +30,7 @@ export const frAdmin = {
     calls: 'Appels au réseau',
     opportunities: 'Opportunités',
     projects: 'Projets & consortiums',
+    communities: 'Communautés',
     moderation: 'Modération',
     support: 'Support',
     incompleteProfiles: 'Profils incomplets',
@@ -376,7 +377,7 @@ export const frAdmin = {
     },
   },
 
-  /** SA-018 / SA-038 / SA-039 — Modération. */
+  /** SA-018 / SA-038 — Modération. */
   moderation: {
     title: 'Modération & signalements',
     subtitle: 'File des signalements, décisions motivées et traçabilité complète.',
@@ -720,5 +721,16 @@ export const frAdmin = {
     invalid_status: "Ce statut n'est pas valide ici.",
     invalid_transition: "Cette transition n'est pas possible dans l'état actuel du projet.",
     request_not_found: "Cette demande de consortium n'existe plus.",
+    // SA-027 -> 029 — communautés (0099).
+    community_not_found: "Cette communauté n'existe plus.",
+    community_post_not_found: "Cette publication n'existe plus.",
+    community_comment_not_found: "Ce commentaire n'existe plus.",
+    invalid_slug: 'Le slug doit être en minuscules, composé de lettres, chiffres et tirets uniquement (ex. : mon-slug).',
+    slug_already_exists: 'Ce slug est déjà utilisé par une autre communauté.',
+    community_missing_required_field: 'Le nom, le slug et la description sont obligatoires.',
+    community_discriminant_required: 'Ce type de communauté exige un pays ou un secteur associé.',
+    community_merge_target_required: 'Indiquez la communauté cible de la fusion (différente de la communauté d’origine).',
+    invalid_community_status: 'Cette transition de statut n’est pas possible pour cette communauté.',
+    invalid_moderation_action: 'Cette action de modération n’est pas possible dans l’état actuel de ce contenu.',
   } as Record<string, string>,
 } as const;

@@ -42,6 +42,11 @@ const CORE_NAV: readonly AdminNavItem[] = [
     label: frAdmin.nav.projects,
     requires: ['projects.manage'],
   },
+  {
+    href: ADMIN_ROUTES.communities,
+    label: frAdmin.nav.communities,
+    requires: ['communities.manage'],
+  },
   { href: ADMIN_ROUTES.moderation, label: frAdmin.nav.moderation, requires: ['profiles.moderate'] },
   { href: ADMIN_ROUTES.support, label: frAdmin.nav.support, requires: ['support.manage'] },
 ];
