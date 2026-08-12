@@ -393,3 +393,19 @@ jour où un accès strict serait ajouté. Ils sont corrigés dans le même commi
 neuf incidents séparés. L'alternative « directive `'use server'` par fonction plutôt que par
 fichier » a été écartée : elle aurait fait entrer tout le graphe d'imports serveur (`next/headers`,
 requêtes Supabase) dans les bundles client des composants qui importent les états initiaux.
+
+---
+
+## 19. En-tête membre — point d'entrée vers le back-office
+
+| #     | Décision                                                                                                                                                                                                                                                                                                                                                                                                          | Source                                                          |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| D-160 | **ADOPTÉE** — Un lien « Administration » apparaît dans l'en-tête membre (Topbar, à gauche du bloc compte), UNIQUEMENT quand le compte détient au moins une permission d'administration (`readAdminAccess()`, même source que la garde serveur `requireAdminAccess()`). La sidebar membre (§89, D-95) reste strictement inchangée. Demandé par le porteur du projet le 2026-08-12 : aucun point d'entrée visible n'existait, même pour un compte habilité. | `Topbar.tsx`, `AppShell.tsx`, `fr.ts` (`nav.adminArea`) |
+
+La séparation des deux navigations (§89 : aucun module admin dans la sidebar membre) est conservée —
+ce lien est un point d'entrée, pas une fusion des espaces. Le masquage n'a jamais été une protection
+(la garde réelle est `requireAdminAccess()` côté serveur + la revalidation de chaque fonction
+`admin_*` en base) : l'absence totale de point d'entrée n'apportait donc aucune sécurité, seulement
+de la friction pour les administrateurs. Coût assumé : `AppShell` exécute désormais
+`get_my_admin_permissions()` (une RPC légère) à chaque rendu de page membre ; si cette lecture
+échoue, le lien n'apparaît pas — un échec ne montre rien, il ne cache jamais un refus.

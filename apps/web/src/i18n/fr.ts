@@ -302,6 +302,8 @@ export const fr = {
     help: 'Aide & Support',
     comingSoonHint: 'Cette section sera ouverte dans une prochaine livraison.',
     accountMenuLabel: 'Mon compte',
+    /** D-160 — lien d'en-tete vers le back-office, visible seulement avec des permissions. */
+    adminArea: 'Administration',
   },
 
   dashboard: {

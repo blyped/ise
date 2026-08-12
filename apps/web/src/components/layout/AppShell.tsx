@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { newCorrelationId } from '@/lib/correlation';
+import { readAdminAccess } from '@/lib/admin/permissions';
 import { loadMaintenanceState, scopeMatchesPath } from '@/lib/queries/maintenance';
 import {
   MaintenanceScreen,
@@ -35,6 +36,15 @@ export interface AppShellProps {
 export async function AppShell({ currentPath, displayName, contextLine, children }: AppShellProps) {
   let content = children;
   let banner: ReactNode = null;
+
+  // D-160 — point d'entree du back-office dans l'en-tete, AFFICHE seulement
+  // si le compte detient au moins une permission d'administration
+  // (`get_my_admin_permissions`, meme source que la garde serveur). La
+  // sidebar membre (§89, D-95) reste inchangee : les deux navigations
+  // demeurent distinctes, seul un lien d'en-tete est ajoute. Une lecture en
+  // echec n'affiche rien — le lien est un confort, jamais un droit.
+  const adminAccess = await readAdminAccess();
+  const showAdminLink = adminAccess !== null && adminAccess.permissions.size > 0;
 
   if (!currentPath.startsWith('/administration')) {
     const maintenance = await loadMaintenanceState(newCorrelationId());
@@ -72,7 +82,7 @@ export async function AppShell({ currentPath, displayName, contextLine, children
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar displayName={displayName} contextLine={contextLine} />
+        <Topbar displayName={displayName} contextLine={contextLine} showAdminLink={showAdminLink} />
         <main id="contenu-principal" className="flex-1 px-7 py-8 max-md:px-5 max-md:py-6">
           <div className="mx-auto flex w-full max-w-[var(--layout-content-max)] flex-col gap-6">
             {banner}
