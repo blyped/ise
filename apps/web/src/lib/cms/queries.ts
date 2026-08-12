@@ -21,6 +21,7 @@ import type {
   CmsScheduleOrder,
   CmsScheduleStatus,
   CmsSection,
+  CmsTextPosition,
   CmsSourceMode,
   CmsStatus,
 } from './types';
@@ -110,6 +111,7 @@ const PLACEMENTS: readonly CmsPlacement[] = [
   'footer',
 ];
 const SOURCE_MODES: readonly CmsSourceMode[] = ['automatic', 'manual', 'hybrid'];
+const TEXT_POSITIONS: readonly CmsTextPosition[] = ['overlay', 'below', 'hidden'];
 const SCHEDULE_STATUSES: readonly CmsScheduleStatus[] = [
   'pending',
   'applied',
@@ -233,6 +235,7 @@ export async function loadCmsAutomationStatus(
 const CAROUSEL_COLUMNS =
   'id, title, subtitle, description, media_id, mobile_media_id, content_type, entity_type,' +
   ' entity_id, cta_label, start_at, end_at, priority, is_sponsored, partner_campaign_id,' +
+  ' text_position, dim_media,' +
   ' status, published_at, published_snapshot, previous_published_snapshot, updated_at';
 
 function toCarouselItem(
@@ -262,6 +265,8 @@ function toCarouselItem(
     startAt: nstr(row['start_at']),
     endAt: nstr(row['end_at']),
     priority: num(row['priority']),
+    textPosition: oneOf(row['text_position'], TEXT_POSITIONS, 'overlay'),
+    dimMedia: bool(row['dim_media']),
     isSponsored: bool(row['is_sponsored']),
     partnerCampaignId: campaignId,
     sponsoredLabel: campaignId === null ? null : (labelByCampaign.get(campaignId) ?? null),

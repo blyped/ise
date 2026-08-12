@@ -119,7 +119,10 @@ export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] })
       id={LANDING_ANCHORS.carousel}
       aria-roledescription={fr.public.carousel.roleDescription}
       aria-label={fr.public.carousel.label}
-      className="bg-deep-navy relative overflow-hidden rounded-xl"
+      // Hero pleine largeur, pleine hauteur d'ecran sous le menu (2026-08-12) :
+      // plus d'arrondi ni de gouttiere, la hauteur vise le viewport moins la
+      // barre superieure collante.
+      className="bg-deep-navy relative w-full overflow-hidden"
       onKeyDown={onKeyDown}
       onMouseEnter={() => setSuspended(true)}
       onMouseLeave={() => setSuspended(false)}
@@ -137,6 +140,68 @@ export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] })
         // La direction artistique mobile n'existe que si le CMS a publie un
         // second visuel. Sans lui, une seule image est demandee au reseau.
         const hasMobileVariant = slide.mobileMedia !== null;
+        // 0109 — options d'affichage par slide. Le voile est un choix
+        // editorial independant ; les textes sont sur l'image, dessous, ou
+        // absents. Une slide sponsorisee montre TOUJOURS sa mention (§26),
+        // meme quand les autres textes sont masques.
+        const dimClass = slide.dimMedia ? 'opacity-40' : '';
+        const showTexts = slide.textPosition !== 'hidden';
+        const overlayTexts = slide.textPosition === 'overlay';
+
+        const textBlock = (
+          <div
+            className={`relative flex max-w-[640px] flex-col gap-5 px-10 max-md:px-6 ${
+              overlayTexts ? 'py-11 max-md:py-8' : 'py-8 max-md:py-6'
+            }`}
+          >
+            {showTexts && kicker !== null ? (
+              <p className="text-overline text-text-inverse w-fit rounded-full bg-white/10 px-5 py-1 font-semibold uppercase tracking-[0.08em]">
+                {kicker}
+              </p>
+            ) : null}
+
+            {showTexts ? (
+              <h2 className="text-display text-text-inverse max-md:text-h1 font-bold">
+                {slide.title}
+              </h2>
+            ) : null}
+
+            {showTexts && slide.subtitle ? (
+              <p className="text-body-sm text-[#C7D2E5]">{slide.subtitle}</p>
+            ) : null}
+            {showTexts && slide.description ? (
+              <p className="text-body-sm max-w-[46ch] text-[#C7D2E5]">{slide.description}</p>
+            ) : null}
+
+            {slide.sponsored && slide.sponsoredLabel !== null ? (
+              <ImpressionTracker
+                eventType="public_partner_impression"
+                entityType={slide.target?.entityType ?? null}
+                entityId={slide.target?.entityId ?? null}
+                sectionKey={LANDING_SECTION_KEYS.carousel}
+                position={index + 1}
+              >
+                <p className="text-caption text-ise-gold font-semibold">{slide.sponsoredLabel}</p>
+              </ImpressionTracker>
+            ) : null}
+
+            {showTexts && route !== null && slide.ctaLabel !== null ? (
+              <ProtectedLink
+                target={route}
+                resourceType={resourceType}
+                className="rounded-base bg-ise-gold text-body-sm text-deep-navy mt-4 inline-flex min-h-[44px] w-fit items-center justify-center px-7 font-semibold transition-colors duration-150 hover:bg-[#C79232] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                event={slide.sponsored ? 'public_partner_click' : 'public_content_click'}
+                entityType={slide.target?.entityType ?? null}
+                entityId={slide.target?.entityId ?? null}
+                sectionKey={LANDING_SECTION_KEYS.carousel}
+                contentType={slide.contentType ?? undefined}
+                position={index + 1}
+              >
+                {slide.ctaLabel}
+              </ProtectedLink>
+            ) : null}
+          </div>
+        );
 
         return (
           <div
@@ -145,7 +210,9 @@ export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] })
             aria-roledescription={fr.public.carousel.slideRoleDescription}
             aria-label={t(fr.public.carousel.position, { index: index + 1, total })}
             hidden={index !== current}
-            className="bg-deep-navy relative min-h-[320px] px-10 py-11 max-md:min-h-[260px] max-md:px-6 max-md:py-8"
+            className={`bg-deep-navy relative flex min-h-[calc(100dvh-var(--layout-topbar))] flex-col max-md:min-h-[calc(100dvh-var(--layout-topbar))] ${
+              overlayTexts ? 'justify-center' : 'justify-end'
+            }`}
           >
             {/*
               ADDENDUM §52 — image de fond.
@@ -176,78 +243,31 @@ export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] })
                 media={slide.media}
                 sizes="100vw"
                 priority={index === 0}
-                className={`object-cover opacity-40 ${hasMobileVariant ? 'max-md:hidden' : ''}`}
+                className={`object-cover ${dimClass} ${hasMobileVariant ? 'max-md:hidden' : ''}`}
               />
               {hasMobileVariant ? (
                 <LandingMediaImage
                   media={slide.mobileMedia}
                   sizes="100vw"
                   priority={index === 0}
-                  className="object-cover opacity-40 md:hidden"
+                  className={`object-cover ${dimClass} md:hidden`}
                 />
               ) : null}
             </div>
 
-            <div className="relative flex max-w-[640px] flex-col gap-5">
-              {kicker === null ? null : (
-                <p className="text-overline text-text-inverse w-fit rounded-full bg-white/10 px-5 py-1 font-semibold uppercase tracking-[0.08em]">
-                  {kicker}
-                </p>
-              )}
-
-              <h2 className="text-display text-text-inverse max-md:text-h1 font-bold">
-                {slide.title}
-              </h2>
-
-              {slide.subtitle ? (
-                <p className="text-body-sm text-[#C7D2E5]">{slide.subtitle}</p>
-              ) : null}
-              {slide.description ? (
-                <p className="text-body-sm max-w-[46ch] text-[#C7D2E5]">{slide.description}</p>
-              ) : null}
-
-              {/*
-                ADDENDUM §26 — une diapositive commerciale porte sa mention en
-                texte. `sponsoredLabel` est garanti non vide par le parseur des
-                que `sponsored` est vrai : il n'existe pas de chemin de rendu
-                sans mention. L'impression, elle, n'est comptee que si la
-                diapositive est reellement affichee **et** visible (§50) —
-                d'ou `ImpressionTracker` autour de la seule diapositive
-                courante.
-              */}
-              {slide.sponsored && slide.sponsoredLabel !== null ? (
-                <ImpressionTracker
-                  eventType="public_partner_impression"
-                  entityType={slide.target?.entityType ?? null}
-                  entityId={slide.target?.entityId ?? null}
-                  sectionKey={LANDING_SECTION_KEYS.carousel}
-                  position={index + 1}
-                >
-                  <p className="text-caption text-ise-gold font-semibold">{slide.sponsoredLabel}</p>
-                </ImpressionTracker>
-              ) : null}
-
-              {route !== null && slide.ctaLabel !== null ? (
-                <ProtectedLink
-                  target={route}
-                  resourceType={resourceType}
-                  className="rounded-base bg-ise-gold text-body-sm text-deep-navy mt-4 inline-flex min-h-[44px] w-fit items-center justify-center px-7 font-semibold transition-colors duration-150 hover:bg-[#C79232] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                  event={slide.sponsored ? 'public_partner_click' : 'public_content_click'}
-                  entityType={slide.target?.entityType ?? null}
-                  entityId={slide.target?.entityId ?? null}
-                  sectionKey={LANDING_SECTION_KEYS.carousel}
-                  contentType={slide.contentType ?? undefined}
-                  position={index + 1}
-                >
-                  {slide.ctaLabel}
-                </ProtectedLink>
-              ) : null}
-            </div>
+            {showTexts || (slide.sponsored && slide.sponsoredLabel !== null)
+              ? overlayTexts
+                ? textBlock
+                : // « Sous l'image » : bande bleu nuit opaque, ancree en bas du hero.
+                  <div className="bg-deep-navy/95 relative w-full">{textBlock}</div>
+              : null}
           </div>
         );
       })}
 
-      <div className="relative flex items-center gap-5 px-10 pb-8 max-md:px-6 max-md:pb-6">
+      {/* Hero plein ecran : les commandes flottent en bas a droite, pour ne
+          pas chevaucher les textes ancres a gauche. */}
+      <div className="absolute bottom-6 right-10 z-10 flex items-center gap-5 max-md:right-6">
         <button type="button" className={CONTROL} onClick={() => goTo(current - 1)}>
           <Arrow direction="previous" />
           <span className="sr-only">{fr.public.carousel.previous}</span>

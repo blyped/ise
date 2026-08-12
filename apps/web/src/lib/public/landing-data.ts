@@ -238,6 +238,10 @@ export interface LandingSlide {
   readonly sponsored: boolean;
   /** Mention imposee par §26. Jamais vide des que `sponsored` est vrai. */
   readonly sponsoredLabel: string | null;
+  /** 0109 — position des textes : sur l'image, dessous, ou masques. */
+  readonly textPosition: 'overlay' | 'below' | 'hidden';
+  /** 0109 — voile sombre sur le visuel. */
+  readonly dimMedia: boolean;
 }
 
 /** ADDENDUM §12 — une actualite, teaser public-safe. */
@@ -561,6 +565,9 @@ export const slideSchema = z
     mobile_media: z.unknown(),
     is_sponsored: booleanFlag,
     sponsored_label: z.unknown(),
+    // 0109 — repli 'overlay'/voile pour les instantanes anterieurs.
+    text_position: z.unknown(),
+    dim_media: z.unknown(),
   })
   .transform<LandingSlide>((row) => ({
     id: row.id,
@@ -575,6 +582,11 @@ export const slideSchema = z
     sponsored: row.is_sponsored,
     // §26 : des qu'une diapositive est commerciale, elle porte une mention.
     sponsoredLabel: row.is_sponsored ? normalizeSponsoredLabel(row.sponsored_label) : null,
+    textPosition:
+      row.text_position === 'below' || row.text_position === 'hidden'
+        ? row.text_position
+        : 'overlay',
+    dimMedia: row.dim_media !== false,
   }));
 
 export const newsSchema = z

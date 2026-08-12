@@ -37,6 +37,14 @@ export const CMS_CONTENT_TYPES = [
 ] as const;
 export type CmsContentType = (typeof CMS_CONTENT_TYPES)[number];
 
+/**
+ * Position des textes d'une slide (0109) : sur l'image (historique), sous
+ * l'image sur le bandeau bleu nuit, ou masques (le titre reste en base :
+ * administration et lecteurs d'ecran).
+ */
+export const CMS_TEXT_POSITIONS = ['overlay', 'below', 'hidden'] as const;
+export type CmsTextPosition = (typeof CMS_TEXT_POSITIONS)[number];
+
 export const CMS_PLACEMENTS = [
   'carousel',
   'partners_band',
@@ -115,6 +123,10 @@ export interface CmsCarouselItem {
   startAt: string | null;
   endAt: string | null;
   priority: number;
+  /** 0109 — position des textes sur la landing. */
+  textPosition: CmsTextPosition;
+  /** 0109 — voile sombre sur le visuel (option independante des textes). */
+  dimMedia: boolean;
   isSponsored: boolean;
   partnerCampaignId: string | null;
   sponsoredLabel: string | null;

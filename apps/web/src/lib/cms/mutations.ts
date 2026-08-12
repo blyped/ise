@@ -119,6 +119,10 @@ export interface CarouselDraft {
   startAt: string | null;
   endAt: string | null;
   priority: number;
+  /** 0109 — 'overlay' | 'below' | 'hidden'. */
+  textPosition: string;
+  /** 0109 — voile sombre sur le visuel. */
+  dimMedia: boolean;
   partnerCampaignId: string | null;
 }
 
@@ -136,6 +140,8 @@ function carouselPayload(draft: CarouselDraft): Record<string, unknown> {
     start_at: draft.startAt,
     end_at: draft.endAt,
     priority: draft.priority,
+    text_position: draft.textPosition,
+    dim_media: draft.dimMedia,
     // `is_sponsored` n'est pas un choix libre : la contrainte
     // `cms_carousel_items_sponsored_traceable` impose l'egalite stricte
     // avec la presence d'une campagne. On la respecte a la source.

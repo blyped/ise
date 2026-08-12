@@ -252,6 +252,43 @@ export function CarouselForm({
 
           <div className="grid gap-5 lg:grid-cols-2">
             <CmsField
+              name="textPosition"
+              label={frCms.carousel.fieldTextPosition}
+              hint={frCms.carousel.fieldTextPositionHelp}
+              error={errors['textPosition']}
+            >
+              {(props) => (
+                <select
+                  {...props}
+                  defaultValue={item?.textPosition ?? 'overlay'}
+                  className={CMS_INPUT_CLASS}
+                >
+                  <option value="overlay">{frCms.carousel.textPositionOverlay}</option>
+                  <option value="below">{frCms.carousel.textPositionBelow}</option>
+                  <option value="hidden">{frCms.carousel.textPositionHidden}</option>
+                </select>
+              )}
+            </CmsField>
+
+            <CmsField
+              name="dimMedia"
+              label={frCms.carousel.fieldDimMedia}
+              hint={frCms.carousel.fieldDimMediaHelp}
+              error={errors['dimMedia']}
+            >
+              {(props) => (
+                <input
+                  {...props}
+                  type="checkbox"
+                  defaultChecked={item?.dimMedia ?? true}
+                  className="border-border text-primary focus-visible:outline-active-blue mt-3 h-5 w-5 rounded border focus-visible:outline-2 focus-visible:outline-offset-2"
+                />
+              )}
+            </CmsField>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <CmsField
               name="priority"
               label={frCms.carousel.fieldPriority}
               error={errors['priority']}

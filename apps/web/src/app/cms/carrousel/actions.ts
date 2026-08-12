@@ -52,6 +52,9 @@ const draftSchema = z
     startAt: z.string().nullable(),
     endAt: z.string().nullable(),
     priority: z.number().int().min(0).max(1000),
+    // 0109 — options d'affichage de la slide.
+    textPosition: z.enum(['overlay', 'below', 'hidden']),
+    dimMedia: z.boolean(),
     partnerCampaignId: z.string().uuid().nullable(),
   })
   // La contrainte `cms_carousel_items_entity_pair` exige les deux ou aucun.
@@ -82,6 +85,8 @@ function readDraft(formData: FormData): CarouselDraft | { error: z.ZodError } {
     startAt: timestamp(formData, 'startAt'),
     endAt: timestamp(formData, 'endAt'),
     priority: integer(formData, 'priority', 0),
+    textPosition: requiredText(formData, 'textPosition') || 'overlay',
+    dimMedia: formData.get('dimMedia') === 'on',
     partnerCampaignId: text(formData, 'partnerCampaignId'),
   });
   if (!parsed.success) return { error: parsed.error };

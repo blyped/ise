@@ -16,18 +16,22 @@ import { SectionShell } from './SectionShell';
 export function CarouselSection({ section }: { section: LandingSection<LandingSlide> }) {
   const unavailable = section.status === 'indisponible';
 
+  // Hero pleine largeur (demande du porteur, 2026-08-12) : avec du contenu,
+  // le carrousel sort du gabarit de section et occupe tout l'ecran sous le
+  // menu — aucune gouttiere, aucun arrondi. L'etat vide, lui, reste un
+  // message editorial : il garde l'enveloppe classique.
+  if (section.items.length > 0) {
+    return <LandingCarousel slides={section.items} />;
+  }
+
   return (
     <SectionShell className="pt-9 max-md:pt-6">
-      {section.items.length === 0 ? (
-        <EmptyState
-          title={unavailable ? frPublic.degraded.sectionUnavailable : fr.public.carousel.emptyTitle}
-          description={
-            unavailable ? frPublic.degraded.sectionUnavailableBody : fr.public.carousel.emptyBody
-          }
-        />
-      ) : (
-        <LandingCarousel slides={section.items} />
-      )}
+      <EmptyState
+        title={unavailable ? frPublic.degraded.sectionUnavailable : fr.public.carousel.emptyTitle}
+        description={
+          unavailable ? frPublic.degraded.sectionUnavailableBody : fr.public.carousel.emptyBody
+        }
+      />
     </SectionShell>
   );
 }

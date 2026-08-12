@@ -213,6 +213,15 @@ export const frCms = {
     fieldStart: 'Début de diffusion',
     fieldEnd: 'Fin de diffusion',
     fieldPriority: 'Priorité (0 à 1000)',
+    fieldTextPosition: 'Affichage des textes',
+    fieldTextPositionHelp:
+      'Sur l’image, sous l’image (bandeau bleu nuit), ou masqués. Le titre reste requis : il sert à l’administration et aux lecteurs d’écran.',
+    textPositionOverlay: 'Sur l’image',
+    textPositionBelow: 'Sous l’image',
+    textPositionHidden: 'Masqués',
+    fieldDimMedia: 'Assombrir le visuel',
+    fieldDimMediaHelp:
+      'Applique un voile sombre sur l’image. Recommandé quand les textes sont affichés sur l’image, pour la lisibilité.',
     fieldSponsored: 'Slide sponsorisée',
     fieldCampaign: 'Campagne partenaire',
     sponsoredHelp:
