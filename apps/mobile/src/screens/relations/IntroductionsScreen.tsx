@@ -531,4 +531,5 @@ const styles = StyleSheet.create({
   timelineBody: { flex: 1, gap: 2 },
   timelineStepDone: { ...textStyle.bodySm, fontWeight: '700', color: colors.textPrimary },
   timelineStepPending: { ...textStyle.bodySm, color: colors.textMuted },
+  timelineState: { ...textStyle.caption, color: colors.textMuted },
 });
