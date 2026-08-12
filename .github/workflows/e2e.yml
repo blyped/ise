@@ -80,7 +80,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Installer les navigateurs Playwright
-        run: pnpm --filter @ise/web exec playwright install --with-deps chromium
+        # webkit en plus de chromium : le projet `mobile-375` emule un
+        # iPhone SE (playwright.config.ts), dont le navigateur par defaut
+        # est WebKit — sans lui, TOUS les scenarios mobiles echouent au
+        # lancement du navigateur (constat du run #8).
+        run: pnpm --filter @ise/web exec playwright install --with-deps chromium webkit
 
       - name: Build de production
         run: pnpm --filter @ise/web build
