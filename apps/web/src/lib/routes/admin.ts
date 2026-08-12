@@ -42,6 +42,10 @@ export const ADMIN_ROUTES = {
   events: '/administration/evenements',
   /** SA-030 — Creation d'un evenement. */
   eventNew: '/administration/evenements/nouveau',
+  /** Redaction administrative des actualites (0110, tache #83). */
+  news: '/administration/actualites',
+  /** Creation d'un article. */
+  newsNew: '/administration/actualites/nouveau',
   /** SA-018 / SA-038 — Moderation & signalements. */
   moderation: '/administration/moderation',
   /** SA-038 — File des tickets support. */
@@ -147,4 +151,9 @@ export function adminCommunityRoute(communityId: string): string {
  */
 export function adminEventRoute(eventId: string): string {
   return `${ADMIN_ROUTES.events}/${encodeURIComponent(eventId)}`;
+}
+
+/** Fiche d'un article : edition du contenu + cycle de vie editorial (0110). */
+export function adminNewsRoute(newsId: string): string {
+  return `${ADMIN_ROUTES.news}/${encodeURIComponent(newsId)}`;
 }

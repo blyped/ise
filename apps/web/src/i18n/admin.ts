@@ -32,6 +32,7 @@ export const frAdmin = {
     projects: 'Projets & consortiums',
     communities: 'Communautés',
     events: 'Événements',
+    news: 'Actualités',
     moderation: 'Modération',
     support: 'Support',
     incompleteProfiles: 'Profils incomplets',
@@ -743,5 +744,11 @@ export const frAdmin = {
     event_missing_online_url: 'Renseignez le lien de connexion avant de publier cet événement (format en ligne ou hybride).',
     event_cancellation_reason_required: 'Le motif d’annulation est obligatoire (au moins 5 caractères).',
     event_registration_not_found: "Cette inscription n'existe plus.",
+    // Actualités — rédaction administrative (0110).
+    news_not_found: "Cet article n'existe plus.",
+    news_missing_required_field: 'Le titre (3 caractères minimum) et le résumé (400 caractères maximum) sont obligatoires.',
+    invalid_category: "Cette catégorie n'existe pas ou n'est plus active.",
+    news_scope_target_required: 'Indiquez la promotion ou la communauté correspondant à la visibilité choisie.',
+    news_source_url_required: 'Indiquez le lien de la source (obligatoire pour ce type de source).',
   } as Record<string, string>,
 } as const;

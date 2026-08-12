@@ -429,3 +429,37 @@ accepte `dryRun` et `onlyEmail` (pilote), et passe par les façades `srv_*` (010
 `private` n'est pas exposé à PostgREST. Un lien d'activation expiré n'est pas une impasse : l'écran
 `/activer-mon-compte` sans session oriente vers « Mot de passe oublié », qui joue exactement le même
 rôle sur un compte existant.
+
+---
+
+## 21. Rédaction administrative des actualités (SA-034, module éditorial manquant)
+
+| #     | Décision                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Source                                                                                                                                              |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-162 | **ADOPTÉE** — Un écran `/administration/actualités` (permission `content.publish`) permet de rédiger, modifier et publier un article directement, sans passer par SQL. Demandé par le porteur le 2026-08-12 : après le lancement, il n'existait aucun moyen de créer une actualité — `/cms/actualites` (D-128) ne pilote que l'exposition sur la landing d'articles déjà existants. Cet écran **supersede la classification « non livré » de SA-034** (décision C-07, 2026-08-11) : SA-034 est désormais livré. SA-035→038 (support & signalements) restent hors périmètre, inchangés. | `0110_admin_news_authoring_api.sql`, `administration/actualites/**`, `lib/admin/queries-news.ts`, `i18n/admin-news.ts` |
+
+Cycle éditorial volontairement restreint à l'usage réel : `admin_set_news_status` n'autorise que
+`draft ↔ published ↔ archived` (jamais `submitted`/`under_review`/`approved`/`rejected`/`duplicate`,
+qui appartiendraient à un circuit de **soumission membre** non construit — aucun écran ne l'expose,
+et `news_editorial_status_check` (0013) continue de les accepter en base sans que cette tranche les
+utilise). `admin_create_news`/`admin_update_news`/`admin_set_news_status` et `admin_list_news` sont
+neuves ; la lecture détail réutilise `public.get_news()` tel quel, comme SA-031 réutilise
+`get_event` — `private.can_see_news()` (0046) accorde déjà un bypass à `content.publish`, y compris
+pour les statuts non publiés.
+
+Frontière D-128 réaffirmée, pas rouverte : cette tranche ne touche jamais `landing_visibility` /
+`landing_priority` / `is_featured`. Publier éditorialement un article ici ne le rend pas visible sur
+la landing — l'exposition reste le rôle exclusif de `/cms/actualites`, une fois l'article publié.
+Un bandeau le rappelle sur la fiche article dès que le statut passe à « Publié ».
+
+Le formulaire d'édition omet volontairement la visibilité (tous les membres / promotion /
+communauté) : `NewsDetail` (`content-view.ts`) ne projette que le LIBELLÉ résolu de la promotion/
+communauté associée, jamais son identifiant brut, et `admin_update_news` réécrit
+`promotion_id`/`community_id` dès que `p_visibility` est fourni — les reproposer sans l'identifiant
+réel aurait risqué d'écraser silencieusement le rattachement existant. La portée se règle donc à la
+création et reste stable ensuite ; une évolution ultérieure pourra exposer les identifiants bruts
+si ce besoin se confirme.
+
+Les deux articles de lancement, insérés directement par SQL avant que cette tranche n'existe,
+restent en base tels quels (aucune migration de données) : ils sont désormais éditables normalement
+depuis ce nouvel écran.

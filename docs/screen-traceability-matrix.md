@@ -365,7 +365,7 @@ Storage additive, `ise_public_assets_cms_write`.
 | SA — Projets & communautes                           | 3 (`SA-027` → `SA-029`)    | Phase 6  | livre (web)                                                    |
 | SA — Evenements (gestion, SA-030) | 1 (`SA-030`) | Phase 6 | livre (web) |
 | SA — Evenements detail/suivi/bilan | 3 (`SA-031` → `SA-033`) | Phase 6 | livre (web) |
-| SA — Contenus editoriaux | 1 (`SA-034`) | Phase 6 | non livre (couvert par SA-018/CMS, decision C-07) |
+| SA — Contenus editoriaux | 1 (`SA-034`) | Phase 6 | livre (web) — `/administration/actualites`, decision D-162 (supersede C-07 pour SA-034) |
 | SA — Support & signalements                          | 4 (`SA-035` → `SA-038`)    | Phase 6  | non livre (couvert par SA-018/CMS, decision C-07)                                                          |
 | SA — Imports & qualite des donnees                   | 6 (`SA-039` → `SA-044`)    | Phase 6  | SA-039 livre (support) ; SA-043 livre (deplace, profils-incomplets) ; SA-040/041/042/044 abandonnes (decision C-06) |
 | SA — Analytics                                       | 3 (`SA-045` → `SA-047`)    | Phase 6  | SA-046/047 livres ; SA-045 abandonne (decision C-06, campagne de completude retiree avec l'import en masse) |
