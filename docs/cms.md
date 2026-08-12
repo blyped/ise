@@ -36,7 +36,7 @@ Audit mené sur la base réelle (`list_tables`, `execute_sql`) avant toute écri
 ### 2.1 Ce qui existait déjà et qui est réutilisé tel quel
 
 | Besoin de PUB-001            | Objet existant réutilisé                                                                                                                                                                     | Pourquoi aucune table nouvelle                                                                                                                                                                                                                                             |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Actualités                   | `public.news` (0013) — `title`, `slug`, `summary`, `image_path`, `editorial_status`, `published_at`, `is_featured`, `featured_at`, `visibility`, `category_code`, `duplicate_of_news_id`     | Le module porte déjà le cycle éditorial complet (`draft` → `submitted` → `under_review` → `approved` → `published`), l'image de couverture et la mise à la une. Recréer une table d'actualités publiques serait le doublon explicitement interdit (addendum §11, CDC §51). |
 | Mise à la une des actualités | `news.is_featured` + `news.featured_at`                                                                                                                                                      | **Existent déjà.** Aucune colonne `featured` n'a été ajoutée à `news`.                                                                                                                                                                                                     |
 | Événements                   | `public.events` (0013) — `title`, `slug`, `starts_at`, `ends_at`, `timezone`, `format`, `city`, `country_code`, `status`, `cancelled_at`, `visibility`                                       | Le filtre « publié, futur, non annulé » se calcule sur ces colonnes. Un événement passé quitte la section **de lui-même** : aucun drapeau à maintenir (addendum §12).                                                                                                      |
@@ -55,7 +55,7 @@ Audit mené sur la base réelle (`list_tables`, `execute_sql`) avant toute écri
 ### 2.2 Colonnes ajoutées aux tables métier — strict minimum
 
 | Table                             | Colonne                                                           | Pourquoi elle était nécessaire                                                                                                                                                                                                                                                            |
-| --------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ---------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ise_profiles`                    | `public_summary text` (40–400 car.)                               | `bio` et `headline` sont des champs **internes**, rédigés pour un lectorat de membres authentifiés. Les promouvoir sur le web ouvert sans consentement violerait D-73 et le MASTER PROMPT §47. Le résumé public est un texte distinct, écrit en sachant qu'il sera public (addendum §16). |
 | `ise_profiles`                    | `allow_public_feature boolean not null default false`             | Opt-in explicite. Aucun profil ne paraît publiquement sans acte positif du membre.                                                                                                                                                                                                        |
 | `news`, `events`, `opportunities` | `landing_visibility text` (`hidden` / `visible`), défaut `hidden` | `visibility` (`members` / `promotion` / `community`) dit **à qui** un contenu s'adresse _dans le réseau_. Elle ne dit pas s'il peut paraître sur le web ouvert. Confondre les deux publierait automatiquement des contenus de promotion.                                                  |
@@ -75,13 +75,13 @@ Audit mené sur la base réelle (`list_tables`, `execute_sql`) avant toute écri
 ### 2.3 Les huit tables créées
 
 | Table                          | Écran   | Pourquoi elle ne pouvait pas être une table existante                                                                                                                                                                        |
-| ------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `cms_media_assets`             | CMS-008 | Storage détient les octets ; aucune table ne détenait `alt_text`, crédit, dimensions, variantes ni références d'usage. `alt_text` est **NOT NULL** : un média sans alternative textuelle n'est pas publiable (addendum §52). |
 | `cms_sections`                 | CMS-003 | Le squelette de la landing (ordre, activation, source automatique/manuelle, nombre de cartes) n'existe nulle part. Ne contient **aucun** contenu métier.                                                                     |
 | `cms_carousel_items`           | CMS-002 | Le texte éditorial d'une slide n'existe dans aucune table métier. La slide _pointe_ la ressource par `entity_type` + `entity_id`.                                                                                            |
 | `cms_partner_campaigns`        | CMS-007 | Une campagne a une période, un emplacement, un CTA et une **mention de transparence obligatoire**. `organizations` ne porte rien de tout cela.                                                                               |
 | `cms_publication_schedule`     | CMS-009 | Table **commune** volontairement : le calendrier doit montrer actualités, événements, slides et campagnes sur une seule ligne de temps. Une colonne `publish_at` par table l'aurait rendu impossible.                        |
-| `cms_content_overrides`        | §43     | Primitive générique « source automatique + override éditorial borné » : épingler, exclure, masquer. Porte aussi l'exclusion « ISE du jour ».                                                                                 |
+| `cms_content_overrides`        | §43     | Primitive générique « source automatique + override éditorial borné » : épingler, exclure, masquer. Porte aussi l'exclusion « ISE du jour ».                                                                                |
 | `cms_featured_profile_rules`   | CMS-006 | Paramètres de sélection. Une seule ligne active (index unique partiel).                                                                                                                                                      |
 | `cms_featured_profile_history` | CMS-006 | Qui, quand, selon quel mode. **Aucune donnée de profil.** Support de la règle de rotation.                                                                                                                                   |
 
@@ -120,7 +120,7 @@ La RLS ne sait pas comparer `OLD` et `NEW` : sans ces triggers, un porteur de `c
 Pas de table `cms_versions`. Chaque table publiable porte quatre colonnes :
 
 | Colonne                                   | Rôle                                        |
-| ----------------------------------------- | ------------------------------------------- |
+| ------------------------------------------ | -------------------------------------------- |
 | _(colonnes vivantes)_                     | **le brouillon** — ce que l'éditeur modifie |
 | `published_snapshot jsonb`                | ce que **voit le site public**              |
 | `previous_published_snapshot jsonb`       | cible du rollback en un appel               |
@@ -151,7 +151,7 @@ cms.media.manage · cms.partners.manage · cms.featured_profile.manage
 Rôles éditoriaux créés, **dans le système existant** :
 
 | Rôle            | Permissions CMS                                                         |
-| --------------- | ----------------------------------------------------------------------- |
+| ---------------- | ------------------------------------------------------------------------- |
 | `superadmin`    | les sept                                                                |
 | `cms_publisher` | les sept                                                                |
 | `cms_editor`    | `cms.read`, `cms.edit`, `cms.media.manage` — **ni publish ni schedule** |
@@ -170,7 +170,7 @@ en `UPDATE` (`invalid_transition`).
 Toutes les politiques ciblent `to authenticated` et se résolvent par `private.has_permission()`.
 
 | Table                          | SELECT     | INSERT / UPDATE                                                                       | DELETE                                   |
-| ------------------------------ | ---------- | ------------------------------------------------------------------------------------- | ---------------------------------------- |
+| -------------------------------- | ---------- | ----------------------------------------------------------------------------------------- | ------------------------------------------- |
 | `cms_media_assets`             | `cms.read` | `cms.media.manage`                                                                    | `cms.media.manage`                       |
 | `cms_sections`                 | `cms.read` | `cms.edit`                                                                            | `cms.publish` **et** `not is_structural` |
 | `cms_carousel_items`           | `cms.read` | `cms.edit`                                                                            | `cms.publish`                            |
@@ -188,11 +188,12 @@ les fonctions de `0059`, qui journalisent. Une écriture directe casserait la pi
 ## 7. Projections public-safe (§44, §45)
 
 `anon` n'a **aucun** privilège sur `public`, `private` ni `analytics` — état posé en `0026`, **non
-assoupli**. Le site public appelle exclusivement dix fonctions `SECURITY DEFINER` :
+assoupli**. Le site public appelle exclusivement onze fonctions `SECURITY DEFINER` :
 
 | Fonction                                  | Ce qu'elle projette                                                         | Ce qu'elle ne projette jamais                                                          |
-| ----------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
 | `public.get_landing_carousel()`           | slides publiées et dans leur période, depuis le snapshot                    | une slide sponsorisée dont la campagne n'est plus active                               |
+| `public.get_landing_carousel_settings()`  | durée de rotation automatique en secondes (`platform_settings`, borne 3-60, D-163) | la table `platform_settings` elle-même, ni aucune autre clé qu'elle porte      |
 | `public.get_landing_sections()`           | squelette publié                                                            | une section non publiée                                                                |
 | `public.get_landing_news(int)`            | id, titre, slug, résumé, catégorie, image, date, à la une                   | le corps de l'article ; toute actualité `promotion` ou `community`                     |
 | `public.get_landing_events(int)`          | id, titre, slug, dates, fuseau, format, ville, pays                         | `online_url_private` ; les événements passés ou annulés                                |
@@ -203,8 +204,8 @@ assoupli**. Le site public appelle exclusivement dix fonctions `SECURITY DEFINER
 | `public.get_landing_stats()`              | quatre compteurs + **leur source nommée**                                   | aucun chiffre en dur                                                                   |
 | `public.record_public_landing_event(...)` | _(écriture)_ huit types d'événements publics                                | IP, empreinte, texte libre                                                             |
 
-Le contrôle `anon_function_grant` de `security_baseline_violations()` échoue si une onzième
-fonction est exposée à `anon`. Décision **D-125**.
+Le contrôle `anon_function_grant` de `security_baseline_violations()` échoue si une douzième
+fonction est exposée à `anon`. Décision **D-125**, liste étendue à onze noms par **D-163** (0111).
 
 ---
 
@@ -213,7 +214,7 @@ fonction est exposée à `anon`. Décision **D-125**.
 `get_landing_stats()` renvoie, pour chaque compteur, `{ value, source }` :
 
 | Compteur        | Source réelle                                                                                       |
-| --------------- | --------------------------------------------------------------------------------------------------- |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
 | `profiles`      | `ise_profiles` hors comptes de test, non supprimés, statut `referenced` ou `active`                 |
 | `promotions`    | promotions **effectivement représentées** par au moins un profil — pas les 72 lignes du référentiel |
 | `countries`     | pays distincts de `ise_profiles.current_country_code` ∪ `experiences.country_code`                  |
@@ -262,7 +263,7 @@ Le §10 annonçait le périmètre laissé à l'application. Il est désormais co
 Cinq choses ne pouvaient pas être résolues côté application :
 
 | Besoin                                     | Obstacle réel                                                                                                                                   | Réponse de `0067`                                                                                |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | Rediriger vers SYS-006 avant le rendu      | `private.permissions` et `private.user_roles` ne sont pas exposées à PostgREST                                                                  | `public.get_my_cms_permissions()`                                                                |
 | Lire `news` et `events` depuis le CMS      | leur RLS (0046) accorde la lecture par `can_see_news()` / `can_see_event()` et l'écriture par `content.publish` — jamais par une permission CMS | `list_cms_news()`, `list_cms_events()` — colonnes énumérées, sans `body` ni `online_url_private` |
 | Écrire l'exposition sur la landing (D-128) | même cause                                                                                                                                      | `set_landing_exposure()`, `set_news_featured()`                                                  |
@@ -313,7 +314,7 @@ ne savait pas l'afficher.
 ### 12.2 Ce que `0068` change
 
 | Objet                            | Avant                                        | Après                                                                               |
-| -------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------- |
+| ----------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Bucket public                    | aucun                                        | **`landing-media`**, et lui seul (D-134)                                            |
 | Destination de CMS-008           | `public-assets` (privé)                      | `landing-media`, sous `carousel/`, `partners/`, `news/` ou `sections/`              |
 | `cms_media_assets.bucket_id`     | défaut `public-assets`, `CHECK` à une valeur | défaut `landing-media`, `CHECK` à deux valeurs (D-137)                              |
