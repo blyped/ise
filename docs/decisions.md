@@ -463,3 +463,35 @@ si ce besoin se confirme.
 Les deux articles de lancement, insérés directement par SQL avant que cette tranche n'existe,
 restent en base tels quels (aucune migration de données) : ils sont désormais éditables normalement
 depuis ce nouvel écran.
+
+---
+
+## 22. Réglage de rotation automatique du carrousel et correction du survol (PUB-001)
+
+| #     | Décision | Source |
+| ----- | -------- | ------ |
+| D-163 | **ADOPTÉE** — La durée de rotation automatique du carrousel de la landing (`AUTOPLAY_MS`, figée à 7000 ms) devient un réglage administratif : `platform_settings` porte la clé `landing.hero_carousel.autoplay_seconds` (défaut 7, bornée 3-60 à la lecture), modifiable sans code depuis `/administration/parametres` (écran générique déjà livré, SA-048). Une dixième projection `get_landing_carousel_settings()` l'expose à `anon`, sur le même modèle que les neuf projections de 0061. | `0111_landing_carousel_autoplay_setting.sql`, `lib/public/landing-data.ts`, `LandingCarousel.tsx` |
+
+`cms_sections` (ligne `section_key = 'hero_carousel'`, colonne `configuration` jsonb) a été
+écarté comme support de ce réglage : cette ligne reste `status = 'draft'` sans
+`published_snapshot`, `get_landing_sections()` ne la retourne donc jamais, et sa colonne
+`configuration` n'est de toute façon exposée ni par `apps/web/src/app/cms/sections/SectionEditor.tsx`
+ni consommée par `landing-data.ts`. `platform_settings` était la voie la plus courte : générique,
+déjà pourvue d'un écran d'édition, sans aucun développement d'interface supplémentaire.
+
+La liste blanche du contrôle de sécurité `anon_function_grant`
+(`private.security_baseline_violations()`, dernière forme 0063) est étendue à onze noms dans la
+même migration : sans cette extension, le contrôle aurait lui-même signalé la nouvelle projection
+comme une fuite au premier appel. Vérifié après application : `security_baseline_violations()`
+renvoie toujours 0 ligne.
+
+**Correction du survol permanent, constatée par le porteur le 2026-08-12** : le carrousel
+n'avançait plus tout seul, et le bouton lecture/pause semblait sans effet. Cause réelle : depuis le
+passage du hero en plein écran (0109), la région `<section>` porteuse du carrousel couvre tout le
+viewport visible au chargement de la page ; `onMouseEnter`/`onMouseLeave` y suspendaient le
+défilement dès qu'une souris était présente n'importe où sur l'écran — y compris en survolant les
+commandes elles-mêmes, ce qui empêchait le bouton lecture/pause de refléter un état « en lecture »
+tant que le curseur restait dessus. Le survol-pause est retiré ; le focus clavier (`onFocusCapture`/
+`onBlurCapture`) et le bouton lecture/pause explicite restent les deux mécanismes d'arrêt, ce
+dernier suffisant seul à satisfaire WCAG 2.2.2 (mécanisme de pause explicite, sans exigence de
+survol).
