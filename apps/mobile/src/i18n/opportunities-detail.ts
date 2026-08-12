@@ -159,6 +159,7 @@ export const frOpportunitiesDetail = {
     titlePlaceholder: 'Ex. Consultant senior en suivi-évaluation',
     organizationLabel: 'Organisation',
     locationLabel: 'Lieu / pays',
+    locationPlaceholder: 'Ville, pays ou Remote',
     descriptionLabel: 'Description',
     descriptionPlaceholder: 'Contexte, responsabilités, durée et informations utiles…',
     skillsLabel: 'Compétences recherchées',
@@ -246,6 +247,24 @@ export const frOpportunitiesDetail = {
     see: 'Voir l’opportunité →',
     emptyTitle: 'Vous n’avez enregistré aucune opportunité.',
     emptyBody: 'Enregistrer une offre la met de côté. Cela ne vaut jamais candidature.',
+  },
+
+  /* ---------------- Mes offres (support ISE-060/061) ---------------- */
+  mine: {
+    title: 'Mes offres publiées',
+    subtitle: 'Vos opportunités actives, en brouillon, clôturées ou expirées.',
+    tabActive: 'Actives',
+    tabDrafts: 'Brouillons',
+    tabClosed: 'Clôturées',
+    tabExpired: 'Expirées',
+    emptyActiveTitle: 'Vous n’avez aucune offre active.',
+    emptyActiveBody: 'Publier une opportunité prend quelques minutes.',
+    emptyDraftsTitle: 'Aucun brouillon.',
+    emptyDraftsBody: 'Une offre commencée et non publiée apparaîtra ici.',
+    emptyOtherTitle: 'Rien à afficher dans cet onglet.',
+    emptyOtherBody: 'Les offres clôturées ou expirées apparaîtront ici.',
+    applicationsCount: '{count} candidatures',
+    targetedCount: '{count} profils ciblés',
   },
 
   /* ---------------- ISE-063 ---------------- */
