@@ -6,7 +6,6 @@ import { ADMIN_ROUTES, adminCommunityRoute } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
 import { loadAdminCommunities } from '@/lib/admin/queries-communities';
-import { formatDate } from '@/lib/admin/format';
 import { nextPageHref, paramOneOf, paramValue, type SearchParams } from '@/lib/admin/params';
 import { AdminShell } from '../_components/AdminShell';
 import { CursorPager, PageHeader, StatusBadge } from '../_components/PageHeader';

@@ -195,7 +195,7 @@ export default async function AdminProjectDetailPage({
                       label: frAdminProjects.detail.reviewConsortium,
                       options: CONSORTIUM_REVIEW_OPTIONS.map((value) => ({
                         value,
-                        label: frAdminProjects.consortium.status[value],
+                        label: frAdminProjects.consortium.status[value] ?? value,
                       })),
                     }}
                   />

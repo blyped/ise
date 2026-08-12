@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ErrorState, EmptyState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
 import { frAdminEvents } from '@/i18n/admin-events';
-import { ADMIN_ROUTES, adminEventRoute } from '@/lib/routes/admin';
+import { ADMIN_ROUTES } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
 import {
