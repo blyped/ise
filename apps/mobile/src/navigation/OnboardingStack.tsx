@@ -37,6 +37,22 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>();
  */
 export function OnboardingStack() {
   return (
-    <Stack.Screen name="CreerCompte" component={CreateAccountScreen} />
+    <Stack.Navigator
+      initialRouteName="OnboardingVerification"
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="CreerCompte" component={CreateAccountScreen} />
+      <Stack.Screen name="MotDePasseOublie" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ReinitialiserMotDePasse" component={ResetPasswordScreen} />
+      <Stack.Screen name="ReclamerProfilConfirmer" component={ClaimConfirmScreen} />
+      <Stack.Screen name="OnboardingVerification" component={VerificationScreen} />
+      <Stack.Screen name="OnboardingPromotion" component={PromotionScreen} />
+      <Stack.Screen name="OnboardingPromotionSignaler" component={MissingPromotionScreen} />
+      <Stack.Screen name="OnboardingCompetences" component={SkillsScreen} />
+      <Stack.Screen name="OnboardingSecteurs" component={SectorsScreen} />
+      <Stack.Screen name="OnboardingLocalisation" component={LocationScreen} />
+      <Stack.Screen name="OnboardingDisponibilite" component={AvailabilityScreen} />
+      <Stack.Screen name="OnboardingFinalisation" component={FinalizeScreen} />
+    </Stack.Navigator>
   );
 }
