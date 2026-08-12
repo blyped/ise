@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { Screen } from '../../components/Screen';
 import { fr } from '../../i18n/fr';
+import { profileManagement as pm } from '../../i18n/profile-management';
 import { useAuth } from '../../lib/auth/AuthProvider';
 import { newCorrelationId } from '../../lib/correlation';
 import {
@@ -13,6 +17,7 @@ import {
   type MemberProfile,
   type MemberPromotion,
 } from '../../lib/queries/profile';
+import { ProfileManagementStack } from '../../navigation/ProfileManagementStack';
 import { colors, rounded, space, textStyle } from '../../theme/tokens';
 
 type LoadState =
@@ -22,15 +27,41 @@ type LoadState =
   | { status: 'ready'; profile: MemberProfile; promotion: MemberPromotion | null };
 
 /**
+ * Pile locale de l'onglet « Moi » : ISE-016 (lecture) en racine, suivi de
+ * la pile de gestion de profil ISE-017 -> ISE-033 (`ProfileManagementStack`).
+ *
+ * Nichee ICI plutot que dans `AppTabs.tsx` pour ne modifier aucun fichier
+ * partage avec les autres tranches mobiles en cours (D-94, consigne
+ * d'isolation du brief) : `AppTabs` continue de monter `ProfileScreen`
+ * exactement comme avant, sans savoir qu'il s'agit desormais d'une pile.
+ */
+type ProfileTabParamList = {
+  ProfileHome: undefined;
+  ProfileManagement: undefined;
+};
+
+const Stack = createNativeStackNavigator<ProfileTabParamList>();
+
+export function ProfileScreen() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileHome" component={ProfileHomeScreen} />
+      <Stack.Screen name="ProfileManagement" component={ProfileManagementStack} />
+    </Stack.Navigator>
+  );
+}
+
+/**
  * Moi — ISE-016 « Mon profil » (coquille mobile, D-94).
  *
  * Meme lecture que `HomeScreen` (`loadMemberContext`, RPC `my_profile_completion`
  * — D-72, le score n'est jamais visible d'un autre membre), etendue a la
- * promotion. Le formulaire d'edition complet (ISE-017 → ISE-033) reste hors
- * de cette premiere tranche : cet ecran est une lecture seule de son propre
- * profil, plus la deconnexion.
+ * promotion. Le point d'entree « Modifier mon profil » ouvre desormais
+ * `ProfileManagementStack` (ISE-017 → ISE-033) ; cet ecran reste lui-meme
+ * une lecture seule de son propre profil, plus la deconnexion.
  */
-export function ProfileScreen() {
+function ProfileHomeScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileTabParamList>>();
   const { user, signOut } = useAuth();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
 
@@ -77,6 +108,12 @@ export function ProfileScreen() {
 
       {state.status === 'ready' ? (
         <ProfileCard profile={state.profile} promotion={state.promotion} />
+      ) : null}
+
+      {state.status === 'ready' ? (
+        <View style={styles.editEntry}>
+          <Button label={pm.hub.title} onPress={() => navigation.navigate('ProfileManagement')} />
+        </View>
       ) : null}
 
       <View style={styles.signOut}>
@@ -168,6 +205,9 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: colors.actionBlue,
     borderRadius: rounded.full,
+  },
+  editEntry: {
+    marginTop: space[5],
   },
   signOut: {
     marginTop: space[8],
