@@ -1,6 +1,7 @@
 /**
  * Sous-ensemble francais des libelles necessaires a cette premiere tranche
- * mobile (ISE-001 connexion, ISE-015 tableau de bord, navigation D-94).
+ * mobile (ISE-001 connexion, ISE-015 tableau de bord, ISE-040 relations,
+ * ISE-055 opportunites, ISE-016 mon profil, navigation D-94).
  *
  * Ce n'est PAS un package partage : `apps/web/src/i18n/fr.ts` reste la
  * source de verite pour le web. Les cles reprises ici portent volontairement
@@ -13,6 +14,7 @@ export const fr = {
   common: {
     loading: 'Chargement…',
     retry: 'Réessayer',
+    loadMore: 'Charger la suite',
     signOut: 'Se déconnecter',
     correlationLabel: 'Référence',
     comingSoonTitle: 'Écran à venir',
@@ -61,5 +63,16 @@ export const fr = {
       verified: 'Vérifié',
       rejected: 'Vérification refusée',
     },
+  },
+
+  /** ISE-040 — Mes relations (coquille mobile de `/reseau/relations`). */
+  network: {
+    title: 'Réseau',
+    errorTitle: 'Impossible de charger votre réseau.',
+    emptyTitle: 'Aucune relation pour le moment.',
+    emptyBody: 'Vos relations acceptées apparaîtront ici.',
+    statConnections: 'Relations',
+    statPromotions: 'Promotions',
+    statCountries: 'Pays',
   },
 } as const;
