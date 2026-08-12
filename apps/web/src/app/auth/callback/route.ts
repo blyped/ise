@@ -22,7 +22,12 @@ const OTP_TYPES: readonly EmailOtpType[] = [
  * `/reinitialiser-mot-de-passe`. Deux destinations sont emises par
  * l'application (ISE-002 et ISE-003) ; aucune autre n'est acceptee.
  */
-const ALLOWED_CALLBACK_TARGETS: readonly string[] = [ROUTES.dashboard, ROUTES.resetPassword];
+const ALLOWED_CALLBACK_TARGETS: readonly string[] = [
+  ROUTES.dashboard,
+  ROUTES.resetPassword,
+  // D-161 — cible des liens d'activation des comptes pre-crees.
+  ROUTES.activateAccount,
+];
 
 /**
  * ADDENDUM Google OAuth — la connexion par mot de passe (ISE-001) autorise

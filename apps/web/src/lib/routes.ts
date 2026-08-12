@@ -9,6 +9,13 @@ export const ROUTES = {
   signUp: '/creer-compte',
   forgotPassword: '/mot-de-passe-oublie',
   resetPassword: '/reinitialiser-mot-de-passe',
+  /**
+   * D-161 — Activation d'un compte pre-cree (provisioning du recensement).
+   * Cible du lien d'invitation Supabase : la session est ouverte par
+   * `/auth/callback` (type=invite), l'ecran fait choisir le mot de passe
+   * puis conduit au tableau de bord — le profil est deja lie et rempli.
+   */
+  activateAccount: '/activer-mon-compte',
   signOut: '/deconnexion',
   authCallback: '/auth/callback',
   dashboard: '/tableau-de-bord',
@@ -58,6 +65,11 @@ export const PUBLIC_ROUTES: readonly string[] = [
   ROUTES.signUp,
   ROUTES.forgotPassword,
   ROUTES.resetPassword,
+  // D-161 — publique pour pouvoir DIRE « lien expire » a un visiteur sans
+  // session, au lieu de le rebondir muettement vers l'ecran de connexion.
+  // Avec session, l'ecran montre le choix du mot de passe ; sans session,
+  // il n'expose rien d'autre que le message et un lien de recuperation.
+  ROUTES.activateAccount,
 ];
 
 /** Ecrans systeme : joignables dans tous les cas, connecte ou non. */
@@ -78,6 +90,7 @@ export const AUTH_ROUTE_PREFIXES: readonly string[] = [
   ROUTES.signUp,
   ROUTES.forgotPassword,
   ROUTES.resetPassword,
+  ROUTES.activateAccount,
   ROUTES.signOut,
   ROUTES.authCallback,
   ROUTES.sessionExpired,

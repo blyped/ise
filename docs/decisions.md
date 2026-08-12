@@ -409,3 +409,23 @@ ce lien est un point d'entrée, pas une fusion des espaces. Le masquage n'a jama
 de la friction pour les administrateurs. Coût assumé : `AppShell` exécute désormais
 `get_my_admin_permissions()` (une RPC légère) à chaque rendu de page membre ; si cette lecture
 échoue, le lien n'apparaît pas — un échec ne montre rien, il ne cache jamais un refus.
+
+---
+
+## 20. Provisioning direct des comptes du recensement
+
+| #     | Décision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Source                                                                                                    |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| D-161 | **ADOPTÉE** — Les 252 profils référencés issus du recensement reçoivent un compte pré-créé et pré-lié, et un e-mail « Activez votre compte » (lien d'invitation Supabase). L'intéressé clique, choisit son mot de passe (`/activer-mon-compte`), et atterrit sur son profil déjà rempli. Demandé par le porteur le 2026-08-12 : le parcours de réclamation (ISE-005→007) était trop exigeant comme porte d'entrée principale ; il est CONSERVÉ en filet de secours pour les e-mails de recensement invalides. Le mécanisme « mot de passe provisoire par e-mail » a été proposé puis écarté au profit du lien d'activation (validé par le porteur) : aucun secret ne circule par e-mail, et le « changement forcé au premier accès » n'a pas à être développé. | `0106_provision_referenced_account.sql`, `0107_provisioning_service_facades.sql`, Edge Function `provision-invitations`, `(auth)/activer-mon-compte/*`, `auth/callback/route.ts` |
+
+La liaison compte↔profil reproduit à l'identique les effets de `private.apply_claim_approval`
+(user_id, `claim_status='claimed'`, `profile_status='active'`, vérification `email` — la possession
+de l'adresse est prouvée par le clic sur le lien envoyé à cette adresse —, rôle `member`, trace
+d'audit `profile.account_provisioned`, évènement `profile.claimed` avec dédoublonnage
+`profile.provisioned:<id>`). Toute réclamation en cours sur un profil provisionné est rejetée avec
+la raison `profile_provisioned_directly`. L'Edge Function est réservée à `service_role`
+(verify_jwt + contrôle explicite du rôle), travaille par lots de 50 maximum avec étalement,
+accepte `dryRun` et `onlyEmail` (pilote), et passe par les façades `srv_*` (0107) puisque le schéma
+`private` n'est pas exposé à PostgREST. Un lien d'activation expiré n'est pas une impasse : l'écran
+`/activer-mon-compte` sans session oriente vers « Mot de passe oublié », qui joue exactement le même
+rôle sur un compte existant.

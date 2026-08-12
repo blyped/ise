@@ -135,6 +135,19 @@ export const fr = {
       samePassword: 'Choisissez un mot de passe différent de l’ancien.',
     },
 
+    /** D-161 — activation d'un compte pre-cree depuis le recensement. */
+    activateAccount: {
+      title: 'Bienvenue sur Compétences ISE',
+      subtitle:
+        'Votre profil vous attend, déjà rempli avec les informations du recensement. Choisissez votre mot de passe pour y accéder — vous pourrez ensuite le mettre à jour.',
+      submit: 'Activer mon compte',
+      submitPending: 'Activation…',
+      invalidLinkTitle: 'Ce lien d’activation n’est plus valable',
+      invalidLinkBody:
+        'Le lien a expiré ou a déjà été utilisé. Utilisez « Mot de passe oublié » avec votre adresse e-mail pour recevoir un nouveau lien.',
+      goToForgot: 'Recevoir un nouveau lien',
+    },
+
     signOut: {
       title: 'Se déconnecter',
       body: 'Vous êtes sur le point de fermer votre session sur cet appareil.',
