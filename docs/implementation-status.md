@@ -72,7 +72,7 @@ Légende : ✅ terminé — 🟡 partiel — ⬜ non démarré — ⬛ sans obje
 | Analytics                                         | SA-046→047             | 🟡          | ✅  | ⬜                                    | ✅           | ⬛     | Schéma `analytics` posé, 4 tables + 1 vue matérialisée, **aucun agrégat calculé sur des données réelles**                                                                                                                                                                                             | 🟡     |
 | Superadmin — paramètres plateforme & audit        | SA-048→050              | ✅          | ✅  | ✅ RLS 0031 cas G (paramètres), RLS 0038 (audit, 17 cas) | ✅ 3/3       | ⬛     | Lot données livré sous `/administration/parametres` (0082/0084) et `/administration/audit` (0083, lecture seule) : réglages de plateforme, feature flags, fenêtres de maintenance, et désormais le journal d'audit (`private.audit_log`) — liste filtrable (SA-049) et détail individuel journalisé (`audit.entry_read`, distinct de `audit.read`, SA-050, décision D-158). Aucune nouvelle fonction d'écriture créée : le backend (0028/0083) préexistait à cette tranche. | 🟡     |
 | OPS — supervision technique (**abandonné**, C-05) | OPS-001→028            | ⬜          | ⬜  | ⬜                                    | ⬛ 0/28      | ⬛     | Abandonné par décision du porteur (C-05) : supervision via Supabase/Vercel                                                                                                                                                                                                                            | ⬛     |
-| Application mobile                                | toutes séries          | ⬜          | ⬛  | ⬜                                    | ⬛           | ⬜     | `apps/mobile` n'est pas créé                                                                                                                                                                                                                                                                          | ⬜     |
+| Application mobile                                | toutes séries          | ⬜          | ⬛  | ⬜                                    | ⬛           | 🟡     | `apps/mobile` existe : coquille Expo/React Native (auth e-mail/mot de passe, 5 onglets D-94). 4 écrans branchés au backend réel — Accueil (ISE-015, `my_profile_completion`), Réseau (ISE-040, `list_my_connections` + `my_network_summary`), Opportunités (ISE-055, `list_opportunities`), Moi (ISE-016 : profil, promotion, complétion, déconnexion). `pnpm --filter @ise/mobile typecheck` : 0 erreur. Aucun test automatisé, aucun E2E, aucune des ~195 autres routes web encore portées (action centrale = coquille).                             | 🟡     |
 
 ---
 
@@ -127,7 +127,7 @@ fichiers ont été édités après application, ce que le README du dossier inte
 - `apps/web` — Next.js, App Router, **179 routes**. En-têtes de sécurité, middleware de session,
   aucune clé `service_role` côté client. **199 tests** (landing, redirections sûres, rendu,
   fiabilité, métadonnées d'image CMS, conflits de programmation, statuts de collaboration).
-- `apps/mobile` — **n'existe pas**.
+- `apps/mobile` — **existe** : scaffold Expo/React Native (auth, navigation 5 onglets D-94) + 4 écrans réels sur backend (Accueil ISE-015, Réseau ISE-040, Opportunités ISE-055, Moi ISE-016). `pnpm --filter @ise/mobile typecheck` passe à 0 erreur. Reste : action centrale (coquille), les ~195 autres routes web, aucun test, aucun E2E mobile.
 
 ---
 
@@ -234,4 +234,4 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
 8. **Réaligner les 20 migrations divergentes** — non pas en éditant les fichiers, mais en
    décidant explicitement quelle version fait foi et en consignant la décision.
 9. Compléter le chantier **Superadmin** : le cœur (SA-001→020, SA-038→039, SA-011→015, SA-021→022, SA-023→033) est livré. SA-034→037 couverts par l'existant (décision C-07). Paramètres plateforme & audit (SA-048→050) livrés — SA-049/050 le 2026-08-11 (`/administration/audit`, RLS 0038, décision D-158). OPS est abandonné (C-05).
-10. Créer `apps/mobile`.
+10. ~~Créer `apps/mobile`~~ — **fait** : scaffold + Accueil, Réseau, Opportunités, Moi (4 écrans réels sur backend). Reste à porter le reste des écrans membre et à ajouter des tests.
