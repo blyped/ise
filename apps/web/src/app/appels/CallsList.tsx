@@ -5,7 +5,8 @@ import { Button, ErrorState } from '@ise/ui-web';
 import { frCalls, tc } from '@/i18n/calls';
 import type { CallCard, CallScope } from '@/lib/calls-view';
 import { CallCardView } from '@/components/calls/CallCardView';
-import { initialLoadMoreCallsState, loadMoreCallsAction, type LoadMoreCallsState } from './actions';
+import { loadMoreCallsAction, type LoadMoreCallsState } from './actions';
+import { initialLoadMoreCallsState } from './states';
 
 export interface CallsListProps {
   initialRows: readonly CallCard[];

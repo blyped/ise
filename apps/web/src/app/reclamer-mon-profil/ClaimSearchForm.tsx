@@ -18,7 +18,8 @@ import { fr, t } from '@/i18n/fr';
 import { claimConfirmRoute } from '@/lib/routes';
 import { useZodForm } from '@/lib/use-zod-form';
 import type { ClaimableProfileSummary } from '@/lib/queries/claim';
-import { initialClaimSearchState, searchClaimAction } from './actions';
+import { searchClaimAction } from './actions';
+import { initialClaimSearchState } from './states';
 
 function toInput(formData: FormData) {
   return {

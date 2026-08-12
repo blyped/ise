@@ -5,11 +5,8 @@ import { Button, ErrorState } from '@ise/ui-web';
 import { frOpportunities, to } from '@/i18n/opportunities';
 import type { OpportunityCard, OpportunityScope } from '@/lib/opportunities-view';
 import { OpportunityCardView } from '@/components/opportunities/OpportunityCardView';
-import {
-  initialLoadMoreOpportunitiesState,
-  loadMoreOpportunitiesAction,
-  type LoadMoreOpportunitiesState,
-} from './actions';
+import { loadMoreOpportunitiesAction, type LoadMoreOpportunitiesState } from './actions';
+import { initialLoadMoreOpportunitiesState } from './states';
 
 /** ISE-055 / ISE-062 — liste paginée PAR CURSEUR (D-44). */
 export function OpportunitiesList({

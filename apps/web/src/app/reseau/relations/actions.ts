@@ -13,14 +13,6 @@ export interface LoadMoreConnectionsState {
   correlationId: string | null;
 }
 
-export const initialLoadMoreConnectionsState: LoadMoreConnectionsState = {
-  status: 'idle',
-  rows: [],
-  nextCursor: null,
-  message: null,
-  correlationId: null,
-};
-
 /**
  * ISE-040 — page suivante de « Mes relations ».
  *

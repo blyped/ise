@@ -5,11 +5,8 @@ import { Button, ErrorState } from '@ise/ui-web';
 import { frOpportunities, to } from '@/i18n/opportunities';
 import type { MyOpportunityGroup, OpportunityCard } from '@/lib/opportunities-view';
 import { OpportunityCardView } from '@/components/opportunities/OpportunityCardView';
-import {
-  initialLoadMoreOpportunitiesState,
-  loadMoreMyOpportunitiesAction,
-  type LoadMoreOpportunitiesState,
-} from '../actions';
+import { loadMoreMyOpportunitiesAction, type LoadMoreOpportunitiesState } from '../actions';
+import { initialLoadMoreOpportunitiesState } from '../states';
 
 /** « Mes offres » — pagination par curseur (D-44). */
 export function MyOpportunitiesList({

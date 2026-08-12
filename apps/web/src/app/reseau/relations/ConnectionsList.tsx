@@ -8,11 +8,8 @@ import { memberProfileRoute } from '@/lib/routes/search';
 import { introductionPathRoute, NETWORK_ROUTES } from '@/lib/routes/network';
 import { formatDate, type ConnectionRow } from '@/lib/network-view';
 import { ProfileSummary } from '@/components/network/ProfileSummary';
-import {
-  initialLoadMoreConnectionsState,
-  loadMoreConnectionsAction,
-  type LoadMoreConnectionsState,
-} from './actions';
+import { loadMoreConnectionsAction, type LoadMoreConnectionsState } from './actions';
+import { initialLoadMoreConnectionsState } from './states';
 
 /**
  * ISE-040 — liste de mes relations, pagination PAR CURSEUR (D-44).

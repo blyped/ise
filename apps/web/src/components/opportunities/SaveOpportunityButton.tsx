@@ -3,10 +3,8 @@
 import { useActionState } from 'react';
 import { Button } from '@ise/ui-web';
 import { frOpportunities } from '@/i18n/opportunities';
-import {
-  initialSaveOpportunityState,
-  toggleSavedOpportunityAction,
-} from '@/app/opportunites/actions';
+import { toggleSavedOpportunityAction } from '@/app/opportunites/actions';
+import { initialSaveOpportunityState } from '@/app/opportunites/states';
 
 /**
  * ISE-062 — « Enregistrer » / « Retirer ».

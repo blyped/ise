@@ -40,8 +40,6 @@ export interface SaveState {
   message: string | null;
 }
 
-export const initialSaveState: SaveState = { status: 'idle', isSaved: false, message: null };
-
 export async function toggleSavedCallAction(
   previous: SaveState,
   formData: FormData,
@@ -71,14 +69,6 @@ export interface LoadMoreCallsState {
   message: string | null;
   correlationId: string | null;
 }
-
-export const initialLoadMoreCallsState: LoadMoreCallsState = {
-  status: 'idle',
-  rows: [],
-  nextCursor: null,
-  message: null,
-  correlationId: null,
-};
 
 function readFilters(formData: FormData): CallListFilters {
   const text = (key: string): string | null => {

@@ -7,7 +7,8 @@ import { frSearch } from '@/i18n/search';
 import { SEARCH_ROUTES } from '@/lib/routes/search';
 import type { SearchResultRow } from '@/lib/queries/search';
 import { ResultCard } from '@/components/search/ResultCard';
-import { initialLoadMoreState, loadMoreResultsAction, type LoadMoreState } from './actions';
+import { loadMoreResultsAction, type LoadMoreState } from './actions';
+import { initialLoadMoreState } from './states';
 
 /**
  * ISE-035 — liste des resultats et pagination PAR CURSEUR (D-44).

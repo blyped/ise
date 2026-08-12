@@ -16,14 +16,6 @@ export interface ClaimSearchState extends FormState {
   results: ClaimableProfileSummary[] | null;
 }
 
-export const initialClaimSearchState: ClaimSearchState = {
-  status: 'idle',
-  message: null,
-  correlationId: null,
-  fieldErrors: {},
-  results: null,
-};
-
 /**
  * ISE-005 — Rechercher son profil reference.
  *

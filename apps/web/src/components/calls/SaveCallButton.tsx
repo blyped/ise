@@ -3,7 +3,8 @@
 import { useActionState } from 'react';
 import { Button } from '@ise/ui-web';
 import { frCalls } from '@/i18n/calls';
-import { initialSaveState, toggleSavedCallAction } from '@/app/appels/actions';
+import { toggleSavedCallAction } from '@/app/appels/actions';
+import { initialSaveState } from '@/app/appels/states';
 
 /**
  * « Enregistrer » / « Retirer » un appel (ISE-047).

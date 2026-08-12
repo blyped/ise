@@ -66,12 +66,6 @@ export interface SaveOpportunityState {
   message: string | null;
 }
 
-export const initialSaveOpportunityState: SaveOpportunityState = {
-  status: 'idle',
-  isSaved: false,
-  message: null,
-};
-
 export async function toggleSavedOpportunityAction(
   previous: SaveOpportunityState,
   formData: FormData,
@@ -102,14 +96,6 @@ export interface LoadMoreOpportunitiesState {
   message: string | null;
   correlationId: string | null;
 }
-
-export const initialLoadMoreOpportunitiesState: LoadMoreOpportunitiesState = {
-  status: 'idle',
-  rows: [],
-  nextCursor: null,
-  message: null,
-  correlationId: null,
-};
 
 function readFilters(formData: FormData): OpportunityFilters {
   const number = (key: string): number | null => {
@@ -196,14 +182,6 @@ export interface LoadMoreApplicationsState {
   message: string | null;
   correlationId: string | null;
 }
-
-export const initialLoadMoreApplicationsState: LoadMoreApplicationsState = {
-  status: 'idle',
-  rows: [],
-  nextCursor: null,
-  message: null,
-  correlationId: null,
-};
 
 export async function loadMoreApplicationsAction(
   previous: LoadMoreApplicationsState,

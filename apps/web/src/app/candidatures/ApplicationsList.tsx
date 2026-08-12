@@ -7,11 +7,8 @@ import { frOpportunities, to } from '@/i18n/opportunities';
 import { applicationRoute } from '@/lib/routes/opportunities';
 import { formatDate } from '@/lib/network-view';
 import type { ApplicationRow, MyApplicationGroup } from '@/lib/opportunities-view';
-import {
-  initialLoadMoreApplicationsState,
-  loadMoreApplicationsAction,
-  type LoadMoreApplicationsState,
-} from '@/app/opportunites/actions';
+import { loadMoreApplicationsAction, type LoadMoreApplicationsState } from '@/app/opportunites/actions';
+import { initialLoadMoreApplicationsState } from '@/app/opportunites/states';
 
 const LINK =
   'inline-flex min-h-[44px] items-center justify-center rounded-base border border-[#CBD5E1] bg-surface px-5 text-body-sm font-medium text-text-primary hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue';

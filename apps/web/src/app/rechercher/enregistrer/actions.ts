@@ -15,14 +15,6 @@ export interface SaveSearchState extends FormState {
   alertPersisted: boolean;
 }
 
-export const initialSaveSearchState: SaveSearchState = {
-  status: 'idle',
-  message: null,
-  correlationId: null,
-  fieldErrors: {},
-  alertPersisted: false,
-};
-
 /**
  * ISE-036 — enregistrer la recherche et son alerte.
  *

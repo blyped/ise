@@ -25,15 +25,6 @@ export interface LoadMoreState {
   addedCount: number;
 }
 
-export const initialLoadMoreState: LoadMoreState = {
-  rows: [],
-  nextCursor: null,
-  status: 'idle',
-  message: null,
-  correlationId: null,
-  addedCount: 0,
-};
-
 /**
  * Les criteres reviennent du navigateur : ils sont REVALIDES par le
  * meme `searchCriteriaSchema` (MASTER PROMPT §62). Une URL forgee ne

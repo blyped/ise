@@ -4,7 +4,8 @@ import { useActionState, useState } from 'react';
 import { Alert, Button, Field, Input, Radio, RadioGroup, Switch } from '@ise/ui-web';
 import { frSearch } from '@/i18n/search';
 import { useZodForm } from '@/lib/use-zod-form';
-import { initialSaveSearchState, saveSearchAction } from './actions';
+import { saveSearchAction } from './actions';
+import { initialSaveSearchState } from './states';
 import { saveSearchFormSchema, saveSearchInputFrom } from './schema';
 
 const FREQUENCIES = [

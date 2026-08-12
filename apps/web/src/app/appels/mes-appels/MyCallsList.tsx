@@ -5,11 +5,8 @@ import { Button, ErrorState } from '@ise/ui-web';
 import { frCalls, tc } from '@/i18n/calls';
 import type { CallCard, MyCallGroup } from '@/lib/calls-view';
 import { CallCardView } from '@/components/calls/CallCardView';
-import {
-  initialLoadMoreCallsState,
-  loadMoreMyCallsAction,
-  type LoadMoreCallsState,
-} from '../actions';
+import { loadMoreMyCallsAction, type LoadMoreCallsState } from '../actions';
+import { initialLoadMoreCallsState } from '../states';
 
 /** « Mes appels » — pagination par curseur (D-44). */
 export function MyCallsList({
