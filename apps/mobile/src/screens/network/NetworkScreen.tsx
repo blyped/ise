@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { Screen } from '../../components/Screen';
 import { fr } from '../../i18n/fr';
+import { frNetworkCalls } from '../../i18n/network-calls';
 import { newCorrelationId } from '../../lib/correlation';
 import {
   loadConnections,
@@ -32,6 +34,7 @@ type LoadState =
  * en base).
  */
 export function NetworkScreen() {
+  const navigation = useNavigation();
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [summary, setSummary] = useState<NetworkSummary | null>(null);
 
@@ -92,6 +95,26 @@ export function NetworkScreen() {
   return (
     <Screen>
       <Text style={styles.heading}>{fr.network.title}</Text>
+
+      {/*
+       * ISE-047 -> ISE-054 — point d'entree vers « Appels au reseau »
+       * (tranche verticale distincte, `screens/network-calls/`). Cette
+       * pile (`navigation/NetworkCallsStack.tsx`) n'est pas encore montee
+       * dans `AppTabs.tsx` (fichier partage, hors perimetre de ce lot) :
+       * tant qu'un lot autorise a toucher `AppTabs.tsx` ne l'a pas
+       * enregistree (ex. en remplacant le composant de l'onglet
+       * « Reseau » par `NetworkCallsStack`, avec cet ecran comme premier
+       * ecran de la pile), cette carte ne navigue nulle part — React
+       * Navigation avertit en developpement plutot que de planter.
+       */}
+      <Pressable
+        onPress={() => navigation.navigate('AppelsReseau' as never)}
+        accessibilityRole="button"
+        style={styles.callsEntry}
+      >
+        <Text style={styles.callsEntryLabel}>{frNetworkCalls.list.title}</Text>
+        <Text style={styles.callsEntryHint}>{frNetworkCalls.list.subtitle}</Text>
+      </Pressable>
 
       {summary !== null ? (
         <View style={styles.summaryRow}>
@@ -181,6 +204,24 @@ function SummaryStat({ value, label }: { value: number; label: string }) {
 }
 
 const styles = StyleSheet.create({
+  callsEntry: {
+    backgroundColor: colors.surface,
+    borderRadius: rounded.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: space[5],
+    marginBottom: space[5],
+    gap: space[1],
+  },
+  callsEntryLabel: {
+    ...textStyle.body,
+    fontWeight: '700',
+    color: colors.actionBlue,
+  },
+  callsEntryHint: {
+    ...textStyle.caption,
+    color: colors.textMuted,
+  },
   heading: {
     ...textStyle.h2,
     fontWeight: '700',
