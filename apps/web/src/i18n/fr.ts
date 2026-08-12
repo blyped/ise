@@ -462,10 +462,12 @@ export const fr = {
     nav: {
       label: 'Navigation principale',
       home: 'Accueil',
+      highlights: 'À la une',
       network: 'Le réseau',
       news: 'Actualités',
       events: 'Événements',
       opportunities: 'Opportunités',
+      expertises: 'Expertises',
       partners: 'Partenaires',
       signIn: 'Connexion',
       memberSpace: 'Mon espace',

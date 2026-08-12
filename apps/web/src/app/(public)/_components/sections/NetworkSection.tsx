@@ -1,9 +1,23 @@
 import { fr, t } from '@/i18n/fr';
 import { frPublic } from '@/i18n/public';
 import { formatCount, formatLongDate } from '@/lib/public/landing-format';
-import type { LandingStatsSection } from '@/lib/public/landing-data';
+import { LANDING_SECTION_KEYS, type LandingStatsSection } from '@/lib/public/landing-data';
+import { SEARCH_ROUTES } from '@/lib/routes/search';
 import { LANDING_ANCHORS } from '../public-nav';
+import { ProtectedLink } from '../ProtectedLink';
 import { SectionShell } from './SectionShell';
+
+/**
+ * Cible de clic de chaque pilier, quand elle existe deja comme ecran reel.
+ * Volontairement partiel : un pilier absent de cette table reste du texte
+ * seul plutot que de pointer vers un lien invente (ADDENDUM §10, regle 6).
+ * `Connecter` seul est cable a ce stade — la demande du porteur ne precise
+ * pas encore les cibles de `Entraider` / `Collaborer` / `Impacter` (tache de
+ * suivi : piliers pilotes par le CMS, avec image et lien par pilier).
+ */
+const PILLAR_TARGETS: Partial<Record<string, string>> = {
+  connecter: SEARCH_ROUTES.find,
+};
 
 /**
  * « Un reseau concu pour etre utile » + « Le reseau en quelques chiffres ».
@@ -37,23 +51,43 @@ export function NetworkSection({
   return (
     <SectionShell id={LANDING_ANCHORS.network} title={fr.public.pillars.title}>
       <ul className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-md:grid-cols-1 max-md:gap-4">
-        {fr.public.pillars.items.map((pillar, index) => (
-          <li
-            key={pillar.key}
-            className={
-              // La maquette alterne fond bleute et fond blanc. L'alternance est
-              // decorative : elle ne porte aucune information (D-90).
-              index % 2 === 0
-                ? 'rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] p-6 max-md:p-5'
-                : 'border-border bg-surface rounded-lg border p-6 max-md:p-5'
-            }
-          >
-            <p className="text-overline text-primary font-semibold uppercase tracking-[0.08em]">
-              {pillar.title}
-            </p>
-            <p className="text-body-sm text-text-secondary mt-4">{pillar.body}</p>
-          </li>
-        ))}
+        {fr.public.pillars.items.map((pillar, index) => {
+          const target = PILLAR_TARGETS[pillar.key];
+          const content = (
+            <>
+              <p className="text-overline text-primary font-semibold uppercase tracking-[0.08em]">
+                {pillar.title}
+              </p>
+              <p className="text-body-sm text-text-secondary mt-4">{pillar.body}</p>
+            </>
+          );
+          const cardClassName =
+            // La maquette alterne fond bleute et fond blanc. L'alternance est
+            // decorative : elle ne porte aucune information (D-90).
+            index % 2 === 0
+              ? 'rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] p-6 max-md:p-5'
+              : 'border-border bg-surface rounded-lg border p-6 max-md:p-5';
+
+          return (
+            <li key={pillar.key}>
+              {target === undefined ? (
+                <div className={cardClassName}>{content}</div>
+              ) : (
+                <ProtectedLink
+                  target={target}
+                  resourceType="espace-membre"
+                  className={`block transition-shadow duration-150 hover:shadow-md ${cardClassName}`}
+                  event="public_content_click"
+                  sectionKey={LANDING_SECTION_KEYS.highlights}
+                  contentType="network_pillar"
+                  position={index + 1}
+                >
+                  {content}
+                </ProtectedLink>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       <div

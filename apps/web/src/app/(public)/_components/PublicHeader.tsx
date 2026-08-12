@@ -54,6 +54,15 @@ export function PublicHeader() {
     toggleRef.current?.focus();
   }, []);
 
+  // « Accueil » doit ramener en haut de page meme quand on y est deja : un
+  // <Link href="/"> seul ne fait rien dans ce cas puisque l'URL ne change
+  // pas (pas de nouvelle navigation, donc pas de restauration de defilement).
+  // Le clic scrolle donc explicitement, en plus de la navigation normale
+  // quand on part d'une autre page publique.
+  const onHomeClick = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   useEffect(() => {
     if (!open) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -101,7 +110,11 @@ export function PublicHeader() {
           <ul className="flex items-center gap-9">
             {PUBLIC_NAV_ITEMS.map((item) => (
               <li key={item.key}>
-                <Link href={item.href} className={LINK_BASE}>
+                <Link
+                  href={item.href}
+                  className={LINK_BASE}
+                  onClick={item.key === 'home' ? onHomeClick : undefined}
+                >
                   {item.label}
                 </Link>
               </li>
@@ -145,7 +158,14 @@ export function PublicHeader() {
                 <Link
                   href={item.href}
                   className={cx(LINK_BASE, 'block min-h-[44px] px-3 py-4')}
-                  onClick={close}
+                  onClick={
+                    item.key === 'home'
+                      ? () => {
+                          onHomeClick();
+                          close();
+                        }
+                      : close
+                  }
                 >
                   {item.label}
                 </Link>
