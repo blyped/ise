@@ -14,7 +14,12 @@ test.describe('PUB-001 — racine publique', () => {
   test('la racine ouvre la landing, pas l’ecran de connexion (§2)', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole('link', { name: 'Connexion' })).toBeVisible();
+    // Scopé au bandeau : la landing porte AUSSI un CTA « Connexion » dans le
+    // contenu principal — le localisateur nu matchait les deux (violation du
+    // mode strict constatée au run #7).
+    await expect(
+      page.getByRole('banner').getByRole('link', { name: 'Connexion' }),
+    ).toBeVisible();
     // ISE-001 n'est pas rendu a la racine : aucun champ de mot de passe.
     await expect(page.getByLabel('Mot de passe')).toHaveCount(0);
   });

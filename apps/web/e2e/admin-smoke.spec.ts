@@ -57,9 +57,22 @@ test.describe('SA-0XX — routage /administration (largeur)', () => {
       ).toBe(true);
 
       if (onRequestedRoute) {
-        // Rendu complet du gabarit (AdminShell) : preuve que la page n'est
-        // pas restee sur une coquille vide ou un etat de chargement fige.
-        await expect(page.getByRole('navigation', { name: "Navigation de l'administration" })).toBeVisible();
+        // Rendu complet du gabarit : preuve que la page n'est pas restee
+        // sur une coquille vide ou un etat de chargement fige. Deux gabarits
+        // coexistent (constat du run #7) : AdminShell (nav laterale
+        // « Navigation de l'administration ») pour le lot cœur, et
+        // AdminPageHeader (fil d'Ariane « Administration ») pour le lot
+        // donnees (audit, analytics, parametres, profils-incomplets).
+        // `toBeAttached` et non `toBeVisible` : sur Mobile 375, la nav
+        // d'AdminShell est repliee derriere le menu (hidden lg:block) —
+        // presente dans le DOM, volontairement invisible.
+        await expect(
+          page
+            .locator(
+              'nav[aria-label="Navigation de l\'administration"], nav[aria-label="Administration"]',
+            )
+            .first(),
+        ).toBeAttached();
       }
     });
   }
