@@ -12,44 +12,66 @@ import { ROUTES, isPublicPath } from './lib/routes';
  *
  * La session est rafraichie a chaque passage : c'est le seul endroit ou les
  * cookies Supabase sont reecrits pour l'ensemble de l'application.
+ *
+ * INSTRUMENTATION TEMPORAIRE (a retirer) : un 500 non explique se produit
+ * pour /reclamer-mon-profil (digest 1724077822, TypeError: Cannot convert
+ * undefined or null to object, at Object.keys). Chaque etape logge un
+ * marqueur avant de s'executer pour isoler la ligne exacte en cas de
+ * nouvelle occurrence, avec la stack complete de l'erreur.
  */
 export async function middleware(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
-  const { response, user } = await updateSession(request);
+  let step = 'start';
+  try {
+    step = 'read-nextUrl';
+    const { pathname, search } = request.nextUrl;
 
-  const isPublic = isPublicPath(pathname);
+    step = 'updateSession';
+    const { response, user } = await updateSession(request);
 
-  if (!user && !isPublic) {
-    const target = request.nextUrl.clone();
-    target.pathname = ROUTES.signIn;
-    target.search = '';
-    target.searchParams.set('raison', 'session');
-    // ADDENDUM §4 : `redirectTo` est le nom canonique du parametre de retour.
-    target.searchParams.set('redirectTo', `${pathname}${search}`);
-    const redirection = NextResponse.redirect(target);
-    redirection.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
-    return redirection;
+    step = 'isPublicPath';
+    const isPublic = isPublicPath(pathname);
+
+    if (!user && !isPublic) {
+      step = 'build-signin-redirect';
+      const target = request.nextUrl.clone();
+      target.pathname = ROUTES.signIn;
+      target.search = '';
+      target.searchParams.set('raison', 'session');
+      // ADDENDUM §4 : `redirectTo` est le nom canonique du parametre de retour.
+      target.searchParams.set('redirectTo', `${pathname}${search}`);
+      step = 'NextResponse.redirect-signin';
+      const redirection = NextResponse.redirect(target);
+      step = 'set-robots-header-redirect';
+      redirection.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+      return redirection;
+    }
+
+    // Une session valide n'a rien a faire sur les ecrans de connexion.
+    if (user && (pathname === ROUTES.signIn || pathname === ROUTES.signUp)) {
+      step = 'build-dashboard-redirect';
+      const target = request.nextUrl.clone();
+      target.pathname = ROUTES.dashboard;
+      target.search = '';
+      return NextResponse.redirect(target);
+    }
+
+    if (!isPublic) {
+      step = 'set-robots-header-response';
+      response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+    }
+
+    step = 'return-response';
+    return response;
+  } catch (error) {
+    console.error('[ISE][DEBUG middleware]', {
+      path: request.nextUrl.pathname,
+      step,
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : null,
+    });
+    throw error;
   }
-
-  // Une session valide n'a rien a faire sur les ecrans de connexion.
-  if (user && (pathname === ROUTES.signIn || pathname === ROUTES.signUp)) {
-    const target = request.nextUrl.clone();
-    target.pathname = ROUTES.dashboard;
-    target.search = '';
-    return NextResponse.redirect(target);
-  }
-
-  /*
-   * ADDENDUM §53 : aucune ressource privee ne doit etre indexee. Le layout
-   * racine pose deja `robots: noindex`, mais une reponse non HTML (fichier,
-   * flux, reponse d'API) ne porte pas de balise `<meta>`. L'en-tete, lui, les
-   * couvre toutes.
-   */
-  if (!isPublic) {
-    response.headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
-  }
-
-  return response;
 }
 
 export const config = {
