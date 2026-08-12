@@ -27,10 +27,16 @@ export function protectedLinks(page: Page) {
   return page.locator('[data-protected-target]');
 }
 
-/** Remplit et soumet ISE-001. */
+/**
+ * Remplit et soumet ISE-001.
+ *
+ * `/^Mot de passe/` et non `'Mot de passe'` : le libelle nu matcherait
+ * aussi le bouton « Afficher le mot de passe » (violation du mode strict,
+ * voir admin-helpers.ts).
+ */
 export async function signIn(page: Page): Promise<void> {
   await page.getByLabel('Adresse e-mail').fill(MEMBER_EMAIL);
-  await page.getByLabel('Mot de passe').fill(MEMBER_PASSWORD);
+  await page.getByLabel(/^Mot de passe/).fill(MEMBER_PASSWORD);
   await page.getByRole('button', { name: 'Se connecter' }).click();
   await expect(page).not.toHaveURL(/\/connexion/);
 }

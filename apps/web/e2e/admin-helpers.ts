@@ -70,11 +70,19 @@ export function hasMemberCredentials(): boolean {
  */
 export const ALLOW_ADMIN_WRITES = process.env.E2E_ADMIN_ALLOW_WRITES === 'true';
 
-/** Remplit et soumet ISE-001 avec les identifiants fournis. */
+/**
+ * Remplit et soumet ISE-001 avec les identifiants fournis.
+ *
+ * `getByLabel('Mot de passe')` sans ancrage matcherait AUSSI le bouton
+ * « Afficher le mot de passe » (IconButton, aria-label) : violation du
+ * mode strict de Playwright constatee a la premiere execution reelle
+ * (run #6). L'ancre `^` ne retient que le champ, dont le nom accessible
+ * est « Mot de passe (obligatoire) ».
+ */
 export async function signInAs(page: Page, email: string, password: string): Promise<void> {
   await page.goto('/connexion');
   await page.getByLabel('Adresse e-mail').fill(email);
-  await page.getByLabel('Mot de passe').fill(password);
+  await page.getByLabel(/^Mot de passe/).fill(password);
   await page.getByRole('button', { name: 'Se connecter' }).click();
   await expect(page).not.toHaveURL(/\/connexion/);
 }
