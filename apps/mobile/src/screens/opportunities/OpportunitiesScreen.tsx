@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
@@ -23,8 +23,31 @@ type LoadState =
  * appelee ici avec `p_scope: 'all', p_status: 'open'` : une liste simple des
  * opportunites ouvertes, sans les onglets ni les filtres du web (D27 §1,
  * perimetre reduit pour cette premiere tranche mobile).
+ *
+ * MODIFICATION (tranche ISE-056 -> ISE-066) : cet écran gagne cinq points
+ * d'entrée facultatifs vers `OpportunitiesDetailStack` (nouveau fichier
+ * `navigation/OpportunitiesDetailStack.tsx`) — ouvrir le détail d'une
+ * offre, « Enregistrées » (ISE-062), « Mes candidatures » (ISE-063),
+ * « Publier une offre » (ISE-057) et « Mes offres » (suivi, ISE-060).
+ * Tous les props sont OPTIONNELS et par défaut sans effet : l'écran reste
+ * utilisable tel quel (aucun changement de comportement) tant qu'il est
+ * monté directement par `AppTabs.tsx`, hors-limite pour cette tranche.
+ * L'intégration réelle consiste à faire pointer l'onglet « Opportunités »
+ * vers `OpportunitiesDetailStack` (voir ce fichier pour le détail).
  */
-export function OpportunitiesScreen() {
+export function OpportunitiesScreen({
+  onOpenOpportunity,
+  onOpenSaved,
+  onOpenApplications,
+  onOpenPublish,
+  onOpenMyOpportunities,
+}: {
+  onOpenOpportunity?: (opportunityId: string) => void;
+  onOpenSaved?: () => void;
+  onOpenApplications?: () => void;
+  onOpenPublish?: () => void;
+  onOpenMyOpportunities?: () => void;
+} = {}) {
   const [state, setState] = useState<LoadState>({ status: 'loading' });
 
   const load = useCallback(() => {
@@ -76,9 +99,32 @@ export function OpportunitiesScreen() {
     });
   }, []);
 
+  const hasEntryPoints =
+    onOpenSaved !== undefined ||
+    onOpenApplications !== undefined ||
+    onOpenPublish !== undefined ||
+    onOpenMyOpportunities !== undefined;
+
   return (
     <Screen>
       <Text style={styles.heading}>{fr.opportunities.title}</Text>
+
+      {hasEntryPoints ? (
+        <View style={styles.entryPointsRow}>
+          {onOpenPublish !== undefined ? (
+            <EntryPointLink label="Publier une offre" onPress={onOpenPublish} />
+          ) : null}
+          {onOpenSaved !== undefined ? (
+            <EntryPointLink label="Enregistrées" onPress={onOpenSaved} />
+          ) : null}
+          {onOpenApplications !== undefined ? (
+            <EntryPointLink label="Mes candidatures" onPress={onOpenApplications} />
+          ) : null}
+          {onOpenMyOpportunities !== undefined ? (
+            <EntryPointLink label="Mes offres" onPress={onOpenMyOpportunities} />
+          ) : null}
+        </View>
+      ) : null}
 
       {state.status === 'loading' ? (
         <View style={styles.centered}>
@@ -102,7 +148,12 @@ export function OpportunitiesScreen() {
         <FlatList
           data={state.rows}
           keyExtractor={(row) => row.opportunityId}
-          renderItem={({ item }) => <OpportunityCardView opportunity={item} />}
+          renderItem={({ item }) => (
+            <OpportunityCardView
+              opportunity={item}
+              onPress={onOpenOpportunity !== undefined ? () => onOpenOpportunity(item.opportunityId) : undefined}
+            />
+          )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           contentContainerStyle={styles.list}
           ListFooterComponent={
@@ -118,15 +169,30 @@ export function OpportunitiesScreen() {
   );
 }
 
-function OpportunityCardView({ opportunity }: { opportunity: OpportunityCard }) {
+function EntryPointLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" style={styles.entryPointLink}>
+      <Text style={styles.entryPointLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function OpportunityCardView({
+  opportunity,
+  onPress,
+}: {
+  opportunity: OpportunityCard;
+  /** Absent : la carte n'est pas interactive (comportement ISE-055 d'origine). */
+  onPress?: (() => void) | undefined;
+}) {
   const typeLabel = fr.opportunities.type[opportunity.opportunityType] ?? opportunity.opportunityType;
   const statusLabel = fr.opportunities.status[opportunity.status] ?? opportunity.status;
   const location = [opportunity.city, opportunity.country]
     .filter((part): part is string => typeof part === 'string' && part.length > 0)
     .join(', ');
 
-  return (
-    <View style={styles.card}>
+  const content = (
+    <>
       <View style={styles.badgeRow}>
         <Badge label={typeLabel} />
         <Badge label={statusLabel} />
@@ -141,7 +207,17 @@ function OpportunityCardView({ opportunity }: { opportunity: OpportunityCard }) 
           {opportunity.summary}
         </Text>
       ) : null}
-    </View>
+    </>
+  );
+
+  if (onPress === undefined) {
+    return <View style={styles.card}>{content}</View>;
+  }
+
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" style={styles.card}>
+      {content}
+    </Pressable>
   );
 }
 
@@ -159,6 +235,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textPrimary,
     marginBottom: space[6],
+  },
+  entryPointsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: space[3],
+    marginBottom: space[5],
+  },
+  entryPointLink: {
+    minHeight: 36,
+    paddingHorizontal: space[4],
+    borderRadius: rounded.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  entryPointLabel: {
+    ...textStyle.caption,
+    color: colors.actionBlue,
+    fontWeight: '700',
   },
   centered: {
     flex: 1,
