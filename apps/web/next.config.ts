@@ -69,6 +69,16 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      // La mediatheque du CMS accepte des images jusqu'a 5 Mo
+      // (mediatheque/actions.ts) mais la limite par defaut des Server
+      // Actions est de 1 Mo : tout televersement au-dela repondait 413/500
+      // (constate en production le 2026-08-12, digest 2284581426@E394).
+      // 6 Mo = 5 Mo de fichier + l'enveloppe multipart du formulaire.
+      bodySizeLimit: '6mb',
+    },
+  },
   transpilePackages: [
     '@ise/config',
     '@ise/db-types',
