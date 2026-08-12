@@ -30,7 +30,7 @@ export default async function AdminNewsNewPage() {
         </div>
 
         <SectionCard title={frAdminNews.form.createTitle}>
-          <NewsForm action={createNewsAction} submitLabel={frAdminNews.form.submitCreate} />
+          <NewsForm action={createNewsAction} />
         </SectionCard>
       </div>
     </AdminShell>
