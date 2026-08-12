@@ -11,8 +11,6 @@ import { ProtectedLink } from './ProtectedLink';
 import { ImpressionTracker } from './analytics/ImpressionTracker';
 import { LANDING_ANCHORS } from './public-nav';
 
-const AUTOPLAY_MS = 7000;
-
 const CONTROL =
   'inline-flex h-[36px] w-[36px] items-center justify-center rounded-full border ' +
   'border-white/30 bg-white/10 text-text-inverse transition-colors duration-150 ' +
@@ -58,12 +56,29 @@ function PlayPauseIcon({ playing }: { playing: boolean }) {
  *    automatique, lui, n'existe qu'apres hydratation ;
  *  - `prefers-reduced-motion: reduce` empeche le demarrage du defilement et
  *    l'arrete s'il est change en cours de session ;
- *  - le defilement s'interrompt au survol et au focus clavier ;
+ *  - le defilement s'interrompt au focus clavier (un lien de diapositive
+ *    focalise ne doit pas se faire emporter sous l'utilisateur) ;
+ *  - un bouton lecture/pause explicite reste **le** moyen d'arret pour la
+ *    souris (WCAG 2.2.2, satisfait par un mecanisme de pause explicite,
+ *    sans exiger de survol). Le survol de la section n'arrete plus le
+ *    defilement depuis que le hero est passe en plein ecran (2026-08-12,
+ *    D-163) : la region couvrant tout le viewport, un survol y est
+ *    quasi permanent des qu'une souris est presente, ce qui figeait le
+ *    carrousel en pratique et rendait le bouton lecture/pause muet (son
+ *    icone dependait de `playing`, toujours faux tant que le curseur
+ *    restait sur les commandes elles-memes) ;
  *  - la region d'annonce passe en `aria-live="polite"` uniquement quand le
  *    defilement est arrete : annoncer un changement automatique toutes les
  *    sept secondes rendrait la page inutilisable au lecteur d'ecran.
  */
-export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] }) {
+export function LandingCarousel({
+  slides,
+  autoplaySeconds,
+}: {
+  slides: readonly LandingSlide[];
+  /** D-163 — reglage admin (`/administration/parametres`), borne 3-60, repli 7. */
+  autoplaySeconds: number;
+}) {
   const total = slides.length;
   const [current, setCurrent] = useState(0);
   const [autoplayAllowed, setAutoplayAllowed] = useState(false);
@@ -71,6 +86,7 @@ export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] })
   const [suspended, setSuspended] = useState(false);
 
   const playing = autoplayAllowed && playRequested && !suspended && total > 1;
+  const autoplayMs = Math.max(3, autoplaySeconds) * 1000;
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return undefined;
@@ -83,9 +99,9 @@ export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] })
 
   useEffect(() => {
     if (!playing) return undefined;
-    const id = window.setInterval(() => setCurrent((index) => (index + 1) % total), AUTOPLAY_MS);
+    const id = window.setInterval(() => setCurrent((index) => (index + 1) % total), autoplayMs);
     return () => window.clearInterval(id);
-  }, [playing, total]);
+  }, [playing, total, autoplayMs]);
 
   const goTo = useCallback(
     (index: number) => setCurrent(((index % total) + total) % total),
@@ -124,8 +140,6 @@ export function LandingCarousel({ slides }: { slides: readonly LandingSlide[] })
       // barre superieure collante.
       className="bg-deep-navy relative w-full overflow-hidden"
       onKeyDown={onKeyDown}
-      onMouseEnter={() => setSuspended(true)}
-      onMouseLeave={() => setSuspended(false)}
       onFocusCapture={() => setSuspended(true)}
       onBlurCapture={() => setSuspended(false)}
     >

@@ -7,6 +7,7 @@ import type {
   LandingFeaturedProfile,
   LandingNews,
   LandingOpportunity,
+  LandingSlide,
 } from './landing-data';
 
 /*
@@ -110,10 +111,10 @@ function visibleText(element: ReactElement): string {
 }
 
 /** Chiffres des maquettes. Ils ne sont mesures par rien : ils sont interdits. */
-const MOCKUP_FIGURES = ['1842', '1 842', '1 842', '1 842', '37', '29', '126'];
+const MOCKUP_FIGURES = ['1842', '1 842', '1 842', '1 842', '37', '29', '126'];
 
 function expectNoMockupFigure(text: string): void {
-  const tokens = text.split(/[^0-9  ]+/).filter((token) => token.length > 0);
+  const tokens = text.split(/[^0-9  ]+/).filter((token) => token.length > 0);
   for (const figure of MOCKUP_FIGURES) {
     expect(tokens, `le nombre « ${figure} » de la maquette apparaît dans le rendu`).not.toContain(
       figure,
@@ -122,6 +123,8 @@ function expectNoMockupFigure(text: string): void {
 }
 
 const OK = <TItem>(items: readonly TItem[]) => ({ status: 'ok' as const, items });
+/** D-163 — le carrousel porte en plus un reglage de duree ; 7s = repli par defaut. */
+const CAROUSEL_OK = (items: readonly LandingSlide[]) => ({ ...OK(items), autoplaySeconds: 7 });
 const DOWN = <TItem>() => ({
   status: 'indisponible' as const,
   items: [] as readonly TItem[],
@@ -220,7 +223,7 @@ function fullPage(statsPayload: unknown): ReactElement {
     'div',
     null,
     h(CarouselSection, {
-      section: OK([
+      section: CAROUSEL_OK([
         slideSchema.parse({
           id: '2b0a4a1e-3f7a-4c39-9b5f-1d2e3f4a5b6c',
           title: 'Rencontre annuelle des ISE',
@@ -345,7 +348,9 @@ describe('ADDENDUM §26 — transparence des contenus commerciaux', () => {
       is_sponsored: true,
       sponsored_label: 'Sponsorisé',
     });
-    expect(visibleText(h(CarouselSection, { section: OK([sponsored]) }))).toContain('Sponsorisé');
+    expect(visibleText(h(CarouselSection, { section: CAROUSEL_OK([sponsored]) }))).toContain(
+      'Sponsorisé',
+    );
   });
 });
 
@@ -464,7 +469,7 @@ describe('images — bucket public `landing-media`', () => {
 
   it('rend le visuel de la diapositive, avec l’alternative du CMS', () => {
     const markup = renderToStaticMarkup(
-      h(CarouselSection, { section: OK([slide({ media: MEDIA })]) }),
+      h(CarouselSection, { section: CAROUSEL_OK([slide({ media: MEDIA })]) }),
     );
     expect(markup).toContain(
       `${TEST_SUPABASE_URL}/storage/v1/object/public/landing-media/carousel/2026/08/rencontre.webp`,
@@ -475,7 +480,7 @@ describe('images — bucket public `landing-media`', () => {
   it('§58 — première diapositive en « eager », les suivantes en « lazy »', () => {
     const markup = renderToStaticMarkup(
       h(CarouselSection, {
-        section: OK([
+        section: CAROUSEL_OK([
           slide({ id: 'aaaaaaaa-1111-4111-8111-111111111111', media: MEDIA }),
           slide({
             id: 'bbbbbbbb-2222-4222-8222-222222222222',
@@ -491,7 +496,7 @@ describe('images — bucket public `landing-media`', () => {
   it('§52 — un média sans alternative textuelle n’émet aucune balise img', () => {
     const markup = renderToStaticMarkup(
       h(CarouselSection, {
-        section: OK([slide({ media: { ...MEDIA, alt_text: null } })]),
+        section: CAROUSEL_OK([slide({ media: { ...MEDIA, alt_text: null } })]),
       }),
     );
     expect(markup).not.toContain('<img');
@@ -500,7 +505,7 @@ describe('images — bucket public `landing-media`', () => {
   it('un média resté dans un bucket privé n’émet aucune balise img', () => {
     const markup = renderToStaticMarkup(
       h(CarouselSection, {
-        section: OK([slide({ media: { ...MEDIA, bucket: 'public-assets' } })]),
+        section: CAROUSEL_OK([slide({ media: { ...MEDIA, bucket: 'public-assets' } })]),
       }),
     );
     expect(markup).not.toContain('<img');

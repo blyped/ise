@@ -24,6 +24,9 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                         content_type, entity_type, entity_id, cta_label,
  *                                         priority, media, mobile_media, is_sponsored,
  *                                         sponsored_label }
+ *   get_landing_carousel_settings()    -> **objet** { autoplay_seconds } (0111, D-163).
+ *                                         Reglage global (`platform_settings`), borne 3-60
+ *                                         cote base ; repli 7 si la lecture echoue.
  *   get_landing_sections()             -> tableau { section_key, title, subtitle,
  *                                         display_order, source_mode, max_items, cta_label,
  *                                         cta_entity_type, cta_entity_id, configuration }
@@ -82,6 +85,7 @@ export const LANDING_RPC_TIMEOUT_MS = 4000;
 /** Noms des projections `public-safe` lues par PUB-001. */
 export const LANDING_FUNCTIONS = {
   carousel: 'get_landing_carousel',
+  carouselSettings: 'get_landing_carousel_settings',
   sections: 'get_landing_sections',
   news: 'get_landing_news',
   events: 'get_landing_events',
@@ -367,13 +371,24 @@ export interface LandingStatsSection extends LandingSection<LandingStat> {
   readonly allZero: boolean;
 }
 
+/**
+ * ADDENDUM §52, D-163 — le carrousel porte, en plus de ses diapositives, un
+ * reglage global de duree de rotation. Meme principe que
+ * `LandingStatsSection` : la section standard est etendue de champs propres
+ * a sa projection plutot que de creer un second etat parallele.
+ */
+export interface LandingCarouselSection extends LandingSection<LandingSlide> {
+  /** Secondes entre deux diapositives (`platform_settings`, borne 3-60, repli 7). */
+  readonly autoplaySeconds: number;
+}
+
 export interface LandingData {
   /** Horodatage de la lecture reellement servie (peut etre anterieur, §47). */
   readonly generatedAt: string;
   /** `true` si au moins une section provient d'une lecture reussie plus ancienne. */
   readonly servedFromLastKnownGood: boolean;
   readonly sections: readonly LandingSectionConfig[];
-  readonly carousel: LandingSection<LandingSlide>;
+  readonly carousel: LandingCarouselSection;
   readonly news: LandingSection<LandingNews>;
   readonly events: LandingSection<LandingEvent>;
   readonly opportunities: LandingSection<LandingOpportunity>;
@@ -907,6 +922,26 @@ async function readStats(): Promise<LandingStatsSection> {
   return parseStats(outcome.value);
 }
 
+/** Repli si la lecture du reglage echoue : comportement identique a avant 0111. */
+const DEFAULT_CAROUSEL_AUTOPLAY_SECONDS = 7;
+
+const carouselSettingsSchema = z.object({
+  autoplay_seconds: z.number().int().min(3).max(60),
+});
+
+/**
+ * D-163 — duree de rotation du carrousel. Reglage cosmetique, pas un
+ * contenu : contrairement aux autres projections, un echec de lecture ne
+ * degrade pas la section (§47 ne s'applique qu'au contenu editorial) ; il
+ * retombe silencieusement sur le comportement fige d'avant 0111.
+ */
+async function readCarouselAutoplaySeconds(): Promise<number> {
+  const outcome = await callProjection(LANDING_FUNCTIONS.carouselSettings);
+  if (!outcome.ok) return DEFAULT_CAROUSEL_AUTOPLAY_SECONDS;
+  const parsed = carouselSettingsSchema.safeParse(outcome.value);
+  return parsed.success ? parsed.data.autoplay_seconds : DEFAULT_CAROUSEL_AUTOPLAY_SECONDS;
+}
+
 /**
  * Derniere version valide, **par section**.
  *
@@ -963,6 +998,7 @@ async function fetchLandingData(): Promise<LandingData> {
   const [
     sectionsRead,
     carouselRead,
+    carouselAutoplaySeconds,
     newsRead,
     eventsRead,
     opportunitiesRead,
@@ -973,6 +1009,7 @@ async function fetchLandingData(): Promise<LandingData> {
   ] = await Promise.all([
     readList(LANDING_FUNCTIONS.sections, {}, sectionConfigSchema),
     readList(LANDING_FUNCTIONS.carousel, {}, slideSchema),
+    readCarouselAutoplaySeconds(),
     readList(LANDING_FUNCTIONS.news, { p_limit: FETCH_LIMITS.news }, newsSchema),
     readList(LANDING_FUNCTIONS.events, { p_limit: FETCH_LIMITS.events }, eventSchema),
     readList(
@@ -1013,7 +1050,10 @@ async function fetchLandingData(): Promise<LandingData> {
     generatedAt: new Date().toISOString(),
     servedFromLastKnownGood,
     sections,
-    carousel: limited(carousel, sections, LANDING_SECTION_KEYS.carousel),
+    carousel: {
+      ...limited(carousel, sections, LANDING_SECTION_KEYS.carousel),
+      autoplaySeconds: carouselAutoplaySeconds,
+    },
     news: limited(news, sections, LANDING_SECTION_KEYS.news),
     events: limited(events, sections, LANDING_SECTION_KEYS.events),
     opportunities: limited(opportunities, sections, LANDING_SECTION_KEYS.opportunities),

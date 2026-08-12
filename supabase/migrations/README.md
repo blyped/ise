@@ -129,7 +129,7 @@ corriger par une nouvelle migration :
 | `secdef_no_search_path`  | Fonction `security definer` sans `search_path` figé.                                                                                           |
 | `private_exposed`        | Table de `private` ou `analytics` accessible au rôle `authenticated`.                                                                          |
 | `private_column_exposed` | Colonne déclarée privée (score de complétion, scores de matching, lien privé d'événement) lisible ou modifiable par `authenticated` ou `anon`. |
-| `anon_function_grant`    | Fonction de `public` ou `private` exécutable par `anon` hors de la liste blanche des dix projections public-safe (0061, 0063).                 |
+| `anon_function_grant`    | Fonction de `public` ou `private` exécutable par `anon` hors de la liste blanche des onze projections public-safe (0061, 0063, 0111).          |
 
 Le contrôle Storage `private.storage_baseline_violations()` doit lui aussi renvoyer **0 ligne** ;
 ses huit `kind` sont décrits dans `docs/rls.md` §5.4.

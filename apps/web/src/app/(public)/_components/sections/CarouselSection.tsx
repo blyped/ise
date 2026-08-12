@@ -1,7 +1,7 @@
 import { EmptyState } from '@ise/ui-web';
 import { fr } from '@/i18n/fr';
 import { frPublic } from '@/i18n/public';
-import type { LandingSection, LandingSlide } from '@/lib/public/landing-data';
+import type { LandingCarouselSection as LandingCarouselSectionData } from '@/lib/public/landing-data';
 import { LandingCarousel } from '../LandingCarousel';
 import { SectionShell } from './SectionShell';
 
@@ -13,7 +13,7 @@ import { SectionShell } from './SectionShell';
  * pourquoi (MASTER PROMPT §113), et une projection en panne le dit autrement
  * qu'une absence de publication (ADDENDUM §47).
  */
-export function CarouselSection({ section }: { section: LandingSection<LandingSlide> }) {
+export function CarouselSection({ section }: { section: LandingCarouselSectionData }) {
   const unavailable = section.status === 'indisponible';
 
   // Hero pleine largeur (demande du porteur, 2026-08-12) : avec du contenu,
@@ -21,7 +21,7 @@ export function CarouselSection({ section }: { section: LandingSection<LandingSl
   // menu — aucune gouttiere, aucun arrondi. L'etat vide, lui, reste un
   // message editorial : il garde l'enveloppe classique.
   if (section.items.length > 0) {
-    return <LandingCarousel slides={section.items} />;
+    return <LandingCarousel slides={section.items} autoplaySeconds={section.autoplaySeconds} />;
   }
 
   return (
