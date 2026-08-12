@@ -75,4 +75,29 @@ export const fr = {
     statPromotions: 'Promotions',
     statCountries: 'Pays',
   },
+
+  /** ISE-055 — Opportunités (coquille mobile de `/opportunites`). */
+  opportunities: {
+    title: 'Opportunités',
+    errorTitle: 'Impossible de charger les opportunités.',
+    emptyTitle: 'Aucune opportunité ouverte pour l’instant.',
+    emptyBody: 'De nouvelles opportunités apparaîtront ici dès qu’elles seront publiées.',
+    type: {
+      job: 'Emploi',
+      internship: 'Stage',
+      mission: 'Mission',
+      business: 'Business',
+      research: 'Recherche',
+      scholarship: 'Bourse',
+    } as Record<string, string>,
+    status: {
+      draft: 'Brouillon',
+      active: 'Ouverte',
+      paused: 'En pause',
+      closed: 'Clôturée',
+      expired: 'Expirée',
+      cancelled: 'Annulée',
+      moderated: 'Retirée',
+    } as Record<string, string>,
+  },
 } as const;
