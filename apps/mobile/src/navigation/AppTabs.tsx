@@ -3,12 +3,12 @@ import type { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
 import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 
 import { fr } from '../i18n/fr';
-import { ActionCentralScreen } from '../screens/action/ActionCentralScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
-import { NetworkScreen } from '../screens/network/NetworkScreen';
-import { OpportunitiesScreen } from '../screens/opportunities/OpportunitiesScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { colors, minTouchTarget, rounded, textStyle } from '../theme/tokens';
+import { OpportunitiesDetailStack } from './OpportunitiesDetailStack';
+import { ReseauStack } from './ReseauStack';
+import { SearchStack } from './SearchStack';
 import type { AppTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
@@ -19,6 +19,17 @@ const Tab = createBottomTabNavigator<AppTabParamList>();
  * (MASTER PROMPT §90) — cet onglet central n'ouvre pas un 6e ecran caché,
  * il EST l'une des 5 destinations, rendue differemment (bouton releve)
  * pour signaler que c'est une action plutot qu'une consultation.
+ *
+ * INTEGRATION FINALE des tranches mobiles paralleles :
+ *  - « Réseau » monte desormais `ReseauStack` (pile locale qui fusionne
+ *    `NetworkScreen`, ISE-038 -> ISE-046 et ISE-047 -> ISE-054) au lieu de
+ *    `NetworkScreen` seul.
+ *  - L'action centrale « + » monte `SearchStack` (ISE-034 -> ISE-037) au
+ *    lieu de la coquille `ActionCentralScreen`.
+ *  - « Opportunités » monte `OpportunitiesDetailStack` (ISE-055 en racine,
+ *    suivi de ISE-056 -> ISE-066) au lieu de `OpportunitiesScreen` seul.
+ *  - « Moi » reste `ProfileScreen`, qui monte lui-meme sa propre pile
+ *    locale (ISE-016 -> ISE-033) sans que ce fichier le sache.
  */
 export function AppTabs() {
   return (
@@ -32,10 +43,10 @@ export function AppTabs() {
       }}
     >
       <Tab.Screen name="Accueil" component={HomeScreen} options={{ title: fr.nav.home }} />
-      <Tab.Screen name="Reseau" component={NetworkScreen} options={{ title: fr.nav.network }} />
+      <Tab.Screen name="Reseau" component={ReseauStack} options={{ title: fr.nav.network }} />
       <Tab.Screen
         name="ActionCentrale"
-        component={ActionCentralScreen}
+        component={SearchStack}
         options={{
           title: fr.nav.actionCentral,
           tabBarButton: (props) => <CentralActionButton {...props} />,
@@ -43,7 +54,7 @@ export function AppTabs() {
       />
       <Tab.Screen
         name="Opportunites"
-        component={OpportunitiesScreen}
+        component={OpportunitiesDetailStack}
         options={{ title: fr.nav.opportunities }}
       />
       <Tab.Screen name="Moi" component={ProfileScreen} options={{ title: fr.nav.profile }} />

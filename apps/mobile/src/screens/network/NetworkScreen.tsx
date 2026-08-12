@@ -8,6 +8,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { Screen } from '../../components/Screen';
 import { fr } from '../../i18n/fr';
 import { frNetworkCalls } from '../../i18n/network-calls';
+import { frRelations } from '../../i18n/relations';
 import { newCorrelationId } from '../../lib/correlation';
 import {
   loadConnections,
@@ -108,12 +109,47 @@ export function NetworkScreen() {
        * Navigation avertit en developpement plutot que de planter.
        */}
       <Pressable
-        onPress={() => navigation.navigate('AppelsReseau' as never)}
+        onPress={() => navigation.navigate('AppelsListe' as never)}
         accessibilityRole="button"
         style={styles.callsEntry}
       >
         <Text style={styles.callsEntryLabel}>{frNetworkCalls.list.title}</Text>
         <Text style={styles.callsEntryHint}>{frNetworkCalls.list.subtitle}</Text>
+      </Pressable>
+
+      {/*
+       * ISE-038 -> ISE-046 — points d'entree vers la pile RELATIONS &
+       * INTRODUCTIONS (`navigation/RelationsStack.tsx`, tranche verticale
+       * distincte de ce fichier). Meme remarque que la carte « Appels au
+       * reseau » ci-dessus : tant qu'un lot autorise a toucher
+       * `AppTabs.tsx` (hors perimetre de ce lot) n'a pas monte
+       * `RelationsStack` quelque part dans l'arbre de navigation, ces deux
+       * cartes ne naviguent nulle part — React Navigation avertit en
+       * developpement plutot que de planter.
+       */}
+      <Pressable
+        onPress={() => navigation.navigate('Invitations' as never)}
+        accessibilityRole="button"
+        style={styles.callsEntry}
+      >
+        <Text style={styles.callsEntryLabel}>{frRelations.entryPoints.invitations}</Text>
+        <Text style={styles.callsEntryHint}>
+          {summary !== null && summary.pendingReceived > 0
+            ? frRelations.entryPoints.invitationsPending.replace(
+                '{count}',
+                String(summary.pendingReceived),
+              )
+            : frRelations.invitations.subtitle}
+        </Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => navigation.navigate('Introductions' as never)}
+        accessibilityRole="button"
+        style={styles.callsEntry}
+      >
+        <Text style={styles.callsEntryLabel}>{frRelations.entryPoints.introductions}</Text>
+        <Text style={styles.callsEntryHint}>{frRelations.entryPoints.introductionsHint}</Text>
       </Pressable>
 
       {summary !== null ? (

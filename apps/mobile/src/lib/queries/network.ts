@@ -48,6 +48,14 @@ export interface NetworkSummary {
   readonly promotions: number;
   readonly countries: number;
   readonly availableToHelp: number;
+  /**
+   * ISE-040 -> ISE-041 — invitations reçues / envoyées en attente.
+   * Meme champ que `NetworkSummary.pendingReceived/pendingSent` cote web
+   * (`apps/web/src/lib/network-view.ts`) : `my_network_summary()` les
+   * renvoie deja, ce module se contentait de ne pas encore les lire.
+   */
+  readonly pendingReceived: number;
+  readonly pendingSent: number;
 }
 
 type Json = Record<string, unknown>;
@@ -132,6 +140,8 @@ export async function loadNetworkSummary(): Promise<NetworkSummaryResult> {
       promotions: num(raw['promotions']) ?? 0,
       countries: num(raw['countries']) ?? 0,
       availableToHelp: num(raw['available_to_help']) ?? 0,
+      pendingReceived: num(raw['pending_received']) ?? 0,
+      pendingSent: num(raw['pending_sent']) ?? 0,
     },
     failed: false,
   };

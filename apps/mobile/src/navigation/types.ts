@@ -1,5 +1,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+import type { SearchStackParamList } from './SearchStack';
+
 /**
  * Pile affichee aux visiteurs non authentifies.
  *
@@ -17,7 +19,12 @@ export type AuthStackParamList = {
 export type AppTabParamList = {
   Accueil: undefined;
   Reseau: undefined;
-  ActionCentrale: undefined;
+  /**
+   * L'action centrale « + » monte desormais `SearchStack` (ISE-034 ->
+   * ISE-037, integration finale des tranches mobiles paralleles) au lieu
+   * de la coquille `ActionCentralScreen`.
+   */
+  ActionCentrale: NavigatorScreenParams<SearchStackParamList>;
   Opportunites: undefined;
   Moi: undefined;
 };
