@@ -100,4 +100,14 @@ export const fr = {
       moderated: 'Retirée',
     } as Record<string, string>,
   },
+
+  /** ISE-016 — Mon profil (« Moi »). */
+  profile: {
+    errorTitle: 'Impossible de charger votre profil.',
+    emptyTitle: 'Aucun profil rattaché à ce compte.',
+    emptyBody: 'Contactez votre promotion ou l’assistance pour relier votre compte ISE.',
+    promotionUnknown: 'Promotion non renseignée.',
+    completionUnknown: 'Score de complétion indisponible pour le moment.',
+    completionHint: 'Complétez votre profil pour être visible du réseau.',
+  },
 } as const;
