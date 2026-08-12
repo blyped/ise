@@ -7,7 +7,7 @@ import type {
 /**
  * Etats initiaux des ecrans OPPORTUNITES, hors de `actions.ts`
  * (`'use server'`) : un fichier `'use server'` compile tout export
- * non-fonction en reference serveur (proxy), pas en valeur reelle (D-131).
+ * non-fonction en reference serveur (proxy), pas en valeur reelle (D-159).
  */
 export const initialSaveOpportunityState: SaveOpportunityState = {
   status: 'idle',

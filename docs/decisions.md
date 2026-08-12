@@ -363,3 +363,33 @@ d'un écran). Le curseur composite (`created_at`, `id` — D-44) est donc recomp
 (`lib/admin-data/queries.ts`) à partir de la dernière ligne reçue, puis scellé
 (`lib/opaque-cursor.ts`) avant de quitter le serveur — même garantie d'opacité que partout ailleurs,
 construite ici plutôt que déléguée à `private.encode_keyset_cursor()`.
+
+---
+
+## 18. Correctif transversal — exports non-fonction depuis les fichiers `'use server'`
+
+| #     | Décision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Source                                                                                             |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| D-159 | **ADOPTÉE** — Aucun fichier `'use server'` n'exporte autre chose que des fonctions async. Les neuf états initiaux (`initial*State`) qui vivaient dans sept `actions.ts` sont déplacés dans des fichiers voisins `states.ts` (modules ordinaires), qui importent leurs types depuis `actions.ts` via `import type` (effacé à la compilation, donc sans effet `'use server'`). Convention prospective : tout nouvel état initial de `useActionState` naît dans un `states.ts`, jamais dans un `actions.ts`. | `a9ed42b`, `*/states.ts`, `*/actions.ts`, `ClaimSearchForm.tsx` et 10 autres composants consommateurs |
+
+Contexte : un export non-fonction d'un fichier `'use server'` n'est pas la valeur déclarée une fois
+compilé — Turbopack (Next 16.3) le transforme **silencieusement** en *référence serveur*
+(`createServerReference(...)`), c'est-à-dire un proxy appelable dont toutes les propriétés valent
+`undefined`. `initialClaimSearchState` importé par `ClaimSearchForm` arrivait donc dans
+`useActionState` sous forme de proxy sans `fieldErrors`, et `Object.keys(state.fieldErrors)` levait
+`TypeError: Cannot convert undefined or null to object` — le 500 « intermittent » de
+`/reclamer-mon-profil` (digests `1724077822` / `3088685757`, références ISE-CB506A52A080,
+ISE-131E8E112FA2, ISE-9797295876FD, ISE-DDFF3FC13811 entre autres). L'intermittence était une
+illusion : le rendu serveur échouait à chaque requête, mais le flux HTML basculait parfois sur un
+nouveau rendu client complet qui masquait l'échec (erreur « recoverable » de React 19), parfois sur
+la page d'erreur. Le diagnostic a été obtenu en lisant le code **compilé** au point exact du crash
+(chunk client, ligne/colonne de la stack), pas en relisant les sources — les sources étaient
+correctes au regard de TypeScript, qui ne voit pas la sémantique `'use server'`.
+
+Les huit autres états exportés de la même façon (appels, opportunités, candidatures, relations,
+recherche, alertes) portaient le même défaut à l'état latent : leurs consommateurs ne lisent que des
+propriétés en accès optionnel (`state.results?.length ?? 0`), ce qui survit à un proxy — jusqu'au
+jour où un accès strict serait ajouté. Ils sont corrigés dans le même commit plutôt que d'attendre
+neuf incidents séparés. L'alternative « directive `'use server'` par fonction plutôt que par
+fichier » a été écartée : elle aurait fait entrer tout le graphe d'imports serveur (`next/headers`,
+requêtes Supabase) dans les bundles client des composants qui importent les états initiaux.
