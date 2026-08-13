@@ -25,6 +25,7 @@ export const frCms = {
     sections: 'Sections accueil',
     news: 'Actualités',
     events: 'Événements',
+    opportunities: 'Opportunités',
     featuredProfile: 'ISE du jour',
     partners: 'Partenaires',
     media: 'Médiathèque',
@@ -203,7 +204,7 @@ export const frCms = {
     fieldMedia: 'Visuel Desktop',
     fieldMobileMedia: 'Visuel Mobile',
     fieldMediaHelp:
-      'Deux visuels distincts : le Desktop est cadré en 16/9, le Mobile en portrait. Chacun porte son propre texte alternatif.',
+      'Deux visuels distincts : le Desktop est cadré en 16/9, le Mobile en portrait. Chacun porte son propre texte alternatif. Formats recommandés : Desktop 1920 × 1080 px (16/9), Mobile 1080 × 1350 px (4/5), JPEG/WebP/AVIF, 5 Mo maximum.',
     fieldCta: 'Libellé du bouton',
     fieldEntity: 'Ressource liée',
     fieldEntityHelp:
@@ -313,6 +314,40 @@ export const frCms = {
       'L’épinglage est un override éditorial borné dans le temps : il passe devant la source automatique, puis expire de lui-même (ADDENDUM §43).',
     scopeNote:
       'Le CMS ne modifie ni le statut de l’événement, ni ses dates, ni son URL de connexion. Il ne pilote que son exposition sur la landing (D-128).',
+    coverLabel: 'Visuel',
+    coverMedia: 'Visuel de la carte',
+    coverMediaNone: 'Aucun visuel',
+    coverHelp:
+      'Visuel choisi dans la médiathèque publique (comme le carrousel) — jamais un chemin recopié à la main. Format recommandé : 1600 × 900 px (ratio 16/9), JPEG/WebP/AVIF, 5 Mo maximum. Sans visuel, la carte s’affiche sans image (0113).',
+    coverSubmit: 'Enregistrer le visuel',
+    coverDone: 'Visuel enregistré.',
+  },
+
+  /* ---------------------------------------------------------------- */
+  /* CMS-006bis (0113) — Opportunites                                  */
+  /* ---------------------------------------------------------------- */
+  opportunities: {
+    title: 'Opportunités',
+    subtitle: 'Source réelle : le module Opportunités. Le CMS choisit ce qui paraît.',
+    emptyTitle: 'Aucune opportunité',
+    emptyBody:
+      'Le module Opportunités ne contient encore aucune offre. Une opportunité expirée ou dépubliée quitte la landing d’elle-même.',
+    pinned: 'Épinglée',
+    pin: 'Épingler sur la landing',
+    unpin: 'Retirer l’épinglage',
+    pinHelp:
+      'L’épinglage est un override éditorial borné dans le temps : il passe devant la source automatique, puis expire de lui-même (ADDENDUM §43).',
+    scopeNote:
+      'Le CMS ne modifie ni le statut de l’offre, ni sa modération, ni sa description. Ni la rémunération, ni le contact, ni l’URL de candidature externe ne transitent jamais ici (ADDENDUM §13). Il ne pilote que son exposition sur la landing et son visuel (D-128).',
+    coverLabel: 'Visuel',
+    coverMedia: 'Visuel de la carte',
+    coverMediaNone: 'Aucun visuel',
+    coverHelp:
+      'Visuel choisi dans la médiathèque publique — jamais un chemin recopié à la main, et distinct de tout logo d’organisation. Format recommandé : 1600 × 900 px (ratio 16/9), JPEG/WebP/AVIF, 5 Mo maximum. Sans visuel, la carte s’affiche sans image (0113).',
+    coverSubmit: 'Enregistrer le visuel',
+    coverDone: 'Visuel enregistré.',
+    scheduleLabel: 'Programmer l’exposition',
+    pendingSchedule: 'Programmation en attente',
   },
 
   /* ---------------------------------------------------------------- */
@@ -391,7 +426,7 @@ export const frCms = {
       'Ce teaser est celui que sert get_landing_featured_profile() : la même projection que le site public, sans champ privé.',
     showcaseTitle: 'Visuel et accroche (D-165)',
     showcaseHelp:
-      'Visuel choisi dans la médiathèque publique (comme le carrousel), jamais la photo privée du profil : la politique « pas d’avatar » (D-135) ne change pas.',
+      'Visuel choisi dans la médiathèque publique (comme le carrousel), jamais la photo privée du profil : la politique « pas d’avatar » (D-135) ne change pas. Format recommandé : 1600 × 900 px (ratio 16/9), JPEG/WebP/AVIF, 5 Mo maximum.',
     showcaseMedia: 'Visuel',
     showcaseMediaNone: 'Aucun visuel',
     showcaseTagline: 'Accroche',
@@ -419,6 +454,8 @@ export const frCms = {
     fieldDescription: 'Description',
     fieldMedia: 'Visuel Desktop',
     fieldMobileMedia: 'Visuel Mobile',
+    fieldMediaHelp:
+      'Deux visuels distincts : le Desktop est cadré en 16/9, le Mobile en portrait. Formats recommandés : Desktop 1920 × 1080 px (16/9), Mobile 1080 × 1350 px (4/5), JPEG/WebP/AVIF, 5 Mo maximum.',
     fieldCta: 'Libellé du bouton',
     fieldTargetUrl: 'Adresse cible (https)',
     fieldTargetEntityType: 'Ou ressource interne — type',
@@ -459,7 +496,7 @@ export const frCms = {
     uploadTitle: 'Importer un média',
     fieldFile: 'Fichier image',
     fieldFileHelp:
-      'PNG, JPEG, WebP ou AVIF. 5 Mo maximum. Le SVG est refusé : il peut contenir du script et le bucket est public.',
+      'PNG, JPEG, WebP ou AVIF. 5 Mo maximum. Le SVG est refusé : il peut contenir du script et le bucket est public. Taille recommandée selon l’emplacement : environ 1920 × 1080 px pour un visuel plein cadre (carrousel, couverture d’événement ou d’opportunité, « ISE du jour »), 1080 × 1350 px pour un visuel Mobile en portrait. Un fichier plus petit reste accepté mais s’affichera flou en grand format.',
     fieldUsage: 'Emplacement sur la vitrine',
     fieldUsageHelp:
       'Détermine le dossier de rangement dans le bucket public. Le serveur refuse tout autre emplacement.',
