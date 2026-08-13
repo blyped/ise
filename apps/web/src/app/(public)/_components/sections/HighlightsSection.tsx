@@ -54,6 +54,7 @@ function Card({
   kicker,
   kickerClassName,
   title,
+  titleClassName,
   highlight,
   meta,
   visual,
@@ -62,6 +63,11 @@ function Card({
   kicker: string;
   kickerClassName?: string;
   title: string;
+  /**
+   * 0117 — permet de masquer visuellement le titre (`sr-only`) quand la
+   * couverture le porte deja incruste, sans jamais le retirer du DOM.
+   */
+  titleClassName?: string;
   /** Accroche courte, mise en avant entre le titre et le meta (D-165). */
   highlight?: string | null;
   meta?: string | null;
@@ -72,7 +78,9 @@ function Card({
     <article className={CARD}>
       {visual}
       <p className={`${KICKER} ${kickerClassName ?? 'text-primary'}`}>{kicker}</p>
-      <h3 className="text-body text-text-primary font-semibold">{title}</h3>
+      <h3 className={`text-body text-text-primary font-semibold ${titleClassName ?? ''}`}>
+        {title}
+      </h3>
       {highlight ? (
         <p className="text-body-sm text-ise-gold font-medium italic">{highlight}</p>
       ) : null}
@@ -114,18 +122,25 @@ function NoAction() {
   return <p className="text-caption text-text-muted">{frPublic.cards.availableAfterSignIn}</p>;
 }
 
+/**
+ * 0117 — quand la couverture porte deja un titre incruste (affiche), le
+ * titre affiche normalement sous l'image serait un doublon visuel : il est
+ * alors masque avec `sr-only` (jamais retire du DOM, pour l'accessibilite
+ * et le SEO), le kicker et le meta restant visibles a l'identique.
+ */
 function NewsCard({ item }: { item: LandingNews }) {
   const meta = joinMeta([item.summary, formatLongDate(item.publishedAt)]);
   return (
     <Card
       kicker={frPublic.kickers.news}
       title={item.title}
+      {...(item.coverHasText ? { titleClassName: 'sr-only' } : {})}
       meta={meta}
       visual={
-        item.image === null ? null : (
+        item.cover === null ? null : (
           <MediaFrame>
             <LandingMediaImage
-              media={item.image}
+              media={item.cover}
               sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 260px"
               className="object-cover"
             />

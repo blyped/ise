@@ -1,9 +1,12 @@
 'use client';
 
 import { useActionState, useId, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeftRight } from 'lucide-react';
 import { Button } from '@ise/ui-web';
 import { frAdminNews } from '@/i18n/admin-news';
 import { initialFormState } from '@/lib/form-state';
+import { CMS_ROUTES } from '@/lib/routes/cms';
 import type { AdminAction } from '../_components/ActionButton';
 
 const CATEGORIES = [
@@ -152,21 +155,20 @@ export function NewsForm({ action }: { action: AdminAction }) {
           <input id={`${base}-event-date`} name="eventDate" type="date" className={`${FIELD} w-[200px]`} />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor={`${base}-image`} className="text-body-sm text-text-primary font-medium">
-            {frAdminNews.form.imagePath}
-          </label>
-          <input
-            id={`${base}-image`}
-            name="imagePath"
-            type="text"
-            aria-describedby={`${base}-image-aide`}
-            className={`${FIELD} w-[320px]`}
-          />
-          <p id={`${base}-image-aide`} className="text-caption text-text-muted">
-            {frAdminNews.form.imagePathHelp}
-          </p>
-        </div>
+      </div>
+
+      <div className="border-border flex flex-col gap-2 rounded-lg border p-4">
+        <p className="text-body-sm text-text-primary font-medium">{frAdminNews.form.coverTitle}</p>
+        <p className="text-caption text-text-muted max-w-[60ch]">
+          {frAdminNews.form.coverCreateHint}
+        </p>
+        <Link
+          href={CMS_ROUTES.news}
+          className="text-body-sm text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue inline-flex min-h-[44px] w-fit items-center gap-2 font-medium"
+        >
+          <ArrowLeftRight size={16} aria-hidden="true" />
+          {frAdminNews.form.coverManage}
+        </Link>
       </div>
 
       <fieldset className="border-border flex flex-col gap-4 rounded-lg border p-4">

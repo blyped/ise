@@ -85,8 +85,17 @@ export const frAdminNews = {
     summaryHelp: '400 caractères maximum — affiché dans les listes et le teaser.',
     body: 'Corps de l’article',
     eventDate: 'Date associée (optionnelle)',
-    imagePath: 'Chemin de l’image (optionnel)',
-    imagePathHelp: 'Chemin de stockage d’un visuel déjà téléversé (ex. via la médiathèque CMS).',
+    /**
+     * 0117 — l'image ne se saisit plus ici : un seul visuel par article,
+     * choisi depuis /cms/actualites, réutilisé automatiquement sur la
+     * carte de la landing et sur la page de l'article.
+     */
+    coverTitle: 'Image de couverture',
+    coverCreateHint:
+      'Se choisit après création, depuis le CMS (Actualités) : un seul visuel par article, réutilisé automatiquement sur la carte de la landing et sur la page de l’article.',
+    coverDefined: 'Une couverture est définie.',
+    coverUndefined: 'Aucune couverture définie pour le moment.',
+    coverManage: 'Gérer la couverture dans le CMS',
     sourceType: 'Type de source',
     sourceUrl: 'Lien de la source',
     visibility: 'Visibilité',

@@ -54,7 +54,10 @@ export async function createNewsAction(
       p_summary: summary,
       p_body: text(formData, 'body'),
       p_event_date: text(formData, 'eventDate'),
-      p_image_path: text(formData, 'imagePath'),
+      // 0117 — l'image ne se saisit plus dans ce formulaire : elle se
+      // choisit apres coup depuis /cms/actualites (set_news_cover_media).
+      // Le parametre RPC reste pour ne rien casser cote signature SQL.
+      p_image_path: null,
       p_source_type: text(formData, 'sourceType'),
       p_source_url: text(formData, 'sourceUrl'),
       p_visibility: requiredText(formData, 'visibility') || 'members',

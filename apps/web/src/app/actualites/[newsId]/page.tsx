@@ -21,6 +21,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { loadViewerContext } from '@/lib/queries/viewer';
 import { loadNews } from '@/lib/queries/content';
 import { formatDay } from '@/lib/communities-view';
+import { landingMediaUrl } from '@/lib/public/landing-data';
+import { StorageImage } from '@/components/media/StorageImage';
 import { AppShell } from '@/components/layout/AppShell';
 import { ACTION_LINK, CHIP } from '@/components/collab/styles';
 
@@ -105,6 +107,17 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ new
       <div className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-start">
         <article className="flex min-w-0 flex-col gap-6">
           <Card>
+            {detail.cover === null ? null : (
+              <div className="bg-surface-muted rounded-base relative mb-5 aspect-[16/9] w-full overflow-hidden">
+                <StorageImage
+                  src={landingMediaUrl(detail.cover) ?? ''}
+                  alt={detail.cover.alt}
+                  sizes="(max-width: 1279px) 100vw, 800px"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+            )}
             <Badge tone="info">{detail.categoryName ?? ''}</Badge>
             <h1 className="text-h1 text-text-primary mt-4 max-w-[36ch] font-bold">
               {detail.title}
