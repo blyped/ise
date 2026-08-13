@@ -16,6 +16,8 @@ export const CMS_ROUTES = {
   carouselNew: '/cms/carrousel/nouveau',
   /** CMS-003 — Sections d'accueil. */
   sections: '/cms/sections',
+  /** CMS-011 (0114) — Piliers « Un reseau concu pour etre utile ». */
+  pillars: '/cms/piliers',
   /** CMS-004 — Actualites. */
   news: '/cms/actualites',
   /** CMS-005 — Evenements. */

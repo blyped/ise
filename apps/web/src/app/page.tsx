@@ -91,6 +91,7 @@ export default async function LandingPage() {
         />
         <NetworkSection
           stats={landing.stats}
+          pillars={landing.pillars}
           title={sectionTitle(sections, LANDING_SECTION_KEYS.stats) ?? undefined}
         />
         <ExpertisesSection

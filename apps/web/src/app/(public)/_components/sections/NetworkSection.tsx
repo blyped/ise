@@ -1,29 +1,51 @@
 import { fr, t } from '@/i18n/fr';
 import { frPublic } from '@/i18n/public';
 import { formatCount, formatLongDate } from '@/lib/public/landing-format';
-import { LANDING_SECTION_KEYS, type LandingStatsSection } from '@/lib/public/landing-data';
+import {
+  LANDING_SECTION_KEYS,
+  type LandingPillar,
+  type LandingSection,
+  type LandingStatsSection,
+} from '@/lib/public/landing-data';
 import { SEARCH_ROUTES } from '@/lib/routes/search';
+import { CALL_ROUTES } from '@/lib/routes/calls';
+import { PROJECT_ROUTES } from '@/lib/routes/projects';
+import { OPPORTUNITY_ROUTES } from '@/lib/routes/opportunities';
 import { LANDING_ANCHORS } from '../public-nav';
+import { LandingMediaImage } from '../LandingMediaImage';
 import { ProtectedLink } from '../ProtectedLink';
 import { SectionShell } from './SectionShell';
 
 /**
- * Cible de clic de chaque pilier, quand elle existe deja comme ecran reel.
- * Volontairement partiel : un pilier absent de cette table reste du texte
- * seul plutot que de pointer vers un lien invente (ADDENDUM §10, regle 6).
- * `Connecter` seul est cable a ce stade — la demande du porteur ne precise
- * pas encore les cibles de `Entraider` / `Collaborer` / `Impacter` (tache de
- * suivi : piliers pilotes par le CMS, avec image et lien par pilier).
+ * Resolution d'un `link_target` CMS (0114) en URL reelle.
+ *
+ * Liste blanche cote base (`cms_pillars.link_target`, migration 0114) :
+ * cinq ecrans membres reels, jamais un chemin invente (ADDENDUM §10,
+ * regle 6). Une cle absente de cette table — ancienne valeur retiree de la
+ * liste blanche base, ou reponse malformee — rend le pilier en texte seul,
+ * exactement comme un `link_target` `null`.
  */
-const PILLAR_TARGETS: Partial<Record<string, string>> = {
-  connecter: SEARCH_ROUTES.find,
+const TARGET_ROUTES: Partial<Record<string, string>> = {
+  search: SEARCH_ROUTES.find,
+  calls: CALL_ROUTES.list,
+  projects: PROJECT_ROUTES.list,
+  opportunities: OPPORTUNITY_ROUTES.list,
+  applications: OPPORTUNITY_ROUTES.applications,
 };
 
 /**
  * « Un reseau concu pour etre utile » + « Le reseau en quelques chiffres ».
  *
- * Les quatre piliers sont du **discours de marque**, pas de la donnee metier :
- * ils vivent dans `fr.public.pillars` au meme titre que la promesse de marque.
+ * Le titre et le corps des quatre piliers restent du **discours de
+ * marque**, pas de la donnee metier : ils vivent dans `fr.public.pillars`
+ * au meme titre que la promesse de marque. Depuis 0114 (D-168), l'image, la
+ * legende optionnelle et le lien de chaque pilier sont pilotes par le CMS
+ * (`cms_pillars` / `/cms/piliers`) : `pillars` porte cette partie
+ * editoriale variable, appariee au pilier fixe par `pillarKey`.
+ *
+ * Un pilier absent de `pillars.items` (projection en panne, ou simplement
+ * pas encore configure) reste du texte seul — jamais un lien ou une image
+ * inventes.
  *
  * ADDENDUM §23 — les chiffres, eux, viennent exclusivement de
  * `get_landing_stats()`. Cette fonction renvoie aujourd'hui **zero partout**,
@@ -39,9 +61,11 @@ const PILLAR_TARGETS: Partial<Record<string, string>> = {
  */
 export function NetworkSection({
   stats,
+  pillars,
   title,
 }: {
   stats: LandingStatsSection;
+  pillars: LandingSection<LandingPillar>;
   title?: string | undefined;
 }) {
   // `allZero` couvre les deux cas ou il n'y a rien de mesure a montrer : la
@@ -52,13 +76,27 @@ export function NetworkSection({
     <SectionShell id={LANDING_ANCHORS.network} title={fr.public.pillars.title}>
       <ul className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-md:grid-cols-1 max-md:gap-4">
         {fr.public.pillars.items.map((pillar, index) => {
-          const target = PILLAR_TARGETS[pillar.key];
+          const cmsPillar = pillars.items.find((item) => item.pillarKey === pillar.key);
+          const target =
+            cmsPillar?.linkTarget === null || cmsPillar?.linkTarget === undefined
+              ? undefined
+              : TARGET_ROUTES[cmsPillar.linkTarget];
           const content = (
             <>
+              {cmsPillar?.image === null || cmsPillar?.image === undefined ? null : (
+                <LandingMediaImage
+                  media={cmsPillar.image}
+                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                  className="mb-4 aspect-video w-full rounded-md object-cover"
+                />
+              )}
               <p className="text-overline text-primary font-semibold uppercase tracking-[0.08em]">
                 {pillar.title}
               </p>
               <p className="text-body-sm text-text-secondary mt-4">{pillar.body}</p>
+              {cmsPillar?.caption === null || cmsPillar?.caption === undefined ? null : (
+                <p className="text-body-sm text-text-secondary mt-2">{cmsPillar.caption}</p>
+              )}
             </>
           );
           const cardClassName =
@@ -78,7 +116,7 @@ export function NetworkSection({
                   resourceType="espace-membre"
                   className={`block transition-shadow duration-150 hover:shadow-md ${cardClassName}`}
                   event="public_content_click"
-                  sectionKey={LANDING_SECTION_KEYS.highlights}
+                  sectionKey={LANDING_SECTION_KEYS.pillars}
                   contentType="network_pillar"
                   position={index + 1}
                 >
