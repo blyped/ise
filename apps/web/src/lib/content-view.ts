@@ -1,6 +1,7 @@
 import { asArray, asObject, bool, num, str, strings, toProfileCard } from '@/lib/network-view';
 import type { NetworkProfileCard } from '@/lib/network-view';
 import type { Page } from '@/lib/communities-view';
+import { parseMedia, type LandingMedia } from '@/lib/public/landing-data';
 
 /**
  * Types de vue et conversions PURES de la tranche ACTUALITES &
@@ -81,6 +82,16 @@ export interface NewsCard {
   summary: string;
   eventDate: string | null;
   imagePath: string | null;
+  /**
+   * 0117 — couverture unique de l'article, resolue dans la mediatheque
+   * publique (meme validation que la landing : bucket public, alternative
+   * textuelle >= 3 caracteres). Remplace `imagePath` comme source de
+   * verite pour « une image est-elle definie et affichable ? ». `null` si
+   * aucune couverture n'est choisie, ou si le media n'y est plus valide.
+   */
+  cover: LandingMedia | null;
+  /** 0117 — sans effet sur la page article (le titre y reste toujours visible) ; utile pour l'admin. */
+  coverHasText: boolean;
   sourceType: string | null;
   sourceUrl: string | null;
   visibility: string;
@@ -254,6 +265,8 @@ export function toNewsCard(value: unknown): NewsCard | null {
     summary: str(raw['summary']) ?? '',
     eventDate: str(raw['event_date']),
     imagePath: str(raw['image_path']),
+    cover: parseMedia(raw['cover']),
+    coverHasText: bool(raw['cover_has_text']),
     sourceType: str(raw['source_type']),
     sourceUrl: str(raw['source_url']),
     visibility: str(raw['visibility']) ?? 'members',

@@ -192,6 +192,10 @@ export interface CmsNewsRow {
   summary: string;
   categoryCode: string;
   imagePath: string | null;
+  /** 0117 — visuel de couverture choisi dans la médiathèque publique, unique et réutilisé partout. */
+  coverMediaId: string | null;
+  /** 0117 — `true` si le visuel porte déjà un titre incrusté (la carte n'affiche alors pas le titre en double). */
+  coverHasText: boolean;
   editorialStatus: string;
   visibility: string;
   landingVisibility: 'hidden' | 'visible';
