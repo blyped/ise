@@ -28,7 +28,7 @@ Légende : ✅ terminé — 🟡 partiel — ⬜ non démarré — ⬛ sans obje
 | Tables `public` sans RLS activée                           | **0**                                                                                                                                 |
 | Politiques RLS (schéma `public`)                           | **440**                                                                                                                               |
 | Tables `public` sans aucune politique                      | **3** — `domain_events`, `notification_deliveries`, `profile_search_documents` (volontaire)                                           |
-| Fonctions `public` / `private`                             | 289 / 115                                                                                                                             |
+| Fonctions `public` / `private`                              | 289 / 115                                                                                                                             |
 | Fonctions exécutables par `anon`                           | **11**, exactement la liste blanche de D-125 (étendue de dix à onze par 0111, `get_landing_carousel_settings`, D-163)                 |
 | Buckets Storage                                            | 9 — 8 privés (0027) + `landing-media` public (0068, D-134)                                                                            |
 | Tâches `cron.job`                                          | **4**, toutes `active` (`cms_expire_content`, `cms_publish_scheduled`, `cms_select_featured_profile`, `cms_publish_featured_profile`) |
@@ -55,7 +55,7 @@ Légende : ✅ terminé — 🟡 partiel — ⬜ non démarré — ⬛ sans obje
 | Recherche & découverte                            | ISE-034→037            | ✅          | ✅  | ✅ SQL 0001–0002 (search)             | ✅ 4/4       | ⬜     | Annuaire vide : la recherche fonctionne mais ne renvoie rien ; aucun test E2E                                                                                                                                                                                                                         | 🟡     |
 | Relations & introductions                         | ISE-038→046            | ✅          | ✅  | ✅ SQL 0004                           | ✅ 9/9       | ⬜     | Filtres d'ISE-040 non livrés (F-05) ; demandes/refus/retraits de connexion et demandes d'introduction notifiés in-app depuis 0105 ; aucun test E2E                                                                                                                                                                                                                     | 🟡     |
 | Appels au réseau                                  | ISE-047→054            | ✅          | ✅  | ✅ SQL 0005, 0019                     | ✅ 8/8       | ⬜     | Ciblage nominatif absent ; publication d'un appel notifiée in-app aux profils matchés depuis 0105 ; aucun test E2E                                                                                                                                                                                                                                       | 🟡     |
-| Opportunités                                      | ISE-055→066            | ✅          | ✅  | ✅ SQL 0006, 0020                     | ✅ 12/12     | ⬜     | Modération SA-020 livrée (`/administration/opportunites`) ; dépôt de CV non ouvert ; changement d'étape et sélection d'une candidature notifiés in-app au candidat depuis 0115/0116 (D-169, retrait et déclarations auto restent hors périmètre) ; aucun test E2E                                                                                                                                                                                                   | 🟡     |
+| Opportunités                                      | ISE-055→066            | ✅          | ✅  | ✅ SQL 0006, 0020                     | ✅ 12/12     | ⬜     | Modération SA-020 livrée (`/administration/opportunites`) ; dépôt de CV non ouvert ; changement d'étape et sélection d'une candidature notifiés in-app au candidat depuis 0115/0116 (D-169, retrait et déclarations auto restent hors périmètre) ; aucun test E2E                                                                                                                                                                                                                   | 🟡     |
 | Promotions                                        | ISE-067→071            | ✅          | ✅  | ✅ SQL 0024                           | ✅ 5/5       | ⬜     | Aucune donnée d'annuaire : les espaces promotion sont vides                                                                                                                                                                                                                                           | 🟡     |
 | Stages                                            | ISE-072→077            | ✅          | ✅  | ✅ SQL 0007, 0025                     | ✅ 6/6       | ⬜     | Écrans ISE-073→077 livrés (détail, candidature, relecture, suivi, résultat) ; aucun test E2E ; aucune offre réelle en base                                                                                                                                                                            | 🟡     |
 | Mentorat                                          | ISE-078→083            | ✅          | ✅  | ✅ SQL 0008, 0026                     | ✅ 6/6       | ⬜     | Écrans ISE-078→083 livrés (`/mentorat` et sous-routes) ; carte `/collaborer` réactivée ; aucun mentor réel en base ; aucun test E2E                                                                                                                                                                   | 🟡     |
@@ -148,14 +148,30 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
 - **0 actualité, 0 événement, 0 opportunité, 0 média CMS, 0 événement de domaine.** La landing
   publique rend intégralement ses états vides, et le CMS liste des tables vides.
 
-### Aucun test de bout en bout
+### Tests de bout en bout — paragraphe obsolète corrigé (D-169)
 
-- **Aucun test E2E n'a jamais été exécuté.** `apps/web/e2e/public-redirect.spec.ts` existe et est
-  câblé dans `.github/workflows/e2e.yml`, mais n'a jamais tourné (le bac à sable n'a pas d'accès
-  à `*.supabase.co`). C'est le maillon manquant de la Definition of Done sur **toutes** les
-  tranches déclarées livrées.
+- **Ce paragraphe affirmait « aucun test E2E n'a jamais été exécuté » ; c'est faux depuis le
+  12 août 2026.** Le blocage documenté (bac à sable sans accès `*.supabase.co`, scope du connecteur
+  GitHub insuffisant pour modifier `.github/workflows/e2e.yml`) a été levé **par l'utilisateur
+  directement**, hors agent (commit `f280574`, « restaurer les secrets Superadmin E2E dans le
+  workflow », 2026-08-12, auteur `blyped@gmail.com`). Depuis, plusieurs cycles réels d'exécution et
+  de correction ont eu lieu : `c93dd95`/`4265105` (ajout de `admin-smoke.spec.ts`,
+  `admin-permissions.spec.ts`, `admin-communities.spec.ts`), `9683db2`/`f42936f` (correctifs faits
+  *après constat d'échecs réels* aux runs #6 et #8, documentés dans `admin-helpers.ts` et
+  `e2e.yml`), `963a456` (ajout du projet webkit/mobile-375). La tâche #81 du suivi de session note
+  un run #9 vert.
+- **Ce que je n'ai pas pu vérifier moi-même depuis ce bac à sable** : le statut du dernier run
+  GitHub Actions (aucun outil d'accès à l'API Actions n'est disponible ici) ni la présence réelle
+  des secrets `E2E_MEMBER_EMAIL`/`E2E_MEMBER_PASSWORD`/`E2E_SUPERADMIN_EMAIL`/
+  `E2E_SUPERADMIN_PASSWORD` dans Settings → Secrets du dépôt (le YAML les référence, ce qui ne
+  prouve pas leur existence côté GitHub). Ce point reste à confirmer par l'utilisateur ou un
+  environnement ayant accès à l'API Actions.
+- **Un seul job `redirect`** dans `e2e.yml` exécute déjà toutes les specs de `apps/web/e2e/`
+  (`testMatch: '**/*.spec.ts'` dans `playwright.config.ts`) : `public-redirect.spec.ts` et les
+  trois `admin-*.spec.ts` tournent dans la même commande `pnpm --filter @ise/web exec playwright
+  test`, sans job séparé par spec.
 - Les 411 tests unitaires ne touchent jamais la base. Les 31 harnais SQL touchent la base mais
-  jamais l'interface.
+  jamais l'interface — ce constat-là reste vrai, seul le statut E2E était erroné.
 
 ### Modules entiers sans interface
 
@@ -237,8 +253,10 @@ Cette section est la partie utile du document. Elle ne contient que des manques 
    (275 réponses, 255 profils après dédoublonnage) a été importé directement en migration
    (`0088_import_ise_census`), en contournant le module SA-040 → SA-042. Décision C-06 (docs/decisions.md) :
    ce module est abandonné, plus aucun état vide à combler par ce biais.
-5. **Brancher un consommateur d'événements de domaine** (notifications in-app d'abord) : sinon les
-   19 modules livrés sont muets.
+5. ~~Brancher un consommateur d'événements de domaine~~ — **fait le 12 août (0105) et étendu le
+   13 août (0116, D-169)** : 13 types sur ~40 relayés en notification in-app. Reste à couvrir le
+   reste des types (candidature soumise/retirée, recommandation retirée, digests) et à brancher un
+   canal e-mail/push (section 4, « Notifications in-app »).
 6. ~~Livrer les écrans manquants de Stages (5) et de Mentorat (6)~~ — **fait le 2026-08-09**
    (ISE-073 → ISE-083, harnais 0025/0026 rejoués verts).
 7. **Livrer ISE-024 → ISE-033**, SYS-003, SYS-004, SYS-007, SYS-010.

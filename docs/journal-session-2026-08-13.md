@@ -138,25 +138,83 @@ reste en un ou plusieurs lots, avec ou sans nouveau `dryRun` de contrôle avant 
 
 ---
 
+## 5. Réconciliation git, ré-vérification des migrations, et clôture des points ouverts (D-169)
+
+Suite à l'instruction « on fait tous les points mentionnés sauf les invitations », les points 1
+(git), 2 (migrations) et 3 (points ouverts du 12 août) de la section précédente ont été traités
+dans la suite de cette même session — le provisioning (section 4 ci-dessus) reste seul non
+retouché, conformément à l'exclusion explicite.
+
+**Dépôt local réconcilié.** Le dépôt était sur une branche parasite (`push-remaining-piliers`,
+laissée par un sous-agent antérieur), elle-même divergente de `main` local, lui-même divergent de
+`origin/main`. Un `git checkout main` avait silencieusement fait revenir plusieurs fichiers du
+répertoire de travail à un état ancien (contenu redondant déjà présent sur `origin/main` via une
+autre lignée de commits, vérifié avant action). Corrigé par `git reset --hard origin/main` puis
+suppression de la branche parasite.
+
+**5 migrations restantes re-vérifiées** (`0070_promotions_api`, `0072_communities_api`,
+`0073_projects_api`, `0074_news_events_api`, `0075_mentorship_api`) — délégué à un sous-agent pour
+ne pas consommer ~215 Ko de contexte sur les 5 comparaisons SQL complètes. Verdict : 20/20
+migrations d'`Annexe B` de `docs/migration-integrity.md` désormais tranchées. 17 sont des écarts
+cosmétiques ou des formes SQL équivalentes ; 3 étaient de vrais écarts, tous bénins : `0070` a un
+écart réel dépôt/production sur un filtre de statut `next_event` (documenté, pas corrigé — hors
+périmètre d'une vérification d'intégrité) ; `0073` et `0074` ont un historique `schema_migrations`
+obsolète mais la fonction réellement active en production correspond déjà au dépôt — aucun bug
+actif.
+
+**`domain_events` manquants pour candidatures et recommandations (D-169), migrations `0115` et
+`0116`.** `submit_application`, `declare_external_application`, `transition_application_status`
+(0008) et la création d'une `recommendation_requests` (insert direct côté client, RLS 0021)
+n'écrivaient aucune ligne dans `public.domain_events`. Comblé par `0115` (reprend ces fonctions à
+l'identique + un `insert into domain_events` par issue ; trigger `AFTER INSERT` sur
+`recommendation_requests` puisque sa création n'a pas de RPC dédiée) et `0116` (étend le `case` de
+`private.process_pending_domain_event_notifications()`, 0105, à 4 types de plus : candidature
+retenue/changée, demande/réponse de recommandation — 13 types couverts sur ~40 au total). Détail
+complet en `docs/decisions.md` §28 (D-169). Les deux migrations sont appliquées et vérifiées en
+production (`security_baseline_violations()` et `storage_baseline_violations()` à 0).
+
+**Navigation mobile (tâche #114) : déjà fonctionnellement complète, code mort nettoyé.** Le résumé
+de session hérité affirmait à tort que 6 piles de navigation restaient à monter. Vérification du
+code réel : les 6 piles sont toutes déjà atteignables. Deux fichiers (`RelationsStack.tsx`,
+`NetworkCallsStack.tsx`) portaient un composant navigateur jamais monté (leurs écrans avaient été
+fusionnés à plat dans `ReseauStack.tsx` par une passe antérieure) — retirés, en conservant les
+types de routes exportés (toujours importés par 13 écrans). `AppTabParamList.Reseau` est aussi
+mieux typé (`NavigatorScreenParams<ReseauStackParamList>` au lieu de `undefined`).
+
+**CI E2E Superadmin (tâche #115) : déjà résolu, hors agent, le 12 août.** Le blocage documenté
+(scope du connecteur GitHub insuffisant pour modifier `.github/workflows/e2e.yml`) a été levé par
+l'utilisateur directement (commit `f280574`, pas par un agent). Le workflow exécute déjà
+`admin-smoke.spec.ts`, `admin-permissions.spec.ts` et `admin-communities.spec.ts` via un seul job
+générique (`testMatch: '**/*.spec.ts'`), pas des jobs séparés. Plusieurs cycles réels d'exécution
+et de correction ont eu lieu depuis (`9683db2`, `4265105`, `f42936f`, `963a456`). Non vérifiable
+depuis ce bac à sable : le statut du dernier run GitHub Actions (aucun outil d'accès à l'API
+Actions disponible ici) et la présence réelle des 4 secrets référencés dans Settings → Secrets du
+dépôt. `docs/implementation-status.md` affirmait encore « aucun test E2E n'a jamais été exécuté » —
+corrigé.
+
+---
+
 ## Travaux restants / points d'attention
 
-1. **Provisioning D-161 — 201 invitations non envoyées** (section 4). Prochaine étape : confirmation
-   explicite de l'utilisateur avant tout nouvel appel à `provision-invitations` sur le reste des
-   profils `referenced`. Envisager un `dryRun` de contrôle avant l'envoi réel, par lots de 50.
-2. **Dépôt local toujours partiellement désynchronisé** (section 3) au-delà des deux fichiers déjà
-   corrigés — un `git status`/`git fetch` complet suivi d'une décision de réconciliation (commit,
-   stash ou reset raisonné) reste à faire sur `C:\Services\Ise\app`.
-3. Les points ouverts du journal du 12 août (intégration de la navigation mobile, E2E Superadmin
-   bloqué sur deux points humains, 5 migrations divergentes non re-vérifiées, couverture de
-   notification incomplète, absence de `domain_events` pour candidatures/recommandations) restent
-   inchangés — non retouchés dans cette session.
-4. Aucun test automatisé (`tsc`, `vitest`) n'a pu être exécuté dans le bac à sable pour les
-   fonctionnalités D-167/D-168 : `pnpm` est absent du `PATH` et les symlinks `.bin` du store pnpm
-   ne se résolvent pas correctement à travers le montage Windows→Linux. Contournement utilisé :
-   appel direct de `tsc` via son chemin résolu dans `node_modules/.pnpm/typescript@.../`, comparé
-   par échantillonnage à des fichiers non modifiés (`cms/evenements/page.tsx`) pour confirmer que
-   les erreurs restantes sont uniquement dues à l'absence de `@types/react`/`@types/node` dans ce
-   bac à sable, pas à une régression introduite.
+1. **Provisioning D-161 — 201 invitations non envoyées.** Explicitement exclu de cette session.
+   Prochaine étape : confirmation explicite de l'utilisateur avant tout nouvel appel à
+   `provision-invitations` sur le reste des profils `referenced`.
+2. **`application.withdrawn` côté recruteur et `recommendation.withdrawn`** ne déclenchent aucune
+   notification (0116) : aucun type au catalogue, aucun destinataire jugé assez pertinent dans ce
+   lot. À confirmer si le besoin existe réellement avant d'étendre.
+3. **Statut réel du dernier run GitHub Actions E2E non vérifiable depuis ce bac à sable** (section
+   5) — à confirmer par l'utilisateur ou un environnement ayant accès à l'API Actions.
+4. **`docs/implementation-status.md` reste daté par endroits** au-delà des sections corrigées cette
+   session (ex. le nombre de migrations affiché en tête de document, certaines lignes du tableau
+   §1 qui répètent encore « aucun test E2E » module par module) — une repasse complète du document
+   serait utile mais dépasse le périmètre des tâches traitées ici.
+5. Aucun test automatisé (`tsc`, `vitest`) n'a pu être exécuté dans le bac à sable pour les
+   fonctionnalités D-167/D-168/D-169 : `pnpm` est absent du `PATH` et les symlinks `.bin` du store
+   pnpm (et de `node_modules/@types/react`) ne se résolvent pas correctement à travers le montage
+   Windows→Linux (`Input/output error` constaté sur le symlink `@types/react`). Contournement
+   utilisé : appel direct de `tsc` via son chemin résolu dans `node_modules/.pnpm/typescript@.../`,
+   et par ailleurs vérification par `grep` exhaustif des usages avant toute suppression de code
+   (navigation mobile) pour compenser l'absence de vérification de type automatisée.
 
 ---
 
