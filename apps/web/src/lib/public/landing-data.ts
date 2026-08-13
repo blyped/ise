@@ -35,11 +35,11 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                         is_featured, is_pinned }
  *   get_landing_events(p_limit)        -> tableau { id, entity_type:'event', title, slug,
  *                                         event_type_code, starts_at, ends_at, timezone,
- *                                         format, city, country_code, image, is_pinned }
+ *                                         format, city, country_code, is_pinned }
  *   get_landing_opportunities(p_limit) -> tableau { id, entity_type:'opportunity', title,
  *                                         opportunity_type, contract_type, sector,
  *                                         country_code, city, remote_allowed, deadline,
- *                                         organization, image, is_pinned }
+ *                                         organization, is_pinned }
  *   get_landing_featured_profile()     -> objet **ou `null`** { entity_type:'profile',
  *                                         profile_id, display_name,
  *                                         promotion{id,name,graduation_year},
@@ -97,6 +97,7 @@ export const LANDING_FUNCTIONS = {
   expertises: 'get_landing_expertises',
   partners: 'get_landing_partners',
   stats: 'get_landing_stats',
+  pillars: 'get_landing_pillars',
 } as const;
 
 /**
@@ -114,6 +115,8 @@ export const LANDING_SECTION_KEYS = {
   expertises: 'expertises',
   stats: 'network_stats',
   partners: 'partners',
+  /** 0114 — analytique des clics sur les piliers, distincte de `highlights`. */
+  pillars: 'network_pillars',
 } as const;
 
 export type LandingSectionKey = (typeof LANDING_SECTION_KEYS)[keyof typeof LANDING_SECTION_KEYS];
@@ -380,6 +383,26 @@ export interface LandingPartnerCampaign {
   readonly sponsoredLabel: string;
 }
 
+/**
+ * 0114 — contenu editorial d'un pilier de « Un reseau concu pour etre
+ * utile » (Connecter / Entraider / Collaborer / Impacter). Le titre et le
+ * corps restent un discours de marque fixe (`fr.public.pillars`, i18n) :
+ * cette projection ne porte que ce qui varie dans le temps.
+ */
+export interface LandingPillar {
+  /** 'connecter' | 'entraider' | 'collaborer' | 'impacter'. */
+  readonly pillarKey: string;
+  readonly image: LandingMedia | null;
+  /** Texte editorial optionnel, en complement du corps fixe. */
+  readonly caption: string | null;
+  /**
+   * Cle d'une liste blanche cote base ('search' | 'calls' | 'projects' |
+   * 'opportunities' | 'applications') ou `null`. La resolution en URL reelle
+   * se fait cote frontend (NetworkSection.tsx) : jamais un chemin libre.
+   */
+  readonly linkTarget: string | null;
+}
+
 /** ADDENDUM §23 — un chiffre du reseau, calcule en base. */
 export type LandingStatId = 'profiles' | 'promotions' | 'countries' | 'organizations';
 
@@ -421,6 +444,8 @@ export interface LandingData {
   readonly expertises: LandingSection<LandingExpertise>;
   readonly partners: LandingSection<LandingPartnerCampaign>;
   readonly stats: LandingStatsSection;
+  /** 0114 — toujours 4 elements (un par pilier), jamais filtre par max_items. */
+  readonly pillars: LandingSection<LandingPillar>;
 }
 
 // ---------------------------------------------------------------------------
@@ -714,6 +739,20 @@ export const opportunitySchema = z
     pinned: row.is_pinned,
     target: { entityType: 'opportunity', entityId: row.id },
     image: parseMedia(row.image),
+  }));
+
+export const pillarSchema = z
+  .object({
+    pillar_key: requiredText,
+    image: z.unknown(),
+    caption: nullableText,
+    link_target: nullableText,
+  })
+  .transform<LandingPillar>((row) => ({
+    pillarKey: row.pillar_key,
+    image: parseMedia(row.image),
+    caption: row.caption,
+    linkTarget: row.link_target,
   }));
 
 const promotionSchema = z.object({ name: nullableText, graduation_year: nullableInteger });
@@ -1050,6 +1089,7 @@ async function fetchLandingData(): Promise<LandingData> {
     expertisesRead,
     partnersRead,
     statsRead,
+    pillarsRead,
   ] = await Promise.all([
     readList(LANDING_FUNCTIONS.sections, {}, sectionConfigSchema),
     readList(LANDING_FUNCTIONS.carousel, {}, slideSchema),
@@ -1065,6 +1105,7 @@ async function fetchLandingData(): Promise<LandingData> {
     readList(LANDING_FUNCTIONS.expertises, { p_limit: FETCH_LIMITS.expertises }, expertiseSchema),
     readList(LANDING_FUNCTIONS.partners, { p_placement: null }, partnerSchema),
     readStats(),
+    readList(LANDING_FUNCTIONS.pillars, {}, pillarSchema),
   ]);
 
   const sectionsSection = withLastKnownGood('sections', sectionsRead);
@@ -1076,6 +1117,7 @@ async function fetchLandingData(): Promise<LandingData> {
   const expertises = withLastKnownGood('expertises', expertisesRead);
   const partners = withLastKnownGood('partners', partnersRead);
   const stats = withLastKnownGood('stats', statsRead);
+  const pillars = withLastKnownGood('pillars', pillarsRead);
 
   const sections = sectionsSection.items;
   const servedFromLastKnownGood = [
@@ -1088,6 +1130,7 @@ async function fetchLandingData(): Promise<LandingData> {
     expertises,
     partners,
     stats,
+    pillars,
   ].some((section) => section.stale === true);
 
   return {
@@ -1105,6 +1148,8 @@ async function fetchLandingData(): Promise<LandingData> {
     expertises: limited(expertises, sections, LANDING_SECTION_KEYS.expertises),
     partners: limited(partners, sections, LANDING_SECTION_KEYS.partners),
     stats,
+    // Pas de `limited()` : 4 elements fixes, aucun reglage `max_items` cote CMS.
+    pillars,
   };
 }
 
