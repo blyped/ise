@@ -44,10 +44,13 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                         profile_id, display_name,
  *                                         promotion{id,name,graduation_year},
  *                                         current_position, organization, public_summary,
- *                                         expertise_areas[], featured_date,
+ *                                         expertise_areas[], photo, tagline, featured_date,
  *                                         selection_mode }
  *                                       (0068 : `avatar_path` a ete RETIRE de la
- *                                        projection — D-135)
+ *                                        projection — D-135. 0112 : `photo` et
+ *                                        `tagline` AJOUTES — D-165. `photo` est un
+ *                                        media de la mediatheque PUBLIQUE choisi par
+ *                                        l'admin, jamais l'avatar prive du membre.)
  *   get_landing_expertises(p_limit)    -> tableau { id:**nombre**,
  *                                         entity_type:'expertise_area', name, slug,
  *                                         description, profile_count }
@@ -324,6 +327,15 @@ export interface LandingFeaturedProfile {
   readonly summary: string | null;
   readonly expertiseAreas: readonly string[];
   readonly target: EntityRef;
+  /**
+   * D-165 — visuel editorial choisi par l'admin pour CETTE mise en avant,
+   * tire de la mediatheque PUBLIQUE (`landing-media`). Ce n'est PAS
+   * l'avatar prive du membre : D-135 (aucun avatar_path projete) reste en
+   * vigueur, inchangee par cet ajout.
+   */
+  readonly photo: LandingMedia | null;
+  /** D-165 — accroche courte (3-160 caracteres), propre a cette mise en avant. */
+  readonly tagline: string | null;
 }
 
 /** ADDENDUM §24 — une expertise de la taxonomie reelle. */
@@ -693,14 +705,23 @@ const expertiseNameSchema = z.array(z.object({ name: nullableText }));
 /**
  * ADDENDUM §11, §21, §45 — « ISE du jour ».
  *
- * PAS D'AVATAR — D-135. Le bucket `avatars` est prive et le reste. Depuis
- * 0068, `get_landing_featured_profile()` ne projette meme plus `avatar_path`.
- * Le teaser affiche un monogramme construit depuis `display_name` : aucun
- * octet de photographie ne quitte le reseau sans un consentement qui porte
- * precisement sur cela, et `allow_public_feature` n'est pas ce
- * consentement-la. `selection_mode` reste ignore : c'est une information
- * d'exploitation interne.
+ * PAS D'AVATAR PRIVE — D-135, INCHANGEE. Le bucket `avatars` est prive et le
+ * reste. Depuis 0068, `get_landing_featured_profile()` ne projette meme plus
+ * `avatar_path`. `allow_public_feature` consent a un teaser textuel, pas a
+ * la publication d'une photographie personnelle.
+ *
+ * `photo` (D-165, migration 0112) N'EST PAS CET AVATAR : c'est un visuel
+ * choisi par l'admin dans la mediatheque PUBLIQUE (`landing-media`), la meme
+ * que le carrousel et les actualites — deja soumis a l'obligation d'un texte
+ * alternatif. `parseMedia()` lui applique exactement les memes controles.
+ * Quand aucun visuel n'a ete choisi, `photo` vaut `null` et le composant
+ * retombe sur le monogramme construit depuis `display_name`. `tagline` est
+ * l'accroche courte associee, distincte de `public_summary`. `selection_mode`
+ * reste ignore : c'est une information d'exploitation interne.
  */
+/** D-165 — accroche courte, alignee sur la contrainte SQL (3-160 caracteres). */
+export const FEATURED_TAGLINE_MAX = 160;
+
 export const featuredProfileSchema = z
   .object({
     profile_id: identifier,
@@ -710,6 +731,8 @@ export const featuredProfileSchema = z
     organization: nullableText,
     public_summary: nullableText,
     expertise_areas: z.unknown(),
+    photo: z.unknown(),
+    tagline: z.unknown(),
   })
   .transform<LandingFeaturedProfile>((row) => {
     const promotion = promotionSchema.safeParse(row.promotion);
@@ -730,6 +753,10 @@ export const featuredProfileSchema = z
             .slice(0, 3)
         : [],
       target: { entityType: 'profile', entityId: row.profile_id },
+      // D-165 : visuel de mediatheque publique (jamais l'avatar prive) et
+      // accroche courte, propres a CETTE mise en avant.
+      photo: parseMedia(row.photo),
+      tagline: nullableText.parse(row.tagline)?.slice(0, FEATURED_TAGLINE_MAX) ?? null,
     };
   });
 
