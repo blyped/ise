@@ -18,6 +18,7 @@ import type {
   CmsOrganizationOption,
   CmsPartnerCampaign,
   CmsPendingSchedule,
+  CmsPillarRow,
   CmsPlacement,
   CmsScheduleEntityType,
   CmsScheduleOrder,
@@ -867,6 +868,29 @@ export async function loadMediaOptions(
       id: str(row['id']),
       filename: str(row['filename']),
       altText: str(row['alt_text']),
+    })),
+  };
+}
+
+const PILLAR_KEYS = ['connecter', 'entraider', 'collaborer', 'impacter'] as const;
+const PILLAR_LINK_TARGETS = ['search', 'calls', 'projects', 'opportunities', 'applications'] as const;
+
+/** CMS-011 (0114) — les 4 piliers, toujours dans le meme ordre. */
+export async function loadCmsPillars(
+  correlationId: string,
+): Promise<CmsResult<readonly CmsPillarRow[]>> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc('list_cms_pillars');
+  if (error) return fail(error, correlationId, 'list_cms_pillars');
+
+  return {
+    ok: true,
+    data: asRows(data).map((row) => ({
+      pillarKey: oneOf(row['pillar_key'], PILLAR_KEYS, 'connecter'),
+      mediaId: nstr(row['media_id']),
+      caption: nstr(row['caption']),
+      linkTarget: optionalOneOf(row['link_target'], PILLAR_LINK_TARGETS),
+      updatedAt: str(row['updated_at']),
     })),
   };
 }
