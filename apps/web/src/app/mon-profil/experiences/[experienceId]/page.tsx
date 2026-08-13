@@ -6,6 +6,7 @@ import { requireProfile } from '@/lib/profile-guard';
 import {
   loadCountries,
   loadJobFunctions,
+  loadOrganizations,
   loadSectors,
   loadVisibilityRules,
 } from '@/lib/queries/reference';
@@ -40,11 +41,12 @@ export default async function EditExperiencePage({
     );
   }
 
-  const [experience, sectors, jobFunctions, countries, rules] = await Promise.all([
+  const [experience, sectors, jobFunctions, countries, organizations, rules] = await Promise.all([
     loadExperience(context.profile.id, experienceId, context.correlationId),
     loadSectors(context.correlationId),
     loadJobFunctions(context.correlationId),
     loadCountries(context.correlationId),
+    loadOrganizations(context.correlationId),
     loadVisibilityRules(context.correlationId),
   ]);
 
@@ -62,7 +64,12 @@ export default async function EditExperiencePage({
         </Link>
       }
     >
-      {!experience.ok || !sectors.ok || !jobFunctions.ok || !countries.ok || rule === undefined ? (
+      {!experience.ok ||
+      !sectors.ok ||
+      !jobFunctions.ok ||
+      !countries.ok ||
+      !organizations.ok ||
+      rule === undefined ? (
         <ErrorState
           title={frProfile.common.loadErrorTitle}
           description={frProfile.common.loadErrorBody}
@@ -84,6 +91,7 @@ export default async function EditExperiencePage({
           sectors={sectors.data}
           jobFunctions={jobFunctions.data}
           countries={countries.data}
+          organizations={organizations.data}
           visibilityRule={rule}
         />
       )}

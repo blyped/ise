@@ -4,7 +4,7 @@ import { frProfile } from '@/i18n/profile';
 import { ROUTES } from '@/lib/routes';
 import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { requireProfile } from '@/lib/profile-guard';
-import { loadCountries, loadVisibilityRules } from '@/lib/queries/reference';
+import { loadCountries, loadOrganizations, loadVisibilityRules } from '@/lib/queries/reference';
 import { loadProfileVisibility } from '@/lib/queries/profile-sections';
 import { AppShell } from '@/components/layout/AppShell';
 import { ProfileHeaderForm } from './ProfileHeaderForm';
@@ -54,8 +54,9 @@ export default async function EditProfileHeaderPage() {
 
   const { profile, correlationId } = context;
 
-  const [countries, rules, visibility] = await Promise.all([
+  const [countries, organizations, rules, visibility] = await Promise.all([
     loadCountries(correlationId),
+    loadOrganizations(correlationId),
     loadVisibilityRules(correlationId),
     loadProfileVisibility(profile.id, correlationId),
   ]);
@@ -74,7 +75,7 @@ export default async function EditProfileHeaderPage() {
           {frProfile.header.photoUnavailable}
         </Alert>
 
-        {!countries.ok || !rules.ok ? (
+        {!countries.ok || !organizations.ok || !rules.ok ? (
           <ErrorState
             title={frProfile.common.loadErrorTitle}
             description={frProfile.common.loadErrorBody}
@@ -84,6 +85,7 @@ export default async function EditProfileHeaderPage() {
           <ProfileHeaderForm
             profile={profile}
             countries={countries.data}
+            organizations={organizations.data}
             rules={rules.data}
             current={visibility.ok ? visibility.data : {}}
           />

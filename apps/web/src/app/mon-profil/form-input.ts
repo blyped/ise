@@ -25,6 +25,7 @@ export function toHeaderInput(formData: FormData) {
     headline: blankToUndefined(formData.get('headline')),
     bio: blankToUndefined(formData.get('bio')),
     currentPosition: blankToUndefined(formData.get('currentPosition')),
+    currentOrganizationId: blankToUndefined(formData.get('currentOrganizationId')),
     currentOrganizationRaw: blankToUndefined(formData.get('currentOrganizationRaw')),
     currentCountryCode: blankToUndefined(formData.get('currentCountryCode')),
     currentCity: blankToUndefined(formData.get('currentCity')),
@@ -37,6 +38,7 @@ export function toExperienceInput(formData: FormData) {
   const sectorId = blankToUndefined(formData.get('sectorId'));
   const jobFunctionId = blankToUndefined(formData.get('jobFunctionId'));
   return {
+    organizationId: blankToUndefined(formData.get('organizationId')),
     organizationNameRaw: blankToUndefined(formData.get('organizationNameRaw')),
     positionTitle: formData.get('positionTitle'),
     sectorId: sectorId === undefined ? undefined : Number(sectorId),

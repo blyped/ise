@@ -84,7 +84,11 @@ export const frProfile = {
     headlineTitle: 'En-tête professionnel',
     headlineLabel: 'Titre professionnel',
     headlinePlaceholder: 'Ex. Ingénieure Statisticienne Économiste · Suivi-évaluation',
-    organizationLabel: 'Organisation actuelle',
+    organizationPickLabel: 'Organisation actuelle',
+    organizationPickPlaceholder: 'Choisir dans la liste…',
+    organizationPickHint:
+      'Recherchez votre organisation dans la liste. Absente ? Saisissez son nom ci-dessous.',
+    organizationLabel: 'Ou saisir le nom (si elle n’est pas répertoriée)',
     organizationPlaceholder: 'Ex. Banque Atlantique',
     positionLabel: 'Fonction actuelle',
     positionPlaceholder: 'Ex. Responsable études & performance',
@@ -130,7 +134,11 @@ export const frProfile = {
     subtitle:
       'Décrivez une expérience suffisamment précise pour qu’un autre ISE comprenne votre rôle et votre niveau d’intervention.',
     backLink: 'Retour aux expériences',
-    organizationLabel: 'Organisation',
+    organizationPickLabel: 'Organisation',
+    organizationPickPlaceholder: 'Choisir dans la liste…',
+    organizationPickHint:
+      'Recherchez l’organisation dans la liste. Absente ? Saisissez son nom ci-dessous.',
+    organizationLabel: 'Ou saisir le nom (si elle n’est pas répertoriée)',
     organizationPlaceholder: 'Ex. Banque Atlantique',
     positionLabel: 'Poste / fonction',
     positionPlaceholder: 'Ex. Responsable études & performance',

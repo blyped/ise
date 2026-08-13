@@ -21,7 +21,11 @@ import { frProfile } from '@/i18n/profile';
 import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { initialFormState } from '@/lib/form-state';
 import { useZodForm } from '@/lib/use-zod-form';
-import type { CountryOption, VisibilityFieldRule } from '@/lib/queries/reference';
+import type {
+  CountryOption,
+  OrganizationOption,
+  VisibilityFieldRule,
+} from '@/lib/queries/reference';
 import type { ProfileHeader } from '@/lib/queries/profile-sections';
 import { toHeaderInput } from '../form-input';
 import { saveProfileHeaderAction } from '../actions';
@@ -44,11 +48,18 @@ const VISIBILITY_FIELDS = [
 export interface ProfileHeaderFormProps {
   profile: ProfileHeader;
   countries: readonly CountryOption[];
+  organizations: readonly OrganizationOption[];
   rules: readonly VisibilityFieldRule[];
   current: Readonly<Record<string, VisibilityLevelValue>>;
 }
 
-export function ProfileHeaderForm({ profile, countries, rules, current }: ProfileHeaderFormProps) {
+export function ProfileHeaderForm({
+  profile,
+  countries,
+  organizations,
+  rules,
+  current,
+}: ProfileHeaderFormProps) {
   const [state, formAction, isPending] = useActionState(saveProfileHeaderAction, initialFormState);
   const { clientErrors, clearField, onSubmit } = useZodForm(profileHeaderSchema, toHeaderInput);
 
@@ -63,6 +74,11 @@ export function ProfileHeaderForm({ profile, countries, rules, current }: Profil
   const countryOptions = countries.map((country) => ({
     value: country.code,
     label: country.name,
+  }));
+
+  const organizationOptions = organizations.map((organization) => ({
+    value: organization.id,
+    label: organization.isVerified ? `${organization.name} ✓` : organization.name,
   }));
 
   const ruleFor = (fieldKey: string) => rules.find((rule) => rule.fieldKey === fieldKey);
@@ -142,19 +158,20 @@ export function ProfileHeaderForm({ profile, countries, rules, current }: Profil
 
           <div className="grid gap-5 sm:grid-cols-2">
             <Field
-              label={frProfile.header.organizationLabel}
-              error={errorFor('currentOrganizationRaw')}
+              label={frProfile.header.organizationPickLabel}
+              hint={frProfile.header.organizationPickHint}
+              error={errorFor('currentOrganizationId')}
             >
               {({ id, describedBy, invalid }) => (
-                <Input
+                <Select
                   id={id}
-                  name="currentOrganizationRaw"
-                  type="text"
-                  defaultValue={profile.currentOrganizationRaw ?? ''}
-                  placeholder={frProfile.header.organizationPlaceholder}
+                  name="currentOrganizationId"
+                  options={organizationOptions}
+                  placeholder={frProfile.header.organizationPickPlaceholder}
+                  defaultValue={profile.currentOrganizationId ?? ''}
                   aria-invalid={invalid}
                   {...(describedBy ? { 'aria-describedby': describedBy } : {})}
-                  onChange={() => clearField('currentOrganizationRaw')}
+                  onChange={() => clearField('currentOrganizationId')}
                 />
               )}
             </Field>
@@ -174,6 +191,24 @@ export function ProfileHeaderForm({ profile, countries, rules, current }: Profil
               )}
             </Field>
           </div>
+
+          <Field
+            label={frProfile.header.organizationLabel}
+            error={errorFor('currentOrganizationRaw')}
+          >
+            {({ id, describedBy, invalid }) => (
+              <Input
+                id={id}
+                name="currentOrganizationRaw"
+                type="text"
+                defaultValue={profile.currentOrganizationRaw ?? ''}
+                placeholder={frProfile.header.organizationPlaceholder}
+                aria-invalid={invalid}
+                {...(describedBy ? { 'aria-describedby': describedBy } : {})}
+                onChange={() => clearField('currentOrganizationRaw')}
+              />
+            )}
+          </Field>
 
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label={frProfile.header.countryLabel} error={errorFor('currentCountryCode')}>

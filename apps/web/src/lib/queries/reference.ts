@@ -165,6 +165,48 @@ export async function loadJobFunctions(
   return { ok: true, data: rows.map((row) => ({ id: row.id, name: row.name })) };
 }
 
+export interface OrganizationOption {
+  id: string;
+  name: string;
+  isVerified: boolean;
+}
+
+/**
+ * Référentiel `public.organizations` (D-166) : alimente la liste déroulante
+ * « Organisation » des écrans de profil (en-tête, expériences), pour que
+ * `current_organization_id` / `experiences.organization_id` soient réellement
+ * renseignés plutôt que devinés depuis du texte libre. Le texte libre reste
+ * un repli pour une organisation absente de la liste (D-164, D-166) : cet
+ * écran ne crée jamais d'organisation lui-même.
+ */
+export async function loadOrganizations(
+  correlationId: string,
+): Promise<Result<OrganizationOption[]>> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('organizations')
+    .select('id, canonical_name, is_verified')
+    .order('canonical_name')
+    .limit(500);
+
+  if (error) return fail(error, correlationId);
+
+  const rows = (data ?? []) as unknown as Array<{
+    id: string;
+    canonical_name: string;
+    is_verified: boolean;
+  }>;
+
+  return {
+    ok: true,
+    data: rows.map((row) => ({
+      id: row.id,
+      name: row.canonical_name,
+      isVerified: row.is_verified,
+    })),
+  };
+}
+
 export type VisibilityLevel = 'private' | 'connections' | 'promotion' | 'members';
 
 export interface VisibilityFieldRule {

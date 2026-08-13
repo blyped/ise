@@ -22,6 +22,7 @@ import { useZodForm } from '@/lib/use-zod-form';
 import type {
   CountryOption,
   JobFunctionOption,
+  OrganizationOption,
   SectorOption,
   VisibilityFieldRule,
 } from '@/lib/queries/reference';
@@ -37,6 +38,7 @@ export interface ExperienceFormProps {
   sectors: readonly SectorOption[];
   jobFunctions: readonly JobFunctionOption[];
   countries: readonly CountryOption[];
+  organizations: readonly OrganizationOption[];
   visibilityRule: VisibilityFieldRule;
 }
 
@@ -46,11 +48,17 @@ export function ExperienceForm({
   sectors,
   jobFunctions,
   countries,
+  organizations,
   visibilityRule,
 }: ExperienceFormProps) {
   const [state, formAction, isPending] = useActionState(saveExperienceAction, initialFormState);
   const { clientErrors, clearField, onSubmit } = useZodForm(experienceSchema, toExperienceInput);
   const [isCurrent, setIsCurrent] = useState(experience?.isCurrent ?? false);
+
+  const organizationOptions = organizations.map((organization) => ({
+    value: organization.id,
+    label: organization.isVerified ? `${organization.name} ✓` : organization.name,
+  }));
 
   const errorFor = useCallback(
     (name: string): string | undefined => clientErrors[name] ?? state.fieldErrors[name],
@@ -76,21 +84,20 @@ export function ExperienceForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field
-          label={frProfile.experienceForm.organizationLabel}
-          error={errorFor('organizationNameRaw')}
-          required
+          label={frProfile.experienceForm.organizationPickLabel}
+          hint={frProfile.experienceForm.organizationPickHint}
+          error={errorFor('organizationId')}
         >
           {({ id, describedBy, invalid }) => (
-            <Input
+            <Select
               id={id}
-              name="organizationNameRaw"
-              type="text"
-              required
-              defaultValue={experience?.organizationName ?? ''}
-              placeholder={frProfile.experienceForm.organizationPlaceholder}
+              name="organizationId"
+              options={organizationOptions}
+              placeholder={frProfile.experienceForm.organizationPickPlaceholder}
+              defaultValue={experience?.organizationId ?? ''}
               aria-invalid={invalid}
               {...(describedBy ? { 'aria-describedby': describedBy } : {})}
-              onChange={() => clearField('organizationNameRaw')}
+              onChange={() => clearField('organizationId')}
             />
           )}
         </Field>
@@ -115,6 +122,26 @@ export function ExperienceForm({
           )}
         </Field>
       </div>
+
+      <Field
+        label={frProfile.experienceForm.organizationLabel}
+        error={errorFor('organizationNameRaw')}
+      >
+        {({ id, describedBy, invalid }) => (
+          <Input
+            id={id}
+            name="organizationNameRaw"
+            type="text"
+            defaultValue={
+              experience?.organizationId === null ? (experience?.organizationName ?? '') : ''
+            }
+            placeholder={frProfile.experienceForm.organizationPlaceholder}
+            aria-invalid={invalid}
+            {...(describedBy ? { 'aria-describedby': describedBy } : {})}
+            onChange={() => clearField('organizationNameRaw')}
+          />
+        )}
+      </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label={frProfile.experienceForm.startLabel} error={errorFor('startDate')} required>

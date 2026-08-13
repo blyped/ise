@@ -145,7 +145,12 @@ export async function saveProfileHeaderAction(
       headline: input.headline ?? null,
       bio: input.bio ?? null,
       current_position: input.currentPosition ?? null,
-      current_organization_raw: input.currentOrganizationRaw ?? null,
+      // D-166 : l'organisation choisie dans la liste (referentiel
+      // `public.organizations`) prime sur le texte libre, qui ne sert que
+      // de repli pour une organisation absente de la liste.
+      current_organization_id: input.currentOrganizationId ?? null,
+      current_organization_raw:
+        input.currentOrganizationId !== undefined ? null : (input.currentOrganizationRaw ?? null),
       current_country_code: input.currentCountryCode ?? null,
       current_city: input.currentCity ?? null,
       linkedin_url: input.linkedinUrl === '' ? null : (input.linkedinUrl ?? null),
@@ -197,7 +202,11 @@ export async function saveExperienceAction(
 
   const row = {
     profile_id: context.profile.id,
-    organization_name_raw: input.organizationNameRaw ?? null,
+    // D-166 : meme repli que l'en-tete (`saveProfileHeaderAction`) — la
+    // fiche `public.organizations` choisie dans la liste prime sur le
+    // texte libre, qui ne sert que pour une organisation absente de la liste.
+    organization_id: input.organizationId ?? null,
+    organization_name_raw: input.organizationId !== undefined ? null : (input.organizationNameRaw ?? null),
     position_title: input.positionTitle,
     sector_id: input.sectorId ?? null,
     job_function_id: input.jobFunctionId ?? null,
