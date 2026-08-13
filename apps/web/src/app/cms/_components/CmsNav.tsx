@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
-import { Menu, X } from 'lucide-react';
+import { ArrowLeftRight, Menu, X } from 'lucide-react';
 import { frCms } from '@/i18n/cms';
 import { isCurrentNavItem, type CmsNavItem } from './nav';
 
@@ -10,6 +10,13 @@ export interface CmsNavProps {
   currentPath: string;
   screenTitle: string;
   items: readonly CmsNavItem[];
+  /**
+   * Lien croisé vers l'administration (§30, D-171), affiché uniquement
+   * quand le compte courant a au moins une permission d'administration —
+   * sinon ce serait un bouton decoratif menant systematiquement a SYS-006
+   * (MASTER PROMPT §113). `undefined` masque l'entree.
+   */
+  adminLink?: { href: string; label: string };
 }
 
 const LINK_BASE =
@@ -27,7 +34,7 @@ const LINK_BASE =
  *     porte jamais seule l'information (D-90) ;
  *   * chaque cible fait au moins 44 px de haut.
  */
-export function CmsNav({ currentPath, screenTitle, items }: CmsNavProps) {
+export function CmsNav({ currentPath, screenTitle, items, adminLink }: CmsNavProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -108,6 +115,18 @@ export function CmsNav({ currentPath, screenTitle, items }: CmsNavProps) {
         <nav aria-label={frCms.brand.nav} className="pt-2 lg:pt-0">
           {list}
         </nav>
+
+        {adminLink ? (
+          <div className="border-border mx-3 mb-4 border-t pt-3">
+            <Link
+              href={adminLink.href}
+              className={`${LINK_BASE} text-text-secondary hover:bg-surface-muted hover:text-text-primary gap-2`}
+            >
+              <ArrowLeftRight size={16} aria-hidden="true" />
+              {adminLink.label}
+            </Link>
+          </div>
+        ) : null}
       </div>
     </>
   );
