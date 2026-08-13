@@ -22,6 +22,8 @@ export const CMS_ROUTES = {
   events: '/cms/evenements',
   /** CMS-006 — ISE du jour. */
   featuredProfile: '/cms/ise-du-jour',
+  /** CMS-006bis (0113) — Opportunites : exposition landing + visuel. */
+  opportunities: '/cms/opportunites',
   /** CMS-007 — Partenaires. */
   partners: '/cms/partenaires',
   partnersNew: '/cms/partenaires/nouveau',

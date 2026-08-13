@@ -22,6 +22,7 @@ export const CMS_NAV: readonly CmsNavItem[] = [
   { href: CMS_ROUTES.sections, label: frCms.nav.sections, requires: 'cms.read' },
   { href: CMS_ROUTES.news, label: frCms.nav.news, requires: 'cms.read' },
   { href: CMS_ROUTES.events, label: frCms.nav.events, requires: 'cms.read' },
+  { href: CMS_ROUTES.opportunities, label: frCms.nav.opportunities, requires: 'cms.read' },
   { href: CMS_ROUTES.featuredProfile, label: frCms.nav.featuredProfile, requires: 'cms.read' },
   { href: CMS_ROUTES.partners, label: frCms.nav.partners, requires: 'cms.read' },
   { href: CMS_ROUTES.media, label: frCms.nav.media, requires: 'cms.read' },
