@@ -254,32 +254,31 @@ export function LandingCarousel({
             */}
             <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
               {/*
-                Rognage constate sur les diapositives sponsorisees (2026-08-13) :
-                un visuel de campagne partenaire est compose comme une affiche
-                (logo, accroche, ET une bande d'info fixe pres du bord bas), pas
-                comme une photo pleine page. Avec `object-cover` dans ce
-                conteneur cale sur `100dvh`, tout rapport largeur/hauteur de
-                fenetre different de celui de l'image rogne le haut ou le bas —
-                la bande du bas etait la premiere sacrifiee. Une diapositive
-                editoriale (photo) tolere ce recadrage ; une diapositive
-                sponsorisee ne le tolere pas : son visuel doit rester lisible en
-                entier. D'ou `object-contain` (mise en boite avec un filet
-                `bg-deep-navy` de part et d'autre) uniquement pour
-                `slide.sponsored`, les diapositives ordinaires restant en plein
-                cadre.
+                Rognage constate en production (2026-08-13, retour utilisateur
+                direct sur capture d'ecran) : `object-cover` dans ce conteneur
+                cale sur `100dvh` rogne le haut ou le bas de CHAQUE visuel des
+                que le rapport largeur/hauteur de la fenetre differe de celui
+                de l'image — pas seulement les diapositives sponsorisees.
+                Premier correctif (limite a `slide.sponsored`) insuffisant :
+                confirme par l'utilisateur que les diapositives ordinaires
+                perdent aussi de l'information en bas d'image. `object-contain`
+                s'applique donc desormais a TOUTES les diapositives : chaque
+                visuel reste entierement lisible, quitte a un filet
+                `bg-deep-navy` de part et d'autre quand le ratio de la fenetre
+                ne correspond pas exactement a celui de l'image.
               */}
               <LandingMediaImage
                 media={slide.media}
                 sizes="100vw"
                 priority={index === 0}
-                className={`${slide.sponsored ? 'object-contain' : 'object-cover'} ${dimClass} ${hasMobileVariant ? 'max-md:hidden' : ''}`}
+                className={`object-contain ${dimClass} ${hasMobileVariant ? 'max-md:hidden' : ''}`}
               />
               {hasMobileVariant ? (
                 <LandingMediaImage
                   media={slide.mobileMedia}
                   sizes="100vw"
                   priority={index === 0}
-                  className={`${slide.sponsored ? 'object-contain' : 'object-cover'} ${dimClass} md:hidden`}
+                  className={`object-contain ${dimClass} md:hidden`}
                 />
               ) : null}
             </div>
@@ -327,7 +326,6 @@ export function LandingCarousel({
                 className={cx(
                   'block h-[10px] w-[10px] rounded-full border border-white/50 transition-colors duration-150',
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
-                  index === current ? 'bg-text-inverse' : 'bg-transparent hover:bg-white/40',
                 )}
               >
                 <span className="sr-only">{t(fr.public.carousel.goTo, { index: index + 1 })}</span>
