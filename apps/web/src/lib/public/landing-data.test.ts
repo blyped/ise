@@ -76,7 +76,8 @@ const NEWS_ROW = {
   slug: 'transformation-economique',
   summary: 'Un résumé public.',
   category_code: 'analyse',
-  image: { ...MEDIA_ROW, path: 'news/2026/07/transformation.webp' },
+  cover: { ...MEDIA_ROW, path: 'news/2026/07/transformation.webp' },
+  cover_has_text: false,
   published_at: '2026-07-01T08:00:00+00:00',
   is_featured: true,
   is_pinned: false,
@@ -629,23 +630,31 @@ describe('médias — bucket public `landing-media`', () => {
 
   it('rattache la couverture à l’actualité, et le logo au partenaire', () => {
     const news = newsSchema.parse(NEWS_ROW);
-    expect(news.image?.path).toBe('news/2026/07/transformation.webp');
-    expect(landingMediaUrl(news.image)).toContain('/object/public/landing-media/news/');
+    expect(news.cover?.path).toBe('news/2026/07/transformation.webp');
+    expect(landingMediaUrl(news.cover)).toContain('/object/public/landing-media/news/');
 
     const partner = partnerSchema.parse(PARTNER_ROW);
     expect(partner.logo?.path).toBe('partners/2026/08/banque.png');
   });
 
   it('une actualité sans couverture publiable reste une actualité entière', () => {
-    const news = newsSchema.parse({ ...NEWS_ROW, image: null });
-    expect(news.image).toBeNull();
+    const news = newsSchema.parse({ ...NEWS_ROW, cover: null });
+    expect(news.cover).toBeNull();
     expect(news.title).toBe(NEWS_ROW.title);
 
     const withoutAlt = newsSchema.parse({
       ...NEWS_ROW,
-      image: { ...MEDIA_ROW, alt_text: null },
+      cover: { ...MEDIA_ROW, alt_text: null },
     });
-    expect(withoutAlt.image).toBeNull();
+    expect(withoutAlt.cover).toBeNull();
+  });
+
+  it('0117 — cover_has_text évite de dupliquer un titre déjà incrusté dans l’image', () => {
+    const withText = newsSchema.parse({ ...NEWS_ROW, cover_has_text: true });
+    expect(withText.coverHasText).toBe(true);
+
+    const withoutText = newsSchema.parse(NEWS_ROW);
+    expect(withoutText.coverHasText).toBe(false);
   });
 
   it('une diapositive porte son visuel et sa variante mobile', () => {
