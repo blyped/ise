@@ -529,7 +529,8 @@ describe('images — bucket public `landing-media`', () => {
       slug: 'transformation',
       summary: 'Un résumé public.',
       category_code: 'analyse',
-      image: { ...MEDIA, path: 'news/2026/07/transformation.webp' },
+      cover: { ...MEDIA, path: 'news/2026/07/transformation.webp' },
+      cover_has_text: false,
       published_at: '2026-07-01T08:00:00+00:00',
       is_featured: true,
       is_pinned: false,
@@ -573,7 +574,8 @@ describe('images — bucket public `landing-media`', () => {
       slug: 'transformation',
       summary: 'Un résumé public.',
       category_code: 'analyse',
-      image: null,
+      cover: null,
+      cover_has_text: false,
       published_at: '2026-07-01T08:00:00+00:00',
       is_featured: true,
       is_pinned: false,
@@ -588,6 +590,32 @@ describe('images — bucket public `landing-media`', () => {
     );
     expect(markup).not.toContain('<img');
     expect(markup).toContain('Transformation économique africaine');
+  });
+
+  it('0117 — cover_has_text masque visuellement le titre (sr-only), sans le retirer du DOM', () => {
+    const news = newsSchema.parse({
+      id: '11111111-2222-4333-8444-555555555555',
+      title: 'Affiche du forum annuel',
+      slug: 'affiche-forum',
+      summary: 'Un résumé public.',
+      category_code: 'analyse',
+      cover: { ...MEDIA, path: 'news/2026/07/affiche.webp' },
+      cover_has_text: true,
+      published_at: '2026-07-01T08:00:00+00:00',
+      is_featured: false,
+      is_pinned: false,
+    });
+    const markup = renderToStaticMarkup(
+      h(HighlightsSection, {
+        news: OK([news]),
+        featuredProfile: OK<LandingFeaturedProfile>([]),
+        events: OK<LandingEvent>([]),
+        opportunities: OK<LandingOpportunity>([]),
+      }),
+    );
+    // Le titre reste dans le DOM (accessibilité/SEO), mais masqué visuellement.
+    expect(markup).toContain('Affiche du forum annuel');
+    expect(markup).toContain('sr-only');
   });
 
   /**
