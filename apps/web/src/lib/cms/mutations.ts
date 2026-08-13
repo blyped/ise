@@ -402,6 +402,28 @@ export async function setFeaturedAutomation(
   return { ok: true, data: undefined };
 }
 
+/**
+ * D-165 — visuel de la médiathèque publique et accroche courte pour une
+ * mise en avant donnée. `mediaId` doit référencer un original du bucket
+ * `landing-media` doté d'un texte alternatif ; la base revalide les deux
+ * (`set_featured_profile_showcase`), ce module ne fait que transmettre.
+ */
+export async function setFeaturedProfileShowcase(
+  featuredDate: string,
+  mediaId: string | null,
+  tagline: string | null,
+  correlationId: string,
+): Promise<MutationResult> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('set_featured_profile_showcase', {
+    p_featured_date: featuredDate,
+    p_media_id: mediaId,
+    p_tagline: tagline,
+  });
+  if (error) return failure(error, correlationId, 'set_featured_profile_showcase');
+  return { ok: true, data: undefined };
+}
+
 export interface FeaturedRulesDraft {
   minDaysBetweenFeatures: number;
   requireClaimedProfile: boolean;

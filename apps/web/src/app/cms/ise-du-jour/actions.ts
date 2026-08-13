@@ -17,6 +17,7 @@ import {
   excludeProfileFromFeatured,
   overrideFeaturedProfile,
   setFeaturedAutomation,
+  setFeaturedProfileShowcase,
   updateFeaturedRules,
 } from '@/lib/cms/mutations';
 
@@ -108,6 +109,46 @@ export async function excludeProfileAction(
         correlationId,
       ),
     frCms.featured.excludeDone,
+  );
+  if (state.status === 'success') revalidatePath(CMS_ROUTES.featuredProfile);
+  return state;
+}
+
+/**
+ * D-165 — visuel et accroche d'une mise en avant. Cible la ligne
+ * `cms_featured_profile_history` par sa `featured_date` (§ set_featured_
+ * profile_showcase) : c'est la même granularité que « ISE du jour actuel »
+ * affiché plus haut sur cet écran.
+ */
+export async function setShowcaseAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const featuredDate = requiredText(formData, 'featuredDate');
+  if (featuredDate.length === 0) {
+    return {
+      status: 'error',
+      message: frCms.common.requiredField,
+      correlationId: null,
+      fieldErrors: { featuredDate: frCms.common.requiredField },
+    };
+  }
+
+  const tagline = text(formData, 'tagline');
+  if (tagline !== null && (tagline.length < 3 || tagline.length > 160)) {
+    return {
+      status: 'error',
+      message: 'L’accroche doit compter entre 3 et 160 caractères.',
+      correlationId: null,
+      fieldErrors: { tagline: 'Entre 3 et 160 caractères.' },
+    };
+  }
+
+  const state = await runCmsPublishAction(
+    'cms.featured_profile.manage',
+    (correlationId) =>
+      setFeaturedProfileShowcase(featuredDate, text(formData, 'mediaId'), tagline, correlationId),
+    frCms.featured.showcaseDone,
   );
   if (state.status === 'success') revalidatePath(CMS_ROUTES.featuredProfile);
   return state;

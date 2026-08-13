@@ -12,6 +12,7 @@ import type {
   CmsFeaturedCandidate,
   CmsFeaturedOverview,
   CmsMediaAsset,
+  CmsMediaOption,
   CmsNewsRow,
   CmsOrganizationOption,
   CmsPartnerCampaign,
@@ -517,6 +518,8 @@ export async function loadFeaturedOverview(
               status: str(asRow(currentRow)['status'], 'scheduled'),
               publishedAt: nstr(asRow(currentRow)['published_at']),
               selectionContext: asRow(asRow(currentRow)['selection_context']),
+              showcaseMediaId: nstr(asRow(currentRow)['showcase_media_id']),
+              showcaseTagline: nstr(asRow(currentRow)['showcase_tagline']),
             },
       history: asRows(root['history']).map((row) => ({
         featuredDate: str(row['featured_date']),
@@ -802,7 +805,7 @@ export async function loadMediaAssets(
 /** Liste allegee pour les listes deroulantes « choisir un visuel ». */
 export async function loadMediaOptions(
   correlationId: string,
-): Promise<CmsResult<readonly { id: string; filename: string; altText: string }[]>> {
+): Promise<CmsResult<readonly CmsMediaOption[]>> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('cms_media_assets')
