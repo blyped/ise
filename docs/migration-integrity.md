@@ -4,6 +4,31 @@ Ce document décrit le contrôle qui vérifie que les fichiers de
 `supabase/migrations/*.sql` correspondent réellement au SQL appliqué sur le projet
 Supabase, et consigne le verdict du dernier contrôle.
 
+> ## ALERTE — 3 écarts exécutables réels détectés (13 août 2026)
+>
+> La clôture des 5 dernières migrations « en attente » (Annexe B, §B.2) a mis au jour
+> **3 écarts qui portent sur du SQL exécutable**, pas seulement sur des commentaires :
+> `0070_promotions_api`, `0073_projects_api`, `0074_news_events_api`. Détail complet en
+> **§B.2bis**. Résumé :
+>
+> - **`0070_promotions_api`** : le fichier du dépôt filtre `next_event` sur
+>   `e.status = 'published'` ; **la base de production exécute réellement**
+>   `e.status in ('published','full')` (confirmé à la fois dans
+>   `supabase_migrations.schema_migrations` et dans la définition live de
+>   `public.get_promotion_overview`). **Le dépôt est en retard sur la production.**
+> - **`0073_projects_api`** et **`0074_news_events_api`** : le SQL enregistré dans
+>   `supabase_migrations.schema_migrations` (l'historique d'application) ne correspond
+>   **ni** au fichier du dépôt **ni** à la fonction réellement active en base
+>   aujourd'hui (vérifié via `pg_get_functiondef`) — le dépôt et la production
+>   s'accordent entre eux, mais l'historique de migration, lui, est obsolète. Cela
+>   signifie qu'au moins deux fonctions ont été corrigées **directement en base**
+>   (hors du système de migration suivi), sans qu'aucun fichier `supabase/migrations/`
+>   n'ait jamais consigné ce correctif.
+>
+> Aucun fichier de `supabase/migrations/` n'a été modifié pour produire ce constat.
+> Aucune action corrective n'a été prise ici : ce sont des signalements pour
+> arbitrage humain, conformément à la règle du projet.
+
 ---
 
 ## Verdict du 8 août 2026 — contrôle rejoué sur les **74** migrations
@@ -458,26 +483,133 @@ super-canonique rejouée) :
 | `0049_rls_support_moderation` | (sondage détaillé §0 ci-dessus) | `comment on function` : « …s'executent avec current_user = … » (dépôt) vs « …s'executent donc avec current_user = … » (appliqué) — un mot ajouté | Cosmétique (libellé) |
 | `0056_opportunities_api` | `a8294e07...` égales | `comment on function publish_opportunity / opportunity_card / record_opportunity_outbound_click` reformatés en littéraux concaténés (aucun changement de sens) | Cosmétique |
 | `0067_cms_backoffice_api` | `d0bb24ae...` égales | `comment on function` (8 fonctions CMS) reformatés | Cosmétique |
+| `0072_communities_api` | égales (vérifié intégralement, §B.2 12/08→13/08) | `comment on column`/`comment on function` reformatés (`community_posts.resolution_summary`, `community_card`, etc.), aucune donnée ni logique modifiée. Fonction live `private.community_card` recontrôlée via `pg_get_functiondef` : identique au dépôt. | Cosmétique |
+| `0070_promotions_api` | **différentes** — voir §B.2bis | `get_promotion_overview` : `next_event` filtre `e.status = 'published'` (dépôt) vs `e.status in ('published','full')` (base ET fonction live) | **Écart exécutable réel — signalé** |
+| `0073_projects_api` | **différentes** — voir §B.2bis | `project_role_card` : champ `languages` construit avec `l.name` et sans `is_mandatory` (base, `schema_migrations`) vs `l.name_fr` et avec `is_mandatory` (dépôt ET fonction live) | **Écart exécutable réel — signalé** |
+| `0074_news_events_api` | **différentes** — voir §B.2bis | `list_network_feed` : filtres `careers`/`publications` par liste de `category_code` en dur (dépôt ET fonction live) vs sous-requête sur `news_categories.slug` (base, `schema_migrations`) | **Écart exécutable réel — signalé** |
+| `0075_mentorship_api` | égales (vérifié intégralement, texte complet relu ligne à ligne) | Uniquement des commentaires de bloc/en-tête retirés (explications MASTER PROMPT, D-xx) ; toutes les fonctions (`mentor_card`, `get_mentorship_home`, `submit_mentorship_request`, etc.) identiques au SQL exécutable près. Fonction live `private.mentor_card` recontrôlée via `pg_get_functiondef` : identique au dépôt. | Cosmétique |
 
-**5 migrations restent à vérification complémentaire** — divergentes à N3 (confirmé par le
-contrôle du 8 août), non re-vérifiées migration par migration lors de cette passe faute de
-temps disponible dans la session : `0070_promotions_api`, `0072_communities_api`,
-`0073_projects_api`, `0074_news_events_api`, `0075_mentorship_api`. Ce sont des migrations
-`_api` de la même famille que `0056` et `0067`, écrites avec le même gabarit (fonctions
-`plpgsql`/`sql`, `comment on function` systématique, `security definer`) — la probabilité
-que leur écart suive le même profil purement cosmétique est élevée, mais **ce n'est pas une
-certitude vérifiée** : elles ne doivent pas être considérées closes tant qu'elles n'ont pas
-été rejouées avec le script §B.1 (ou celui du §6). Aucun indice d'écart fonctionnel n'a été
-observé (pas d'alerte de sécurité, pas de rapport d'anomalie utilisateur), mais l'absence de
-vérification n'équivaut pas à une preuve d'innocuité.
+Les 5 migrations autrefois listées comme « en attente de vérification complémentaire »
+(`0070`, `0072`, `0073`, `0074`, `0075`) ont donc toutes été rejouées avec la méthode du
+§B.1, en complétant le contrôle par une lecture de la définition **actuellement active**
+en base (`pg_get_functiondef`) chaque fois qu'un écart apparaissait entre dépôt et
+`schema_migrations` — car ce dernier ne s'est pas révélé fiable à lui seul pour ces cinq
+migrations (voir §B.2bis). Aucune n'est donc plus « non vérifiée ».
+
+### B.2bis Détail des 3 écarts exécutables réels (13 août 2026)
+
+Pour ces trois migrations, la comparaison super-canonique dépôt ↔ `schema_migrations` ne
+coïncide pas même après avoir neutralisé commentaires, `comment on` et délimiteurs de
+dollar-quoting : l'écart porte sur du SQL qui s'exécute réellement. Pour chacune, la
+définition **actuellement active** en base a été relue avec
+`pg_get_functiondef('<fonction>'::regprocedure)` afin de savoir laquelle des deux sources
+(dépôt ou `schema_migrations`) reflète le comportement réellement en production aujourd'hui.
+
+**`0070_promotions_api` — `public.get_promotion_overview(bigint)`, bloc `next_event`**
+
+```
+-- dépôt (supabase/migrations/0070_promotions_api.sql)
+         where e.organizer_promotion_id = v_id
+           and e.status = 'published'
+           and e.deleted_at is null
+
+-- base (schema_migrations.statements) ET fonction live (pg_get_functiondef)
+         where e.organizer_promotion_id = v_id
+           and e.status in ('published','full')
+           and e.deleted_at is null
+```
+
+Le dépôt et la base sont d'accord entre eux ici (`schema_migrations` = live) : c'est le
+**dépôt qui est en retard**. En production, un évènement de promotion complet (`full`,
+capacité atteinte) peut apparaître comme « prochain évènement » sur l'espace promotion
+(ISE-067) ; le fichier du dépôt, s'il était rejoué, produirait une fonction plus stricte qui
+l'exclurait. Effet utilisateur plausible mais mineur (un évènement complet reste visible
+alors que le dépôt voudrait qu'il ne le soit plus) — **à trancher par un humain** : soit
+aligner le dépôt sur la base (note documentaire, pas d'édition du fichier, cf. §B.5), soit
+décider que le comportement du dépôt est le comportement voulu et corriger la base par une
+nouvelle migration.
+
+**`0073_projects_api` — `private.project_role_card(uuid)`, champ `languages`**
+
+```
+-- base (schema_migrations.statements) — SEUL cet extrait diffère
+    'languages', coalesce((select jsonb_agg(jsonb_build_object('code', l.code, 'name', l.name)
+                                            order by l.name)
+                             from public.project_role_languages rl
+                             join public.languages l on l.code = rl.language_code
+                            where rl.project_role_id = p_role), '[]'::jsonb),
+
+-- dépôt (supabase/migrations/0073_projects_api.sql) ET fonction live (pg_get_functiondef)
+    'languages', coalesce((select jsonb_agg(jsonb_build_object('code', l.code, 'name', l.name_fr,
+                                                               'is_mandatory', rl.is_mandatory)
+                                            order by l.name_fr)
+                             from public.project_role_languages rl
+                             join public.languages l on l.code = rl.language_code
+                            where rl.project_role_id = p_role), '[]'::jsonb),
+```
+
+Vérification du schéma : `public.languages` ne possède **pas** de colonne `name` (seulement
+`name_fr` et `name_en` — confirmé par `information_schema.columns`). La version enregistrée
+dans `schema_migrations` pour `0073` est donc **invalide si elle était rejouée telle quelle**
+— elle référence une colonne inexistante — et omet en plus le champ `is_mandatory`. Or la
+fonction **actuellement active** en base (`pg_get_functiondef`) est déjà celle du dépôt
+(`l.name_fr`, `is_mandatory` présent) : **la production ne souffre d'aucun bug aujourd'hui**,
+mais quelqu'un a corrigé `private.project_role_card` directement en base (hors migration
+suivie) après l'application initiale de `0073`, sans qu'aucun fichier `supabase/migrations/`
+ultérieur ne consigne ce correctif (confirmé par recherche exhaustive : aucune migration
+0074→0114 ne mentionne `project_role_card`). **À signaler** : l'historique `schema_migrations`
+n'est plus une preuve fiable de ce qui a été réellement appliqué pour cette fonction, et le
+correctif réel n'a jamais été tracé.
+
+**`0074_news_events_api` — `public.list_network_feed(...)`, filtres `careers` / `publications`**
+
+```
+-- base (schema_migrations.statements)
+       and (v_scope <> 'careers' or n.category_code in
+              (select c.code from public.news_categories c
+                where c.slug in ('nominations','carrieres','distinctions')))
+       and (v_scope <> 'publications' or n.category_code in
+              (select c.code from public.news_categories c
+                where c.slug in ('publications','recherche')))
+
+-- dépôt (supabase/migrations/0074_news_events_api.sql) ET fonction live (pg_get_functiondef)
+       and (v_scope <> 'careers' or n.category_code in
+              ('appointment','new_position','career_path','distinction','major_mission'))
+       and (v_scope <> 'publications' or n.category_code in ('publication','research'))
+```
+
+Écart le plus large des trois : la base enregistrée dans `schema_migrations` filtrait par
+une sous-requête sur `news_categories.slug` (3 slugs pour « carrières », 2 pour
+« publications ») ; le dépôt et la fonction live filtrent directement sur 5 puis 2
+`category_code` en dur, un jeu de valeurs différent. Comme pour `0073`, **le dépôt et la
+production s'accordent aujourd'hui** — la fonction active en base correspond au fichier —
+mais l'enregistrement `schema_migrations` pour `0074` ne reflète pas ce qui tourne
+réellement : un correctif a été appliqué directement en base après coup, sans migration
+traçant le changement. Aucune migration 0075→0114 ne redéfinit `list_network_feed`.
+
+**Synthèse.** Le point commun à `0073` et `0074` est que **la production et le dépôt sont
+sains et cohérents entre eux** : le risque n'est donc pas un bug actif pour les
+utilisateurs, mais un **trou dans la traçabilité** — deux fonctions ont été patchées en
+production sans passer par une migration versionnée, ce qui prive le projet de toute preuve
+écrite du changement (qui, quand, pourquoi). `0070` est différent : dépôt et base sont ici en
+désaccord entre eux, la production ayant un comportement plus permissif que ce que le fichier
+laisserait croire.
 
 ### B.3 Cas nécessitant une lecture humaine
 
-**Aucun** des 15 écarts entièrement vérifiés ne modifie une structure de schéma, une
-politique RLS, un privilège, une contrainte ou le comportement observable d'une fonction :
-la comparaison super-canonique (qui neutralise strictement les commentaires et les noms de
-délimiteurs, rien d'autre) confirme que le SQL exécutable est identique de part et d'autre.
-Il n'y a donc **aucun cas à signaler pour arbitrage humain** parmi les 15 vérifiés.
+**Aucun** des 15 premiers écarts vérifiés (§B.2, passe du 12 août) ne modifie une structure
+de schéma, une politique RLS, un privilège, une contrainte ou le comportement observable
+d'une fonction : la comparaison super-canonique (qui neutralise strictement les commentaires
+et les noms de délimiteurs, rien d'autre) confirme que le SQL exécutable est identique de
+part et d'autre. Il n'y a donc **aucun cas à signaler pour arbitrage humain** parmi ces 15.
+
+**En revanche, sur les 5 dernières migrations closes le 13 août, 3 cas sont à signaler pour
+arbitrage humain : `0070_promotions_api`, `0073_projects_api`, `0074_news_events_api`.**
+Détail complet en §B.2bis ci-dessus. Aucun des trois ne touche une politique RLS ou une
+contrainte de schéma, mais tous les trois changent le résultat observable d'une fonction
+(la liste d'évènements « prochain évènement » pour `0070`, le contenu JSON renvoyé pour
+`0073`, l'ensemble des actualités retournées par l'onglet « carrières »/« publications »
+pour `0074`).
 
 Point de vigilance, pas un désaccord : deux des trois « libellés » déjà relevés par le
 contrôle du 8 août (`0032`, `0049`) ne sont pas de simples reformulations mais des
@@ -501,28 +633,39 @@ appliqué en §4 (`0024_seed_taxonomy_business`) et en §2.3 (`0035`/`0036`).
 Le README de `supabase/migrations/` interdit d'éditer un fichier après son application. La
 présente annexe applique la convention déjà en usage dans ce document (§4, §2.3, §3) : **une
 note explicite dans `docs/migration-integrity.md`**, plutôt qu'une migration corrective ou une
-réédition rétroactive. Aucune migration `010X_fix_comments_*.sql` n'est créée : les 15 écarts
-vérifiés ne portent que sur des `comment on`, jamais sur une donnée ou un effet de schéma —
-il n'y a donc rien qu'une migration corrective devrait « rattraper » en base. Si un jour les 5
-migrations restantes révèlent un écart réellement exécutable, l'arbitrage du §6 s'applique :
-une **nouvelle** migration porte le delta, jamais une édition d'un fichier déjà appliqué.
+réédition rétroactive. Aucune migration `010X_fix_comments_*.sql` n'est créée pour les 17
+écarts cosmétiques ou de forme équivalente : ils ne portent que sur des `comment on` ou des
+réécritures sans effet, jamais sur une donnée ou un effet de schéma — il n'y a donc rien
+qu'une migration corrective devrait « rattraper » en base.
+
+Pour les **3 écarts réellement exécutables** identifiés en §B.2bis (`0070`, `0073`, `0074`),
+le même principe s'applique par construction — **aucun fichier de migration n'a été édité
+pour les corriger** — mais la décision de fond (quelle version fait foi, faut-il une
+migration corrective pour réaligner la base sur le dépôt, ou une note qui aligne le dépôt sur
+la base) reste **ouverte et nécessite un arbitrage humain** avant toute action, conformément
+à l'arbitrage du §6 : une **nouvelle** migration porterait le delta le cas échéant, jamais une
+édition d'un fichier déjà appliqué.
 
 ### B.6 Bilan chiffré
 
 | Catégorie | Nombre | Migrations |
 | --- | --- | --- |
-| Cosmétique (texte de `comment on` uniquement) | 13 | `0030`, `0031`, `0032`, `0033`, `0034`, `0036`, `0038`, `0040`, `0042`, `0045`, `0046`, `0049`, `0056`, `0067` *(voir note)* |
+| Cosmétique (texte de `comment on` uniquement) | 15 | `0030`, `0031`, `0032`, `0033`, `0034`, `0036`, `0038`, `0040`, `0042`, `0045`, `0046`, `0049`, `0056`, `0067`, `0072`, `0075` *(voir note)* |
 | Forme équivalente (SQL non-commentaire réécrit sans changer le comportement) | 1 | `0043` (`execute format(...)` vs `execute '...'`) |
 | Cosmétique + forme équivalente combinées | 1 | `0030` (comment **et** délimiteur `$$`/`$fn$`) |
-| Signalé pour revue humaine | **0** | — |
-| Non re-vérifié dans cette passe (statut hérité du 8 août, à confirmer) | 5 | `0070`, `0072`, `0073`, `0074`, `0075` |
+| Signalé pour revue humaine — écart exécutable réel | **3** | `0070` (dépôt en retard sur la base), `0073` et `0074` (`schema_migrations` obsolète par rapport à dépôt+base, correctif appliqué hors migration suivie) |
+| Non re-vérifié | **0** | — |
 
-*Note : le tableau ci-dessus compte 14 lignes sous « cosmétique » pour respecter le total de
-15 vérifiées + 0043 en forme équivalente + 0030 compté dans les deux colonnes (comment ET
-délimiteur) ; voir le détail par migration en B.2 pour la ventilation exacte.*
+*Note : le tableau ci-dessus compte 16 lignes sous « cosmétique » pour respecter le total de
+20 migrations vérifiées (15 lors de la passe du 12 août + 5 lors de la clôture du 13 août) +
+0043 en forme équivalente + 0030 compté dans les deux colonnes (comment ET délimiteur) + 3
+signalées pour revue humaine ; voir le détail par migration en B.2 et B.2bis pour la
+ventilation exacte.*
 
-**Verdict global : sur les 15 migrations vérifiées intégralement, 0 cas nécessite un arbitrage
-humain.** Les 5 restantes (`0070`, `0072`, `0073`, `0074`, `0075`) sont maintenues au statut
-"divergent, nature non confirmée" hérité du contrôle du 8 août — ni classées bénignes ni
-signalées comme problématiques, faute de vérification directe dans cette session. Aucun fichier
-de `supabase/migrations/` n'a été modifié pour produire cette annexe.
+**Verdict global : sur les 20 migrations initialement signalées divergentes (contrôle du
+8 août), les 20 ont maintenant été vérifiées intégralement. 17 sont cosmétiques ou de forme
+équivalente (aucun effet exécutable), et 3 présentent un écart exécutable réel nécessitant un
+arbitrage humain : `0070_promotions_api`, `0073_projects_api`, `0074_news_events_api` — voir
+§B.2bis pour le détail précis de chaque écart et l'état de la production vérifié via
+`pg_get_functiondef`. Aucun fichier de `supabase/migrations/` n'a été modifié pour produire
+cette annexe, conformément à la règle du projet.
