@@ -135,9 +135,10 @@ export function LandingCarousel({
       id={LANDING_ANCHORS.carousel}
       aria-roledescription={fr.public.carousel.roleDescription}
       aria-label={fr.public.carousel.label}
-      // Hero pleine largeur, pleine hauteur d'ecran sous le menu (2026-08-12) :
-      // plus d'arrondi ni de gouttiere, la hauteur vise le viewport moins la
-      // barre superieure collante.
+      // Hero pleine largeur, sans arrondi ni gouttiere (2026-08-12). Sur
+      // mobile la diapositive vise encore le viewport moins la barre
+      // superieure collante ; sur desktop/tablette elle suit desormais un
+      // ratio fixe plutot que la hauteur d'ecran (D-170, 2026-08-13).
       className="bg-deep-navy relative w-full overflow-hidden"
       onKeyDown={onKeyDown}
       onFocusCapture={() => setSuspended(true)}
@@ -224,7 +225,7 @@ export function LandingCarousel({
             aria-roledescription={fr.public.carousel.slideRoleDescription}
             aria-label={t(fr.public.carousel.position, { index: index + 1, total })}
             hidden={index !== current}
-            className={`bg-deep-navy relative flex min-h-[calc(100dvh-var(--layout-topbar))] flex-col max-md:min-h-[calc(100dvh-var(--layout-topbar))] ${
+            className={`bg-deep-navy relative flex flex-col max-md:min-h-[calc(100dvh-var(--layout-topbar))] md:aspect-[1920/720] ${
               overlayTexts ? 'justify-center' : 'justify-end'
             }`}
           >
@@ -235,9 +236,9 @@ export function LandingCarousel({
               diapositive porte donc son visuel reel quand le CMS en a
               publie un. Trois precautions :
 
-               - le conteneur a une hauteur minimale FIXE et l'image est en
-                 `fill` : la place est reservee avant le chargement, aucun
-                 decalage n'est possible (§58) ;
+               - le conteneur desktop a un RATIO fixe (voir D-170) et
+                 l'image est en `fill` : la place est reservee avant le
+                 chargement, aucun decalage n'est possible (§58) ;
                - la premiere diapositive est en `priority` (elle est
                  au-dessus de la ligne de flottaison, c'est l'element LCP) ;
                  les suivantes sont en `loading="lazy"` ;
@@ -255,17 +256,22 @@ export function LandingCarousel({
             <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
               {/*
                 Rognage constate en production (2026-08-13, retour utilisateur
-                direct sur capture d'ecran) : `object-cover` dans ce conteneur
-                cale sur `100dvh` rogne le haut ou le bas de CHAQUE visuel des
-                que le rapport largeur/hauteur de la fenetre differe de celui
-                de l'image — pas seulement les diapositives sponsorisees.
-                Premier correctif (limite a `slide.sponsored`) insuffisant :
-                confirme par l'utilisateur que les diapositives ordinaires
-                perdent aussi de l'information en bas d'image. `object-contain`
-                s'applique donc desormais a TOUTES les diapositives : chaque
-                visuel reste entierement lisible, quitte a un filet
-                `bg-deep-navy` de part et d'autre quand le ratio de la fenetre
-                ne correspond pas exactement a celui de l'image.
+                direct sur capture d'ecran) : `object-cover` dans un conteneur
+                cale sur `100dvh` rognait le haut ou le bas de chaque visuel
+                des que le rapport largeur/hauteur de la fenetre differait de
+                celui de l'image. Deux correctifs successifs le meme jour :
+                (1) `object-contain` d'abord limite a `slide.sponsored`,
+                insuffisant — les diapositives ordinaires perdaient aussi de
+                l'information ; (2) `object-contain` universel, qui supprime
+                tout rognage mais fait apparaitre de larges bandes laterales
+                `bg-deep-navy` des que le conteneur (calque sur 100dvh, donc
+                tres variable) s'ecarte du ratio 16:9 des visuels existants.
+                Retour utilisateur direct (analyse UX detaillee, 2026-08-13) :
+                le conteneur desktop passe donc d'une hauteur 100dvh a un
+                ratio FIXE proche du format cible des futures affiches —
+                voir D-170. `object-contain` reste actif : aucune image,
+                ancienne ou future, n'est jamais rognee ; seules les bandes
+                laterales varient selon l'ecart au ratio du conteneur.
               */}
               <LandingMediaImage
                 media={slide.media}
@@ -326,6 +332,7 @@ export function LandingCarousel({
                 className={cx(
                   'block h-[10px] w-[10px] rounded-full border border-white/50 transition-colors duration-150',
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+                  index === current ? 'bg-text-inverse' : 'bg-transparent hover:bg-white/40',
                 )}
               >
                 <span className="sr-only">{t(fr.public.carousel.goTo, { index: index + 1 })}</span>
