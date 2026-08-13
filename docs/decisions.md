@@ -25,14 +25,14 @@ Statut des décisions : **ADOPTÉE** (appliquée au code) · **PROVISOIRE** (à 
 ## 1. Source de vérité en cas de contradiction
 
 | #    | Décision                                                                                                                                                                                                                              | Justification                                                                                                                                                                                     |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | 
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | 
 | D-01 | **ADOPTÉE** — En cas de conflit, l'ordre de préséance est : (1) MASTER PROMPT ; (2) **nom de fichier de la maquette** ; (3) document de spécification UI/UX (série 24–35) ; (4) document de spécification fonctionnelle (série 0–23). | Le MASTER PROMPT §2 fixe la hiérarchie. Les maquettes livrées sont l'itération la plus récente et la plus concrète : leurs noms de fichiers tranchent tous les conflits de numérotation d'écrans. |
 | D-02 | **ADOPTÉE** — Les documents UI/UX (24–35) l'emportent sur les documents fonctionnels (0–23) sur les détails d'interface ; l'inverse s'applique aux règles métier.                                                                     | Les documents UI/UX sont postérieurs et se présentent comme « spécification finale ».                                                                                                             |
 
 ### Écart assumé sur ISE-007
 
 | #    | Décision                                                                                                                                                                                                                                                                                       | Justification                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | D-03 | **ADOPTÉE** — La maquette `ISE-007_Verification_Email_Etape_1` montre la saisie d'un code à 6 chiffres. L'écran livré à `/reclamer-mon-profil/verification` affiche à la place **l'état réel de la réclamation** : approuvée automatiquement, ou en attente de revue. Aucun code n'est envoyé. | L'adresse du compte est déjà confirmée par Supabase Auth à la création du compte (ISE-002) : redemander un code vérifierait une seconde fois la même chose. Ce qui reste à vérifier, c'est la **correspondance** entre l'adresse du compte et l'adresse historique du profil — ce que la base fait sans interaction (D-105). Envoyer un code pour simuler une vérification déjà faite serait une étape décorative (MASTER PROMPT §27 et §113). La maquette reste applicable telle quelle au premier écran de l'onboarding (ISE-008 → ISE-014) si le métier veut une double authentification à ce moment-là. |
 
 ### Conflits de numérotation d'écrans tranchés par D-01
@@ -435,7 +435,7 @@ rôle sur un compte existant.
 ## 21. Rédaction administrative des actualités (SA-034, module éditorial manquant)
 
 | #     | Décision                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Source                                                                                                                                              |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | D-162 | **ADOPTÉE** — Un écran `/administration/actualités` (permission `content.publish`) permet de rédiger, modifier et publier un article directement, sans passer par SQL. Demandé par le porteur le 2026-08-12 : après le lancement, il n'existait aucun moyen de créer une actualité — `/cms/actualites` (D-128) ne pilote que l'exposition sur la landing d'articles déjà existants. Cet écran **supersede la classification « non livré » de SA-034** (décision C-07, 2026-08-11) : SA-034 est désormais livré. SA-035→038 (support & signalements) restent hors périmètre, inchangés. | `0110_admin_news_authoring_api.sql`, `administration/actualites/**`, `lib/admin/queries-news.ts`, `i18n/admin-news.ts` |
 
 Cycle éditorial volontairement restreint à l'usage réel : `admin_set_news_status` n'autorise que
@@ -495,3 +495,162 @@ tant que le curseur restait dessus. Le survol-pause est retiré ; le focus clavi
 `onBlurCapture`) et le bouton lecture/pause explicite restent les deux mécanismes d'arrêt, ce
 dernier suffisant seul à satisfaire WCAG 2.2.2 (mécanisme de pause explicite, sans exigence de
 survol).
+
+---
+
+## 23. Resserrement du menu public et premier câblage des piliers « réseau utile »
+
+| #     | Décision | Source |
+| ----- | -------- | ------ |
+| D-164 | **ADOPTÉE** — Le menu de l'en-tête public passe de six à cinq entrées : `Accueil`, `À la une`, `Le réseau`, `Expertises`, `Partenaires`. `À la une` remplace les trois anciennes entrées `Actualités` / `Événements` / `Opportunités` et pointe sur l'ancre de toute la section « À la une du réseau » (`LANDING_ANCHORS.highlights`), pas sur une carte isolée. `Expertises` est une entrée nouvelle vers `ExpertisesSection`, rendue depuis PUB-001 mais jusqu'ici absente du menu. | `public-nav.ts`, `PublicHeader.tsx` |
+
+Deux défauts réels corrigés au passage, tous deux constatés par le porteur le 2026-08-12 :
+
+- **« Accueil » ne ramenait jamais en haut de page** quand on s'y trouvait déjà : un
+  `<Link href="/">` seul ne produit aucune navigation si l'URL ne change pas, donc aucun
+  défilement. `PublicHeader.tsx` ajoute un gestionnaire de clic dédié
+  (`window.scrollTo({ top: 0, behavior: 'smooth' })`), déclenché en plus de la navigation normale
+  quand on part d'une autre page publique.
+- **Aucune ancre de menu ne pointait sur `ExpertisesSection`** (« Explorer les expertises ») bien
+  que la section soit réellement rendue depuis le premier jour de PUB-001 — simple oubli de
+  `PUBLIC_NAV_ITEMS`, corrigé par l'ajout de l'entrée `Expertises`.
+
+**Premier câblage d'un pilier de « Un réseau conçu pour être utile »** (`NetworkSection.tsx`) :
+jusqu'ici les quatre piliers (Connecter / Entraider / Collaborer / Impacter) étaient du texte pur,
+sans image ni lien, assumé comme « discours de marque ». Le porteur demande que chaque pilier mène
+à un écran réel ; seule la cible de `Connecter` est précisée à ce stade (« arriver à la recherche
+d'experts ISE »). `Connecter` est donc câblé vers `SEARCH_ROUTES.find` (`/rechercher`, ISE-034) via
+`ProtectedLink` (`resourceType="espace-membre"`), exactement le même mécanisme que les pastilles
+d'`ExpertisesSection` — un visiteur anonyme passe par ISE-001 avant d'atteindre l'écran, jamais de
+lien mort. Les trois autres piliers restent du texte seul : inventer leur cible aurait violé la
+règle « jamais de lien mort » (ADDENDUM §10, règle 6). Table `PILLAR_TARGETS` volontairement
+partielle, en attente des cibles réelles de `Entraider` / `Collaborer` / `Impacter`.
+
+**Explicitement hors périmètre de ce commit**, chantiers plus larges ouverts en suivi (409 : liste
+de tâches du porteur) : images sur les cartes Événements/Opportunités de « À la une » (aujourd'hui
+uniquement les Actualités en ont une) ; écran CMS dédié aux Opportunités pour piloter leur
+exposition sur la landing (`/cms/opportunites` n'existe pas, alors que `set_landing_exposure()`
+supporte déjà `opportunity` côté base) ; transformation des quatre piliers en contenu piloté par le
+CMS (image, texte optionnel, lien, par pilier) ; picklist d'organisation dans les formulaires de
+profil pour fiabiliser le comptage `get_landing_stats().organizations` ; décision sur une éventuelle
+photo réelle pour « ISE du jour » (aujourd'hui un monogramme, D-135, choix de confidentialité
+assumé — un changement demanderait de redéfinir le périmètre de `allow_public_feature`) — **tranchée
+ci-dessous par D-165**.
+
+---
+
+## 24. « ISE du jour » : visuel éditorial et accroche, sans rouvrir D-135 (D-165)
+
+| #     | Décision | Source |
+| ----- | -------- | ------ |
+| D-165 | **ADOPTÉE** — La carte « ISE du jour » affiche désormais une vraie photo et une courte accroche, choisies par l'admin **par mise en avant** (`cms_featured_profile_history.showcase_media_id` / `showcase_tagline`, migration `0112`), et non plus seulement le monogramme. Le visuel provient exclusivement de la médiathèque **publique** (`cms_media_assets`, bucket `landing-media`) — jamais du bucket privé `avatars`. Quand aucun visuel n'est choisi pour une mise en avant, le monogramme reste le repli. | `0112_featured_profile_showcase.sql`, `FeaturedForms.tsx` (`ShowcaseForm`), `HighlightsSection.tsx` (`FeaturedProfileCard`) |
+
+**Demande du porteur** (réponse à la question de clarification posée avant ce commit) : *« Pour la
+carte ISE, c'est photo de profil + petit texte descriptif (Exemple : Gilles N'Gatta, le ISE qui
+voulait parler l'anglais, indétrônable bosseur, etc. etc). Tout cela dans la carte. »*
+
+**Pourquoi ce n'est pas une réouverture de D-135.** D-135 dit : le bucket `avatars` est privé et le
+reste, et `allow_public_feature` consent à un teaser **textuel**, pas à la publication d'une
+photographie personnelle du membre. Cette règle n'a **pas changé** : `get_landing_featured_profile()`
+ne projette toujours pas `avatar_path` (le bloc de vérification de la migration 0112 le réaffirme en
+échouant si la chaîne `'avatar_path'` réapparaît dans la fonction). Le champ `photo` ajouté ici est
+un objet **différent** : c'est un visuel choisi par l'administrateur au moment où il programme la
+mise en avant, dans la **même** médiathèque publique que le carrousel et les actualités — un visuel
+déjà soumis à l'obligation d'un texte alternatif non vide (CMS-008, ADDENDUM §52). Il n'existe
+d'ailleurs aujourd'hui **aucun écran** permettant à un membre de déposer sa propre photo de profil
+(D-117 : « Dépôt de photo… non ouvert ») : il n'y a donc pas de photo personnelle à exposer par
+accident, seulement un choix éditorial explicite de l'administrateur.
+
+**Pourquoi une accroche par mise en avant, et pas un champ sur le profil.** `showcase_tagline` vit
+sur `cms_featured_profile_history` (une ligne par `featured_date`), pas sur `ise_profiles` : la même
+personne peut être remise en avant plus tard avec une accroche différente. Elle est volontairement
+distincte de `public_summary` (qui reste affiché à côté sur la carte) : l'accroche est une courte
+punchline éditoriale (3 à 160 caractères, contrainte `cms_featured_profile_history_tagline_length`),
+le résumé reste la description factuelle du profil.
+
+**Ce qui change concrètement** :
+- Migration `0112_featured_profile_showcase.sql` : colonnes `showcase_media_id` (FK vers
+  `cms_media_assets`, `on delete set null`) et `showcase_tagline` (contrainte de longueur) sur
+  `cms_featured_profile_history` ; nouvelle RPC `set_featured_profile_showcase(p_featured_date,
+  p_media_id, p_tagline)`, réservée à `cms.featured_profile.manage`, auditée
+  (`cms.featured_profile.showcase_updated`) ; `get_cms_featured_profile_overview()` et
+  `get_landing_featured_profile()` mis à jour en conséquence (`create or replace`, aucun nouveau nom
+  de fonction anon-exécutable — la liste blanche `anon_function_grant` n'a pas besoin d'être étendue).
+- CMS-006 (`/cms/ise-du-jour`) : nouvelle section « Visuel et accroche (D-165) », qui choisit le
+  visuel dans un menu déroulant alimenté par `loadMediaOptions()` (déjà utilisé par CMS-002/CMS-008)
+  et saisit l'accroche dans un champ texte borné.
+- PUB-001 : `LandingFeaturedProfile.photo` / `.tagline`, alimentés par `featuredProfileSchema` avec
+  les mêmes contrôles que tout autre média public (`parseMedia()` — bucket public, texte alternatif
+  non vide) ; `FeaturedProfileCard` affiche la photo dans le même gabarit `MediaFrame` que les
+  actualités quand elle existe, et retombe sur `ProfileMonogram` sinon.
+- Tests : `landing-data.test.ts` (liste blanche du teaser étendue à `photo`/`tagline`, contrôle que
+  `avatar_path` et un bucket privé ne produisent jamais de photo) et `landing-render.test.ts`
+  (rendu avec et sans visuel choisi, l'assertion D-135 existante — « jamais de photographie quand
+  rien n'a été choisi » — reste verte inchangée).
+
+---
+
+## 25. Visuels sur les cartes Événements/Opportunités, écran CMS `/cms/opportunites`, et règle permanente des tailles d'image recommandées (D-166)
+
+| #     | Décision | Source |
+| ----- | -------- | ------ |
+| D-166 | **ADOPTÉE** — Les cartes Événements et Opportunités de « À la une » affichent désormais un visuel éditorial optionnel, choisi dans la médiathèque publique par le même geste que D-165 (`cover_media_id`, migration `0113`). Un nouvel écran CMS `/cms/opportunites` (CMS-006bis) est créé pour piloter l'exposition des opportunités sur la landing, jusqu'ici absent alors que `set_landing_exposure()` supportait déjà `'opportunity'` côté base. Règle permanente, non limitée à ce commit : **tout champ image ajouté au CMS affiche désormais, à côté du sélecteur, la taille de fichier recommandée en pixels.** | `0113_landing_cover_media.sql`, `HighlightsSection.tsx`, `CoverMediaForm.tsx`, `/cms/evenements`, `/cms/opportunites`, `i18n/cms.ts` |
+
+**Demande du porteur** : *« enchaîne. mais note qu'a chaque fois que tu mets des champs d'image,
+veille à mettre quelque part à coté, la taille de l'image recommandé. »* — reprise des chantiers
+listés en hors-périmètre par D-164, plus une règle de conduite permanente pour tout champ image
+futur, pas seulement ceux touchés ici.
+
+**Visuel de couverture — même patron que D-165, répliqué sur deux modules.** Migration `0113` ajoute
+une colonne `cover_media_id` (FK vers `cms_media_assets`, `on delete set null`) sur `events` et sur
+`opportunities`, et une RPC unique `set_landing_cover_media(p_entity_type, p_entity_id, p_media_id)`
+qui dispatche sur les deux types, réservée à `cms.edit`, valide le média (bucket `landing-media`,
+texte alternatif non vide, non supprimé), verrouille la ligne et journalise
+(`cms.landing_cover_media`). Contrairement à `set_landing_exposure()`, elle n'exige jamais
+`cms.publish` : choisir un visuel n'est pas en soi un acte de publication. Le choix d'une **colonne
+dédiée plutôt que `cms_content_overrides`** est délibéré : un override est borné dans le temps et
+répond à une logique d'épinglage temporaire (§43), alors qu'un visuel de couverture est une donnée
+persistante par entité — sémantiquement différente. `list_cms_events()` et la nouvelle
+`list_cms_opportunities()` exposent la colonne ; `get_landing_events()` / `get_landing_opportunities()`
+résolvent le média via `private.landing_media()`, la même fonction canonique que le carrousel, les
+actualités et D-165. Sans visuel choisi, la carte s'affiche sans image plutôt qu'avec une image
+cassée — même comportement que le monogramme de repli de D-165.
+
+**Écran `/cms/opportunites` (CMS-006bis) — miroir exact de CMS-005, pas une nouvelle logique.** Le
+CMS ne pilote que trois choses, à l'identique des Événements : la visibilité landing, la priorité
+éditoriale, et l'épinglage temporaire (`cms_content_overrides`, §43) — plus, depuis cette même
+décision, le visuel. Aucun champ métier n'y transite : ni le statut de l'offre, ni sa modération, ni
+sa description, ni la rémunération, ni le contact, ni l'URL de candidature externe (ADDENDUM §13,
+D-128). `loadCmsOpportunities()` appelle une nouvelle RPC `list_cms_opportunities()`, miroir
+énuméré de `list_cms_events()` qui exclut explicitement ces champs privés — le bloc de vérification
+interne de la migration `0113` échoue si l'un d'eux apparaît dans la sortie.
+
+**Règle permanente des tailles d'image recommandées.** Chaque hint de champ image du CMS porte
+désormais la taille conseillée en pixels, en plus du format et du poids maximal déjà indiqués :
+1600 × 900 px (16/9) pour un visuel plein cadre isolé (couverture d'événement/opportunité, showcase
+« ISE du jour », `showcaseHelp`) ; 1920 × 1080 px (16/9) Desktop et 1080 × 1350 px (4/5) Mobile pour
+les paires Desktop/Mobile (carrousel, campagnes partenaires) ; la médiathèque générale (CMS-008)
+résume les deux cas puisqu'elle sert tous les emplacements. Cette règle s'applique rétroactivement
+aux champs déjà existants (`carousel.fieldMediaHelp`, `partners.fieldMediaHelp` — qui n'avait
+jusqu'ici aucun hint —, `media.fieldFileHelp`, `featured.showcaseHelp`) et **à tout champ image créé
+ultérieurement** : ce n'est pas un correctif ponctuel mais une convention d'interface durable pour ce
+projet.
+
+**Ce qui change concrètement** :
+- `0113_landing_cover_media.sql` : colonnes `cover_media_id` sur `events`/`opportunities` ;
+  `set_landing_cover_media()` ; `list_cms_events()` recréée (ajoute `cover_media_id`) ;
+  `list_cms_opportunities()` nouvelle ; `get_landing_events()` / `get_landing_opportunities()`
+  recréées (ajoutent `image`). Vérifié indépendamment de son propre bloc `do $verify$` : `security_
+  baseline_violations()` et `storage_baseline_violations()` restent à 0 ligne après application.
+- `landing-data.ts` : `LandingEvent.image` / `LandingOpportunity.image`, schémas Zod et tests associés.
+- `HighlightsSection.tsx` : `EventCard` / `OpportunityCard` reçoivent un `visual` optionnel, même
+  gabarit `MediaFrame` 16/9 que les actualités et D-165.
+- `CoverMediaForm.tsx` (nouveau, `apps/cms/_components`) : composant partagé, repli `<details>` à
+  l'identique d'`EntityScheduleForm`, réutilisé par `/cms/evenements` et `/cms/opportunites`.
+- `/cms/evenements` : nouvelle action `setEventCoverMediaAction`, champ visuel ajouté par ligne.
+- `/cms/opportunites` (nouveau) : `page.tsx` + `actions.ts`, miroir structurel de `/cms/evenements`.
+- `i18n/cms.ts` : bloc `opportunities` complet, hints de taille recommandée sur `events.coverHelp`,
+  `opportunities.coverHelp`, `featured.showcaseHelp`, `carousel.fieldMediaHelp`,
+  `partners.fieldMediaHelp` (nouveau), `media.fieldFileHelp`.
+- Routes et navigation : `CMS_ROUTES.opportunities` (`/cms/opportunites`), entrée de menu
+  correspondante.
