@@ -278,8 +278,6 @@ Le document annonçait lui-même qu'il « complète » ce journal. Ses arbitrage
 | D-149 | **ADOPTÉE** — ISE-092 est un **fil mixte** actualités + événements, uni en base par un curseur keyset unique (D-44), et non deux listes entrelacées côté client. | N-d |
 | D-150 | **ADOPTÉE** — `events.online_url_private` n'est jamais projeté, ni par `private.event_card()`, ni par un `select *`. Seul un booléen `online_url_available` sort ; l'URL passe par `public.get_event_online_url()`. | N-c |
 
----
-
 ### 14.3 Arbitrages rapatriés de `docs/screen-traceability-matrix.md`
 
 La matrice consignait sept écarts de la tranche Recherche & découverte (`E-01` → `E-07`) et
