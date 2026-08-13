@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { EmptyState, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
+import { frAdminCampaigns } from '@/i18n/admin-campaigns';
 import { ADMIN_ROUTES, adminPromotionRoute } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
@@ -96,9 +97,15 @@ export default async function AdminPromotionsPage({
             },
           ]}
         />
-        <Link href={ADMIN_ROUTES.promotionSuggestions} className={DETAIL_LINK}>
-          {frAdmin.promotions.suggestionsLink}
-        </Link>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href={ADMIN_ROUTES.promotionSuggestions} className={DETAIL_LINK}>
+            {frAdmin.promotions.suggestionsLink}
+          </Link>
+          {/* D-173 — suivi global des clics sur les liens d'e-mail (pas une promotion precise). */}
+          <Link href={ADMIN_ROUTES.authLinkEvents} className={DETAIL_LINK}>
+            {frAdminCampaigns.authLinks.navLink}
+          </Link>
+        </div>
       </div>
 
       {rows.length === 0 ? (

@@ -26,6 +26,13 @@ export const ADMIN_ROUTES = {
   promotionNew: '/administration/promotions/nouvelle',
   /** SA-010 — Signalements « ma promotion n'existe pas » (ISE-009). */
   promotionSuggestions: '/administration/promotions/suggestions',
+  /**
+   * Suivi des clics sur les liens d'e-mail Supabase (D-173, migration
+   * 0118/0119) : vue GLOBALE plateforme (pas liee a une promotion), placee
+   * sous /promotions faute d'un meilleur ecran dedie — cf. commentaire du
+   * fichier `promotions/liens/page.tsx`.
+   */
+  authLinkEvents: '/administration/promotions/liens',
   /** SA-016 — File de moderation des appels au reseau. */
   calls: '/administration/appels',
   /** SA-019 — File de moderation des opportunites. */

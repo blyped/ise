@@ -64,6 +64,49 @@ async function runAdminBootstrap(
 }
 
 /**
+ * Journalise CHAQUE atterrissage sur ce point d'entree (0119, D-173) :
+ * `/auth/callback` est le SEUL endroit ou aboutit un clic sur un lien
+ * d'e-mail Supabase (confirmation ISE-002, reinitialisation ISE-003,
+ * activation D-161), qu'il s'agisse d'un succes ou d'un echec. Avant
+ * cela, un lien invalide/expire et un lien jamais clique se
+ * confondaient tous deux dans `auth.users.last_sign_in_at = null`.
+ *
+ * Enveloppe volontairement TOUT : l'insertion est une fonction annexe,
+ * jamais un blocage de la redirection reelle. `error.code` (Supabase)
+ * est typé `string | undefined` ; il est toujours normalisé en
+ * `string | null` avant l'appel RPC (`errorCode ?? null`), pour ne
+ * jamais assigner `undefined` à une clé de l'objet d'arguments
+ * (`exactOptionalPropertyTypes`).
+ */
+async function logAuthLinkEvent(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  linkType: string,
+  outcome: 'success' | 'error',
+  userId: string | null,
+  errorCode: string | null | undefined,
+): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('log_auth_link_event', {
+      p_link_type: linkType,
+      p_outcome: outcome,
+      p_user_id: userId,
+      p_error_code: errorCode ?? null,
+    });
+    if (error) {
+      console.error('[ISE] journalisation clic lien e-mail en echec', {
+        correlationId: newCorrelationId(),
+        code: error.code,
+      });
+    }
+  } catch (unexpected) {
+    console.error('[ISE] journalisation clic lien e-mail — exception avalee', {
+      correlationId: newCorrelationId(),
+      unexpected,
+    });
+  }
+}
+
+/**
  * Point d'atterrissage des liens envoyes par e-mail : confirmation d'adresse
  * (ISE-002) et recuperation de mot de passe (ISE-003 vers ISE-004).
  *
@@ -82,9 +125,14 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      await logAuthLinkEvent(supabase, 'code', 'success', user?.id ?? null, null);
       await runAdminBootstrap(supabase);
       return NextResponse.redirect(new URL(next, origin));
     }
+    await logAuthLinkEvent(supabase, 'code', 'error', null, error.code);
     console.error('[ISE] échange du code de session', {
       correlationId: newCorrelationId(),
       code: error.code,
@@ -95,9 +143,14 @@ export async function GET(request: NextRequest) {
       token_hash: tokenHash,
     });
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      await logAuthLinkEvent(supabase, rawType, 'success', user?.id ?? null, null);
       await runAdminBootstrap(supabase);
       return NextResponse.redirect(new URL(next, origin));
     }
+    await logAuthLinkEvent(supabase, rawType, 'error', null, error.code);
     console.error('[ISE] vérification du lien e-mail', {
       correlationId: newCorrelationId(),
       code: error.code,

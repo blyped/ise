@@ -101,6 +101,38 @@ export const frAdminCampaigns = {
     channelNotEmail:
       "Cette campagne utilise le canal « dans l'application » : le lancement en masse n'est pas disponible pour ce canal.",
   },
+  /**
+   * Suivi des clics sur les liens d'e-mail Supabase (D-173) — resume
+   * GLOBAL plateforme (toutes promotions confondues), pas le detail d'une
+   * campagne. Regroupe ici faute d'un meilleur emplacement, cf. le
+   * commentaire en tete de `promotions/liens/page.tsx`.
+   */
+  authLinks: {
+    navLink: "Clics sur les liens d'e-mail",
+    title: "Clics sur les liens d'e-mail (30 derniers jours)",
+    subtitle:
+      "Chaque atterrissage sur le lien d'un e-mail Supabase (activation, confirmation, réinitialisation), succès ET échec — vue globale de la plateforme, pas filtrée par promotion ni par campagne.",
+    empty: 'Aucun clic enregistré sur la période.',
+    emptyBody:
+      "Soit aucun lien n'a encore été envoyé, soit aucun destinataire n'a encore cliqué depuis la mise en place de ce suivi.",
+    columns: {
+      linkType: 'Type de lien',
+      success: 'Succès',
+      error: 'Échec (lien invalide/expiré)',
+      distinctUsers: 'Comptes distincts activés',
+    },
+    linkType: {
+      signup: 'Confirmation de compte',
+      invite: 'Invitation (D-161)',
+      magiclink: 'Lien magique',
+      recovery: 'Réinitialisation de mot de passe',
+      email_change: "Changement d'adresse e-mail",
+      email: 'E-mail (générique)',
+      code: 'Code PKCE (sans type explicite)',
+    } as Record<string, string>,
+    limitNote:
+      "Ce suivi capture le clic à partir du moment où Supabase valide le jeton (ou refuse de le faire) — pas les ouvertures ou clics mesurés par Resend avant cette étape, faute d'accès aux réglages du compte Resend (webhook) à ce jour.",
+  },
 } as const;
 
 export function batchSentMessage(sentCount: number, emailFailures: number): string {
