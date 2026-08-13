@@ -292,6 +292,27 @@ export async function setLandingExposure(
   return { ok: true, data: undefined };
 }
 
+/**
+ * 0113 — visuel de couverture d'un evenement ou d'une opportunite, tire de
+ * la mediatheque publique. `set_landing_cover_media` valide seule le media
+ * (bucket public, alt_text) ; ce module ne fait que transmettre.
+ */
+export async function setLandingCoverMedia(
+  entityType: 'event' | 'opportunity',
+  entityId: string,
+  mediaId: string | null,
+  correlationId: string,
+): Promise<MutationResult> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('set_landing_cover_media', {
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_media_id: mediaId,
+  });
+  if (error) return failure(error, correlationId, 'set_landing_cover_media');
+  return { ok: true, data: undefined };
+}
+
 export async function setNewsFeatured(
   newsId: string,
   isFeatured: boolean,

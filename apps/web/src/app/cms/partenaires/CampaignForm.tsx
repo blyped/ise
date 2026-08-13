@@ -204,7 +204,12 @@ export function CampaignForm({
           </CmsField>
 
           <div className="grid gap-5 lg:grid-cols-2">
-            <CmsField name="mediaId" label={frCms.partners.fieldMedia} error={errors['mediaId']}>
+            <CmsField
+              name="mediaId"
+              label={frCms.partners.fieldMedia}
+              hint={frCms.partners.fieldMediaHelp}
+              error={errors['mediaId']}
+            >
               {(props) => (
                 <select
                   {...props}
