@@ -100,3 +100,30 @@ Aucune renumérotation (MASTER PROMPT §91).
 | D-55 | **ADOPTÉE** — Aucun statut ne franchit une étape non constatée. En particulier : « candidature envoyée » à un organisme externe n'est jamais posé par un clic dans la plateforme ; l'utilisateur **déclare** lui-même l'état réel. | MASTER PROMPT §27, §29 et §113. |
 
 ---
+
+## 6. Taxonomies et référentiels
+
+| #    | Décision | Justification |
+| ---- | --- | --- |
+| D-60 | **ADOPTÉE** — Le seed intègre l'**intégralité** de la taxonomie du doc 20, soit **435 compétences / 84 catégories / 18 domaines**, et non le sous-ensemble « environ 220 » annoncé par le document lui-même. Les assertions de test sont alignées sur le décompte réel. | Restreindre la taxonomie dégraderait le matching, qui est le cœur du produit. |
+| D-61 | **ADOPTÉE** — Les ~150 libellés présents au doc 19 mais absents du doc 20 (dont 8 catégories entières : Économie sectorielle, Computer Vision, Recensements, Développement logiciel, Cloud, Project Monitoring, Gouvernance d'entreprise, Leadership) sont **intégrés** à la taxonomie, marqués `source = 'doc19'` pour révision ultérieure par le back-office. | Le doc 19 est le « référentiel initial » ; en écarter la moitié perdrait des compétences réelles. Le marquage permet un arbitrage humain sans nouvelle migration. |
+| D-62 | **ADOPTÉE** — Les slugs sont uniques **par table**, pas globalement. Les collisions inter-tables (`sql` compétence vs outil, `microfinance` domaine vs secteur…) sont donc licites. Les clés d'API exposent toujours `{type, slug}`. | L'unicité globale imposerait des slugs artificiels illisibles. |
+| D-63 | **ADOPTÉE** — Les doublons intra-taxonomie identifiés (Analyse de survie 020309/110304, Protection sociale 030405/130501, Planification stratégique 160103/130201) sont seedés **une seule fois**, le second code devenant un alias pointant vers le premier. | Deux entrées identiques fragmentent le matching. |
+| D-64 | **ADOPTÉE** — Référentiels absents des documents et créés : **pays** (ISO 3166-1 alpha-2, libellés français), **sous-régions** (découpage UNSD : Afrique de l'Ouest, Afrique centrale, Afrique de l'Est, Afrique australe, Afrique du Nord, Europe, Amérique du Nord, Amérique latine et Caraïbes, Asie, Océanie), **fonctions** (dérivées des filtres de recherche du doc 22), **promotions** (générées par année, de 1960 à l'année en cours + 5). | « Afrique de l'Ouest » est un critère de matching explicite sans référentiel associé ; les filtres de recherche référencent des fonctions inexistantes. |
+| D-65 | **ADOPTÉE** — Types de disponibilité : le référentiel retenu est celui du **doc 20 (13 codes)**, qui est le seul codifié. « Expertise ponctuelle » (présente dans les libellés, absente des codes) reçoit le code `ad_hoc_expertise`. Les listes à 5, 7 et 8 entrées des autres documents y sont mappées. | Un seul référentiel codé peut servir de pivot ; les autres sont des vues partielles. |
+| D-66 | **ADOPTÉE** — Motifs de signalement : référentiel **unique** de 9 motifs (union dédupliquée des 4 listes), filtré à l'affichage selon le type d'objet signalé. | Quatre listes concurrentes produiraient quatre tables ; un référentiel unique + filtrage contextuel donne le même résultat UI. |
+
+---
+
+## 7. Profil et onboarding
+
+| #    | Décision | Justification |
+| ---- | --- | --- |
+| D-70 | **ADOPTÉE** — Onboarding en **7 étapes**, conformes aux maquettes ISE-008 → ISE-014 : (1) Promotion · (2) Compétences · (3) _(voir ISE-010/011)_ · (4) Secteurs · (5) Localisation · (6) Disponibilité · (7) Finalisation. Les libellés et l'ordre proviennent des noms de fichiers des maquettes (D-01), qui tranchent le conflit 7 / 8 / 9 étapes. | Les maquettes portent explicitement « Étape N » dans leur nom. |
+| D-71 | **ADOPTÉE** — Le score de complétion est calculé par `public.calculate_profile_completion(profile_id)`, à pondérations **stockées en base** (`profile_completion_rules`) et non codées en dur. Les 10 sous-pondérations manquantes sont initialisées à une répartition uniforme du reliquat et ajustables par le back-office sans migration. | Le doc 20 ne chiffre que 3 des 13 blocs. Externaliser les poids évite une migration à chaque recalibrage. |
+| D-72 | **ADOPTÉE** — Le score de complétion est **privé** : lisible par son propriétaire uniquement (RLS), jamais agrégé en classement, jamais affiché sur un profil tiers. | MASTER PROMPT §17. |
+| D-73 | **ADOPTÉE** — Échelle de visibilité unifiée à **4 niveaux** : `private` (moi seul) · `connections` (mes relations) · `members` (tous les membres authentifiés) · `promotion` (ma promotion). Les échelles à 3 et 6 niveaux des autres documents y sont mappées. Aucune visibilité `public` (web ouvert) en V1. | MASTER PROMPT §47 : « les profils sont visibles aux membres autorisés, pas au web public ». |
+| D-74 | **ADOPTÉE** — Visibilités par défaut pour les 10 champs non spécifiés : e-mail personnel `private` · téléphone `private` · CV `private` · date de naissance `private` · adresse `private` · employeur actuel `members` · poste `members` · ville `members` · pays `members` · LinkedIn `members`. | MASTER PROMPT §47 : par défaut, le moins exposé. |
+| D-75 | **ADOPTÉE** — Le niveau de compétence est **déclaratif** et étiqueté comme tel dans l'interface. Aucune promotion automatique en « validé » ou « certifié », y compris après recommandation. | MASTER PROMPT §18. |
+
+---
