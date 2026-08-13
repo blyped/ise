@@ -203,3 +203,210 @@ mais méritent une confirmation.
 | Q-08 | Ouverture d'un second projet Supabase de staging (cf. C-01). | Non pour l'instant ; migrations rejouables prêtes. |
 
 ---
+
+## 12. Site public et CMS (addendum au MASTER PROMPT)
+
+Migrations `0057` → `0066`. Voir `docs/cms.md`, `docs/cms-automation.md`,
+`docs/featured-profile.md` et `docs/rls.md` §11.
+
+| #     | Décision | Justification |
+| ----- | --- | --- |
+| D-121 | **ADOPTÉE** — La contrainte `CHECK` de `analytics.profile_activity_events.event_type` (0019) est **remplacée** pour accueillir les huit événements publics de PUB-001. Les quinze valeurs d'origine sont conservées à l'identique ; aucune ligne existante n'est invalidée. Aucune table d'événements publics n'est créée. | Même arbitrage qu'en D-118 : quand une valeur a une portée métier durable, on élargit le vocabulaire fermé plutôt que d'ouvrir un second entrepôt. Deux tables d'événements produiraient deux vérités à réconcilier pour calculer un même CTR (addendum §50, §51). |
+| D-122 | **ADOPTÉE** — `ise_profiles` reçoit **exactement deux** colonnes : `public_summary` et `allow_public_feature`. L'exclusion temporaire d'un profil de « ISE du jour » n'est **pas** une colonne de profil : elle est portée par `cms_content_overrides` (`override_kind = 'exclude'`), bornée dans le temps et attribuée à son auteur. | `LP_Modification_de_la_base_de_données` suggérait aussi `public_feature_excluded_until` et `public_feature_updated_at`. Une exclusion est un **acte éditorial** : elle a un auteur, une date, un motif et une fin. Une colonne de profil n'en porte aucun, et laisserait croire que la personne est durablement marquée. La consigne du porteur demandait par ailleurs le strict minimum sur les tables métier. |
+| D-123 | **ADOPTÉE** — D-73 (« aucune visibilité `public` en V1 ») **reste en vigueur**. L'échelle de visibilité à quatre niveaux n'est pas étendue. L'exposition sur le web ouvert est un **acte éditorial distinct**, porté par `landing_visibility` (`hidden` / `visible`, défaut `hidden`) sur `news`, `events` et `opportunities`. Les projections publiques exigent en outre `visibility = 'members'`. | L'addendum demande une landing publique, D-73 interdit une visibilité publique : le conflit est réel. Il se résout en distinguant **à qui un contenu s'adresse dans le réseau** (`visibility`) de **s'il peut paraître sur le web ouvert** (`landing_visibility`). Confondre les deux publierait automatiquement les contenus de promotion et de communauté. Aucune donnée de profil n'acquiert de visibilité publique : seul un teaser consenti, opt-in explicite, sort. |
+| D-124 | **ADOPTÉE** — La séparation « configuration brouillon / configuration publiée » (§48) et le rollback (§49) sont portés par trois colonnes (`published_snapshot`, `previous_published_snapshot`, `published_at`) sur chaque table publiable, et **non** par une table `cms_versions`. Les fonctions de PUB-001 lisent le snapshot, jamais les colonnes vivantes. | Une table de versions ajouterait une jointure à chaque lecture publique et un cycle de vie supplémentaire à gérer, pour la même garantie. Le snapshot donne gratuitement la résilience du §47 : si le CMS tombe, la dernière version publiée continue d'être servie. Un rollback à un seul niveau couvre le besoin exprimé (« la dernière configuration publiée saine »). |
+| D-125 | **ADOPTÉE** — `anon` reçoit `EXECUTE` sur **dix** fonctions `SECURITY DEFINER` public-safe, et sur rien d'autre. Aucun privilège de table n'est accordé à `anon` sur `public`, `private` ou `analytics`. `private.security_baseline_violations()` reçoit un sixième contrôle (`anon_function_grant`) qui fait échouer la CI à la onzième fonction exposée. | Addendum §44 et §45. Une liste blanche vérifiée mécaniquement vaut mieux qu'une intention documentée : elle a d'ailleurs détecté D-126 dans la seconde qui a suivi son ajout. |
+| D-126 | **ADOPTÉE** — Le privilège `EXECUTE` accordé par défaut à `PUBLIC` sur 53 fonctions de `public` et `private` est retiré (`0062`), après avoir rendu explicites les privilèges que `authenticated` et `service_role` détenaient déjà par ce biais. Le garde-fou `pg_default_acl` est posé dans sa forme effective en `0066`, avec vérification de son propre effet. | Défaut préexistant, non introduit par ce lot, révélé par le contrôle de D-125. La plupart des fonctions concernées refusaient déjà un appelant anonyme, mais `security_baseline_violations()`, `tables_without_rls()`, `tables_without_policy()`, `storage_baseline_violations()` et `mask_email_hint()` répondaient à `anon` : fuite de structure. Corriger était moins risqué que documenter une exception. |
+| D-127 | **ADOPTÉE** — La sélection éditoriale des expertises (§24 : choisir, ordonner, masquer) passe par `cms_sections.configuration -> expertise_slugs`, et non par `cms_content_overrides`. Liste vide ou absente = taxonomie complète. | `expertise_areas.id` est un `bigint` (table de référence, conventions §3) ; `cms_content_overrides.entity_id` est un `uuid`. Plutôt que d'élargir l'override à deux types de clés — ce qui aurait fragilisé son intégrité référentielle pour tous les autres usages —, la sélection est déclarée là où elle appartient : dans la configuration de la section. |
+| D-128 | **ADOPTÉE** — La programmation CMS d'une actualité, d'un événement ou d'une opportunité ne modifie **que** `landing_visibility`. Elle ne touche jamais `news.editorial_status`, `events.status` ni `opportunities.status`. Pour les objets `cms_*`, elle pilote le statut complet. | Le CMS orchestre l'exposition sur la vitrine ; il ne se substitue pas au circuit éditorial du module Actualités (permission `content.publish`, workflow de revue) ni au cycle de vie métier d'une offre. Confondre les deux permettrait de publier une actualité non relue en programmant une date. |
+| D-129 | **ADOPTÉE** — `pg_cron` est installé sur ce projet et porte les quatre tâches (`cms_expire_content`, `cms_publish_scheduled`, `cms_select_featured_profile`, `cms_publish_featured_profile`). `public.run_cms_automations()` reste le point d'appel unique, utilisable par une Supabase Scheduled Function ou un cron externe si l'extension venait à disparaître. `public.get_cms_automation_status()` expose l'état **réel** lu dans `cron.job` et `cron.job_run_details`. | MASTER PROMPT §98 : aucun état inventé. Une tâche n'est déclarée « qui tourne » que si `cron.job` la contient et que `cron.job_run_details` en atteste. L'incident de `0059` (garde `to_regproc` inopérante, extension créée mais rien planifié) est consigné dans `docs/cms-automation.md` plutôt que masqué. |
+| D-130 | **ADOPTÉE** — Écart assumé à D-104 dans `supabase/tests/rls/0021_cms_suite.sql` : les profils candidats à « ISE du jour » y sont créés avec `is_test_account = false`. Leurs comptes Auth restent préfixés `test+`, et le `ROLLBACK` final garantit qu'aucune ligne ne subsiste. | `private.featured_profile_eligible()` exclut volontairement les comptes de test : un compte de test ne doit jamais paraître sur le web ouvert. Sans cet écart, aucun chemin de sélection ne serait testable. Le cas G01 vérifie en contrepartie qu'un profil **marqué** compte de test n'est jamais sélectionné. |
+| D-131 | **ADOPTÉE** — Rendre un contenu métier visible sur la landing (`landing_visibility = 'visible'`) exige `cms.publish`. Modifier sa seule priorité éditoriale (`landing_priority`) se contente de `cms.edit`. `public.set_landing_exposure()` applique cette distinction, et `public.set_news_featured()` exige `cms.publish`. | Exposer un contenu sur le web ouvert **est** un acte de publication : c'est le geste que la séparation `cms_editor` / `cms_publisher` (docs/cms.md §5) est censée arbitrer. Réordonner trois cartes déjà visibles n'en est pas un. Sans cette distinction, ou bien l'éditeur publiait sans en avoir le droit, ou bien il ne pouvait plus rien ordonner. Cas B10 et B11 de `0022`. |
+| D-132 | **ADOPTÉE** — Le back-office CMS n'appelle pas `POST /api/cms/revalidation-landing` : il appelle directement la Server Action `revalidateLanding()`, dont ce Route Handler n'est que la porte HTTP. La route reste en place, inchangée, pour les appelants **externes** (Edge Function, cron). | Contrat vérifié avant de décider : le corps de la route se réduit à `revalidateLanding()`, derrière un secret partagé et un `503` si le secret n'est pas configuré. Le CMS vit dans la même application Next : émettre une requête HTTP vers soi-même imposerait de connaître son URL publique, de partager un secret avec soi-même et d'ajouter un aller-retour réseau, pour exécuter exactement la même fonction. L'en-tête de la route l'annonçait déjà (ADDENDUM §46). |
+| D-133 | **ADOPTÉE** — Le pipeline d'image de CMS-008 s'arrête après l'étape « métadonnées » : validation par signature binaire, dépôt de l'original dans `public-assets`, dimensions réelles lues dans l'en-tête. Les variantes Desktop / Mobile / vignette ne sont **pas** générées, et aucune ligne `variant_kind` fictive n'est écrite. | ADDENDUM §39 décrit cinq étapes ; les étapes 3 et 4 exigent un encodeur d'images côté serveur, absent de ce déploiement. Enregistrer trois variantes pointant toutes le fichier original satisferait le schéma et ferait servir une image pleine résolution en croyant servir une vignette. L'alerte `media_no_variant` du tableau de bord réclame la génération tant qu'elle n'est pas branchée : le manque est visible, pas masqué (MASTER PROMPT §98). |
+
+---
+
+## 13. Médias de la vitrine publique (migration `0068`)
+
+Voir `supabase/migrations/0068_landing_media_public_bucket.sql`, `docs/rls.md` §5.3 et
+`docs/cms.md` §12.
+
+| #     | Décision | Justification |
+| ----- | --- | --- |
+| D-134 | **ADOPTÉE** — Un **unique** bucket public est créé, `landing-media`, dédié aux médias éditoriaux de PUB-001, en `png / jpeg / webp / avif`, 5 Mo, **sans SVG**, rangé par usage (`carousel/`, `partners/`, `news/`, `sections/`). Les huit buckets de `0027` restent privés. `private.storage_baseline_violations()` échoue si un autre bucket devient public **et** si `landing-media` cesse de l'être. | D-73 (« aucun bucket public ») a été écrit pour une plateforme entièrement authentifiée. PUB-001 est servie à des anonymes : sans surface publique, `landingMediaUrl()` renvoyait `null` et aucune image ne s'affichait. L'alternative — une URL signée par visuel — obligerait à re-signer à chaque rendu, donc à renoncer au cache de 300 s (§46), et l'URL signée fuirait de toute façon sans expiration utile à l'échelle d'un CDN. Un bucket public dont le contenu est, par construction, du matériel éditorial publié, **dit la vérité sur ce qu'il contient**. Le SVG est exclu parce qu'il est du XML capable de porter du script : servi en public sur le domaine Supabase, il s'exécuterait dans le contexte de ce domaine. La restriction de D-73 est donc **bornée**, pas levée : elle devient « un seul bucket public, dont le contenu est éditorial et vérifié mécaniquement ». |
+| D-135 | **ADOPTÉE** — L'« ISE du jour » n'affiche **pas de photographie**. Le teaser porte un **monogramme** (initiales dans une pastille), construit depuis `display_name`, déjà public. Le bucket `avatars` reste privé, aucune copie publique n'est faite, et `get_landing_featured_profile()` **cesse même de projeter `avatar_path`**. L'option « copie publique consentie à l'opt-in » est écartée. | Trois raisons, dans cet ordre. **(1) Périmètre du consentement.** `allow_public_feature` (0057) consent à la parution d'un teaser **textuel** dont les champs sont énumérés. Il n'a jamais été présenté au membre comme un consentement à la publication de son portrait sur le web ouvert. Réutiliser une case cochée pour un usage qu'elle ne décrit pas est un détournement de finalité — exactement ce que MASTER PROMPT §47 interdit. Obtenir le bon consentement supposerait un second opt-in, un second écran, une seconde trace : ce n'est pas ce que ce lot corrige. **(2) Irréversibilité.** Une photographie déposée dans un bucket public est mise en cache par le CDN, aspirée par les moteurs et les archiveurs. Un retrait de consentement, une suppression de compte (D-19) ou une exclusion éditoriale (D-122) ne peuvent pas la rappeler. Le consentement redeviendrait révocable en théorie et définitif en fait. **(3) La maquette ne demande rien de tel.** `PUB-001_Landing_Page_Desktop_1440` montre une carte « ISE DU JOUR » **textuelle** : nom, promotion, lien. Aucun portrait. Le monogramme est donc conforme à la maquette (D-01), n'a aucune surface de confidentialité, ne coûte aucune requête et ne peut pas casser. |
+| D-136 | **ADOPTÉE** — Un média n'est projeté vers la vitrine que s'il réunit **trois** conditions : bucket `landing-media`, alternative textuelle non vide, ligne non supprimée. Sinon la projection renvoie `null` et le composant n'émet **aucune** balise `img`. `news.image_path` et `organizations.logo_path`, qui sont du texte libre antérieur au CMS, sont **résolus dans la médiathèque** par `private.landing_media_by_path()` : une couverture qui n'y est pas enregistrée, décrite et mesurée ne paraît pas. | Trois défauts évités d'un coup. Un média resté dans un bucket privé produirait une URL en 400, donc une image cassée sur la vitrine. Un média sans `alt` est **non publiable** (ADDENDUM §52) : la contrainte existe en base, la projection la redit, et le parseur client la redit une troisième fois — c'est le contrat du client, pas une politesse. Enfin, servir `news.image_path` tel quel donnerait une image sans alternative et sans dimensions connues, c'est-à-dire précisément ce que §52 et §58 interdisent. Le prix est assumé : une couverture d'actualité doit passer par la médiathèque pour paraître, et son absence est visible dans CMS-008. |
+| D-137 | **ADOPTÉE** — Aucune **seconde** colonne de bucket n'est ajoutée à `cms_media_assets`. La colonne `bucket_id`, posée en `0057`, voit son défaut passer à `landing-media` et son `CHECK` s'élargir à `('landing-media', 'public-assets')`. | La colonne demandée existait déjà. En ajouter une seconde créerait deux vérités pour une même information — ce que `docs/cms.md` §1 interdit — et il faudrait ensuite décider laquelle fait foi à chaque lecture. `public-assets` reste **accepté** en base pour ne casser aucune ligne antérieure, mais n'est plus **servi** : un visuel oublié dans l'ancien bucket disparaît proprement de la vitrine, reste visible dans la médiathèque, et n'y produit pas de vignette — le manque est constatable, pas silencieux. |
+| D-138 | **ADOPTÉE** — La place d'une image est réservée par son **conteneur** (rapport d'aspect ou hauteur minimale fixes) et non par ses dimensions intrinsèques : `next/image` est utilisé en `fill`. Les colonnes `width` / `height` de `cms_media_assets` restent projetées mais ne conditionnent pas l'affichage. La première diapositive du carrousel est en `priority`, tout le reste en `loading="lazy"`. | `width` et `height` sont **nullables** en base : un média non mesuré aurait, avec `next/image` en mode intrinsèque, soit disparu, soit provoqué un décalage. Le conteneur à ratio fixe rend le CLS structurellement nul (MASTER PROMPT §58) quel que soit l'état des métadonnées, y compris quand l'image n'arrive jamais. `priority` est réservé au seul élément susceptible d'être le LCP. |
+| D-139 | **PROVISOIRE** — La suppression d'un objet de `landing-media` n'est **pas** testée par un `DELETE` SQL. Le harnais `0023` vérifie le comportement réel sur l'`UPDATE`, qui porte la même condition d'autorisation, et la **forme** de la politique `ise_landing_media_delete` (commande, rôles, permission exigée). | Supabase pose sur `storage.objects` un déclencheur `protect_objects_delete` **`FOR EACH STATEMENT`** : il lève `42501` avant toute évaluation de lignes, donc avant la RLS, et même quand la commande n'aurait touché personne. Aucun `DELETE` n'est observable en SQL, ni permis ni refusé — la suppression passe exclusivement par l'API Storage. Le trou de couverture est nommé plutôt que masqué par un test qui ne mesurerait rien. Il se refermera avec un test d'intégration passant par l'API Storage. |
+| D-140 | **ADOPTÉE** — D-133 est **amendé** sur un point : le bucket de dépôt de CMS-008 devient `landing-media` et le format `avif` est accepté (signature `ftyp` + boîte `ispe` de l'ISOBMFF). Le reste de D-133 tient : les variantes Desktop / Mobile / vignette ne sont toujours **pas** générées, faute d'encodeur d'images déployé, et aucune ligne `variant_kind` fictive n'est écrite. | Le pipeline dépose maintenant là où la vitrine peut lire. AVIF est ajouté parce que `next/image` sert déjà de l'AVIF en sortie : refuser le format en entrée n'aurait protégé de rien. Les vignettes de la médiathèque, elles, sont désormais **réelles** — elles pointent l'original, redimensionné par l'optimiseur de Next, et non une variante fictive. |
+
+---
+
+## 14. Consolidation du 8 août 2026 — arbitrages rapatriés et contrôle de numérotation
+
+Cette section a été ajoutée lors d'une passe de vérification documentaire. Elle ne réécrit aucune
+décision : elle **rapatrie** les arbitrages qui vivaient hors de ce journal et **acte** l'état réel
+de la numérotation.
+
+### 14.1 Contrôle de la numérotation `D-xx`
+
+Relevé mécanique sur ce fichier : **112 décisions**, `D-01` → `D-155` (dont les 15 ajoutées
+ci-dessous), **aucun doublon**. Les
+intervalles vides sont des réserves de bloc thématique (`D-04`→`D-09`, `D-23`→`D-29`,
+`D-33`→`D-39`, `D-47`→`D-49`, `D-56`→`D-59`, `D-67`→`D-69`, `D-76`→`D-79`, `D-86`→`D-89`,
+`D-97`→`D-99`, `D-108`→`D-109`) : ils ne signalent aucune perte. Toutes les décisions du lot
+landing / CMS — `D-105`, puis `D-118` → `D-140` — sont présentes. Aucune décision citée ailleurs
+dans le dépôt (docs, migrations, code) n'est absente de ce journal.
+
+### 14.2 Arbitrages rapatriés de `docs/modules-collaboration.md`
+
+Le document annonçait lui-même qu'il « complète » ce journal. Ses arbitrages sont désormais
+**référencés ici** ; le document reste la référence détaillée (justifications complètes).
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-141 | **ADOPTÉE** — Aucune mécanique de popularité, à aucun niveau : ni vue, ni « j'aime », ni score, ni classement de communautés ou de personnes. Vérifié mécaniquement par le cas C04 du harnais `0027`, qui échoue si une clé de projection contient `view`, `like`, `rank`, `popular`, `score` ou `trend`. | `modules-collaboration.md` C-a |
+| D-142 | **ADOPTÉE** — Seuil de cross-posting : **3 communautés en 24 h** pour une empreinte de contenu identique ; 10 publications et 30 réponses par heure et par membre (D-103). | C-d |
+| D-143 | **ADOPTÉE** — Le marquage « réponse utile » est binaire, posé par le seul auteur de la publication, retirable, et ne produit ni classement ni réputation. | C-f |
+| D-144 | **ADOPTÉE** — La création d'une communauté n'est pas ouverte au membre en V1 ; l'écran le dit et renvoie vers l'assistance. | C-k |
+| D-145 | **ADOPTÉE** — Intérêt et appartenance à un projet ne se rejoignent jamais : `submit_project_interest()` n'écrit que dans `project_applications` ; le seul chemin vers `membership_status = 'active'` est `confirm_project_membership()`, qui horodate le consentement. Une invitation acceptée produit `pending_confirmation`. | P-a, P-b |
+| D-146 | **ADOPTÉE** — La rémunération d'un rôle de projet suit quatre paliers de divulgation (`applied`, `shortlisted`, `selected`, `team_only`). Hors palier atteint, la clé `compensation` est **absente** de la projection — pas vide, absente. | P-d |
+| D-147 | **ADOPTÉE** — Aucun pourcentage d'avancement de projet. Seuls des décomptes : membres confirmés, rôles pourvus sur total, jalons terminés sur total. | P-h |
+| D-148 | **ADOPTÉE** — `landing_visibility` est projeté et **affiché en toutes lettres** dans l'espace membre (« Ce contenu paraît sur le site public »), et n'y est jamais modifiable. Application conjointe de D-123 et D-131. | N-a |
+| D-149 | **ADOPTÉE** — ISE-092 est un **fil mixte** actualités + événements, uni en base par un curseur keyset unique (D-44), et non deux listes entrelacées côté client. | N-d |
+| D-150 | **ADOPTÉE** — `events.online_url_private` n'est jamais projeté, ni par `private.event_card()`, ni par un `select *`. Seul un booléen `online_url_available` sort ; l'URL passe par `public.get_event_online_url()`. | N-c |
+
+### 14.3 Arbitrages rapatriés de `docs/screen-traceability-matrix.md`
+
+La matrice consignait sept écarts de la tranche Recherche & découverte (`E-01` → `E-07`) et
+quatorze de la tranche Relations & introductions (`F-01` → `F-14`) « à fusionner dans le journal
+des décisions à la réunion des deux lots ». La réunion a eu lieu ; deux d'entre eux portent une
+règle transverse et sont promus ici. Les dix-neuf autres restent des **écarts d'écran**, documentés
+dans la matrice, et n'ont pas vocation à devenir des décisions transverses.
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-151 | **ADOPTÉE** — Aucun écran n'affiche de **total de résultats** ni de pagination numérotée : D-44 impose le keyset, et un total exigerait un `COUNT(*)` sur tout l'annuaire à chaque requête. Les listes affichent le nombre d'éléments **rendus** et un bouton « page suivante ». | E-01, E-04 |
+| D-152 | **ADOPTÉE** — Le libellé qualitatif de pertinence (D-42) et les raisons (D-43) ne sont rendus **qu'en mode pertinence** (`match_profiles`). En mode annuaire (`search_profiles`, texte libre), aucun libellé n'est fabriqué et la raison de son absence est écrite à l'écran. | E-02 |
+
+**Écart resté ouvert** (rappelé ici pour qu'il ne se perde pas) : `F-05` — les filtres Promotion /
+Secteur / Pays / Disponibilité d'ISE-040 ne sont pas livrés. La recherche par nom seule est
+rendue. Ce n'est pas un arbitrage définitif, c'est un manque.
+
+### 14.4 Arbitrages rapatriés de `docs/public-routing.md`
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-153 | **ADOPTÉE** — Les entrées de l'en-tête public (« Le réseau », « Actualités », « Événements », « Opportunités », « Partenaires ») pointent vers des **ancres de sections** de PUB-001, jamais vers un écran membre. `/actualites` et `/evenements` existent désormais, mais restent **authentifiés** : y envoyer un visiteur anonyme le renverrait à la connexion. | `public-routing.md` §4 |
+| D-154 | **ADOPTÉE** — PUB-001 est rendue `force-dynamic` ; c'est la **lecture des données** qui est mise en cache (étiquette `pub-001-landing`, revalidation 300 s), pas le HTML. L'en-tête dépend de la session et `ProtectedLink` doit rendre la bonne cible côté serveur, sans JavaScript. | `public-routing.md` §7 |
+| D-155 | **ADOPTÉE** — Trois portes indépendantes protègent la redirection après authentification : `isPublicPath()` (liste blanche), `MEMBER_ROUTE_PREFIXES` (liste blanche des cibles `redirectTo`) et `safeRedirect()` (refus des URL absolues, des chemins d'authentification et des boucles). Une cible inconnue est ramenée au tableau de bord, jamais suivie. | `public-routing.md` §3 |
+
+---
+
+## 15. Superadmin — Communautés (SA-027 → 029)
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-156 | **ADOPTÉE** — SA-029 (« Modération Publication Communauté ») ne couvre, côté écran, que la modération des **publications** de communauté. `admin_moderate_community_comment` (0099) existe côté base — même vérification de permission `communities.manage`, même journalisation dans `community_moderation_actions` — mais n'a pas d'écran dédié : le titre de l'écran désigne explicitement les publications, pas les commentaires. Rien n'empêche d'y brancher un écran ultérieurement, sans nouvelle migration : la fonction existe déjà. | `0099_admin_communities_api.sql`, `communautes/[communityId]/page.tsx` |
+
+---
+
+## 16. Superadmin — Événements (SA-030 → 033)
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-157 | **ADOPTÉE** — SA-031/032/033 (validation, inscriptions, bilan d'événement) sont fusionnés en **un seul écran** `/administration/evenements/[eventId]`, à onglets, plutôt que trois routes distinctes. Le formulaire d'édition d'événement (`admin_update_event`) ne permet **pas** de reciblage de l'organisateur : aucun champ organisateur n'y est exposé. | `0100_admin_events_api.sql`, `evenements/[eventId]/page.tsx` |
+
+Cette fusion suit exactement le précédent posé par SA-028/029 (D-156) et, avant lui, SA-024/025/026 :
+un back-office de gestion de cycle de vie n'a pas besoin d'une route par sous-fonction quand un
+seul jeu de données (l'événement) et une seule permission (`events.manage`) couvrent les trois. Sur
+le reciblage d'organisateur : `get_event` et `private.event_card()` (0074) ne projettent **jamais**
+les identifiants bruts d'organisateur vers le client — seuls des champs dérivés (nom affiché,
+organisation) sortent, exactement comme pour `online_url_private` (D-150). Exposer un sélecteur
+d'organisateur dans `admin_update_event` supposerait de faire remonter ces identifiants côté client,
+ce que le modèle de projection existant refuse structurellement. Le reciblage d'organisateur, s'il
+devient un besoin réel, appellera une fonction dédiée et auditée séparément — pas un champ ajouté
+au formulaire général.
+
+---
+
+## 17. Superadmin — Journal d'audit (SA-049 → 050)
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-158 | **ADOPTÉE** — SA-049 (« Journal Audit Historique Actions ») et SA-050 (« Détail Entrée Audit Conformité ») restent **deux routes distinctes** (`/administration/audit` et `/administration/audit/[entryId]`), à la différence de la fusion SA-024/025/026 → SA-028/029 (D-156) → SA-031/032/033 (D-157) : la lecture du détail est comportementalement distincte de la lecture de la liste, pas seulement informationnellement redondante. Aucune nouvelle fonction d'écriture n'a été créée : `private.read_audit_log()` (0028, surchargée par 0083) et ses façades `public.admin_read_audit_log` / `public.admin_get_audit_entry` / `public.admin_audit_overview` couvraient déjà, en base, l'intégralité du besoin des deux écrans avant le début de cette tranche — aucune migration nouvelle n'était donc nécessaire, seuls les écrans, la suite RLS et cette documentation manquaient. | `0083_admin_audit_api.sql`, `0018_platform_audit_events.sql`, `audit/page.tsx`, `audit/[entryId]/page.tsx` |
+
+`admin_get_audit_entry` renvoie EXACTEMENT les mêmes colonnes que chaque ligne de
+`admin_read_audit_log` (même mapper côté client, `toAuditLogEntry`) : SA-050 n'affiche donc aucune
+donnée que SA-049 ne porte déjà. Ce qui justifie malgré tout deux routes, à l'inverse de SA-004
+fusionné dans SA-003/SA-006 (aucune donnée ET aucun comportement propres) : consulter le détail
+journalise un évènement `audit.entry_read` **dédié**, distinct de `audit.read` (qui ne marque qu'un
+parcours de liste, filtres compris). C'est la preuve, pour un contrôle de conformité ultérieur,
+qu'un administrateur a explicitement **revu** une entrée précise — l'intitulé SA-050
+(« Conformité ») décrit un acte de revue, pas une simple consultation supplémentaire. Fusionner les
+deux écrans (ex. tiroir latéral sur la liste) aurait perdu cette distinction : chaque ouverture du
+tiroir aurait dû déclencher le même évènement dédié qu'une navigation complète, rendant la fusion
+purement cosmétique — sans bénéfice sur le nombre de requêtes ni sur la clarté du code. Le choix
+inverse (une seule fonction `admin_read_audit_log` sans `admin_get_audit_entry` séparé) aurait, lui,
+supprimé la possibilité même de distinguer un survol de liste d'une revue individuelle : c'est
+`admin_get_audit_entry` qui rend le contrôle de conformité vérifiable, pas une colonne de plus dans
+la liste.
+
+Pagination (SA-049) : `admin_read_audit_log` (0083) renvoie un `TABLE(...)`, pas un `jsonb`
+enveloppé `{rows, next_cursor}` comme `admin_list_events`/`admin_list_communities` — c'est la seule
+fonction `admin_list_*`/`admin_read_*` du back-office à emprunter cette forme, héritée de sa
+première version (0028, réutilisée telle quelle par les membres du support avant même l'existence
+d'un écran). Le curseur composite (`created_at`, `id` — D-44) est donc recomposé côté serveur Next
+(`lib/admin-data/queries.ts`) à partir de la dernière ligne reçue, puis scellé
+(`lib/opaque-cursor.ts`) avant de quitter le serveur — même garantie d'opacité que partout ailleurs,
+construite ici plutôt que déléguée à `private.encode_keyset_cursor()`.
+
+---
+
+## 18. Correctif transversal — exports non-fonction depuis les fichiers `'use server'`
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-159 | **ADOPTÉE** — Aucun fichier `'use server'` n'exporte autre chose que des fonctions async. Les neuf états initiaux (`initial*State`) qui vivaient dans sept `actions.ts` sont déplacés dans des fichiers voisins `states.ts` (modules ordinaires), qui importent leurs types depuis `actions.ts` via `import type` (effacé à la compilation, donc sans effet `'use server'`). Convention prospective : tout nouvel état initial de `useActionState` naît dans un `states.ts`, jamais dans un `actions.ts`. | `a9ed42b`, `*/states.ts`, `*/actions.ts`, `ClaimSearchForm.tsx` et 10 autres composants consommateurs |
+
+Contexte : un export non-fonction d'un fichier `'use server'` n'est pas la valeur déclarée une fois
+compilé — Turbopack (Next 16.3) le transforme **silencieusement** en *référence serveur*
+(`createServerReference(...)`), c'est-à-dire un proxy appelable dont toutes les propriétés valent
+`undefined`. `initialClaimSearchState` importé par `ClaimSearchForm` arrivait donc dans
+`useActionState` sous forme de proxy sans `fieldErrors`, et `Object.keys(state.fieldErrors)` levait
+`TypeError: Cannot convert undefined or null to object` — le 500 « intermittent » de
+`/reclamer-mon-profil` (digests `1724077822` / `3088685757`, références ISE-CB506A52A080,
+ISE-131E8E112FA2, ISE-9797295876FD, ISE-DDFF3FC13811 entre autres). L'intermittence était une
+illusion : le rendu serveur échouait à chaque requête, mais le flux HTML basculait parfois sur un
+nouveau rendu client complet qui masquait l'échec (erreur « recoverable » de React 19), parfois sur
+la page d'erreur. Le diagnostic a été obtenu en lisant le code **compilé** au point exact du crash
+(chunk client, ligne/colonne de la stack), pas en relisant les sources — les sources étaient
+correctes au regard de TypeScript, qui ne voit pas la sémantique `'use server'`.
+
+Les huit autres états exportés de la même façon (appels, opportunités, candidatures, relations,
+recherche, alertes) portaient le même défaut à l'état latent : leurs consommateurs ne lisent que des
+propriétés en accès optionnel (`state.results?.length ?? 0`), ce qui survit à un proxy — jusqu'au
+jour où un accès strict serait ajouté. Ils sont corrigés dans le même commit plutôt que d'attendre
+neuf incidents séparés. L'alternative « directive `'use server'` par fonction plutôt que par
+fichier » a été écartée : elle aurait fait entrer tout le graphe d'imports serveur (`next/headers`,
+requêtes Supabase) dans les bundles client des composants qui importent les états initiaux.
+
+---
+
+## 19. En-tête membre — point d'entrée vers le back-office
+
+| #     | Décision | Source |
+| ----- | --- | --- |
+| D-160 | **ADOPTÉE** — Un lien « Administration » apparaît dans l'en-tête membre (Topbar, à gauche du bloc compte), UNIQUEMENT quand le compte détient au moins une permission d'administration (`readAdminAccess()`, même source que la garde serveur `requireAdminAccess()`). La sidebar membre (§89, D-95) reste strictement inchangée. Demandé par le porteur du projet le 2026-08-12 : aucun point d'entrée visible n'existait, même pour un compte habilité. | `Topbar.tsx`, `AppShell.tsx`, `fr.ts` (`nav.adminArea`) |
+
+La séparation des deux navigations (§89 : aucun module admin dans la sidebar membre) est conservée —
+ce lien est un point d'entrée, pas une fusion des espaces. Le masquage n'a jamais été une protection
+(la garde réelle est `requireAdminAccess()` côté serveur + la revalidation de chaque fonction
+`admin_*` en base) : l'absence totale de point d'entrée n'apportait donc aucune sécurité, seulement
+de la friction pour les administrateurs. Coût assumé : `AppShell` exécute désormais
+`get_my_admin_permissions()` (une RPC légère) à chaque rendu de page membre ; si cette lecture
+échoue, le lien n'apparaît pas — un échec ne montre rien, il ne cache jamais un refus.
+
+---
