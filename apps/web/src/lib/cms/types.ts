@@ -349,6 +349,22 @@ export interface CmsMediaOption {
   altText: string;
 }
 
+/** 0114 — cible interne valide pour le lien d'un pilier (liste blanche base). */
+export type CmsPillarLinkTarget = 'search' | 'calls' | 'projects' | 'opportunities' | 'applications';
+
+/**
+ * CMS-011 (0114) — un pilier de « Un reseau concu pour etre utile ». Le
+ * titre et le corps restent fixes (fr.public.pillars) : cette ligne ne
+ * porte que la partie editoriale variable (image, legende, lien).
+ */
+export interface CmsPillarRow {
+  pillarKey: 'connecter' | 'entraider' | 'collaborer' | 'impacter';
+  mediaId: string | null;
+  caption: string | null;
+  linkTarget: CmsPillarLinkTarget | null;
+  updatedAt: string;
+}
+
 export interface CmsFeaturedHistoryRow {
   featuredDate: string;
   profileId: string;
