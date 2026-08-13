@@ -45,7 +45,7 @@ export async function CmsShell({ currentPath, screenTitle, children }: CmsShellP
         currentPath={currentPath}
         screenTitle={screenTitle}
         items={CMS_NAV}
-        adminLink={adminLink}
+        {...(adminLink ? { adminLink } : {})}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">

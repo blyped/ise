@@ -44,7 +44,7 @@ export async function AdminShell({ access, currentPath, screenTitle, children }:
         currentPath={currentPath}
         screenTitle={screenTitle}
         items={visibleNavItems(access)}
-        cmsLink={cmsLink}
+        {...(cmsLink ? { cmsLink } : {})}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
