@@ -113,7 +113,7 @@ export function PublicHeader() {
                 <Link
                   href={item.href}
                   className={LINK_BASE}
-                  onClick={item.key === 'home' ? onHomeClick : undefined}
+                  {...(item.key === 'home' ? { onClick: onHomeClick } : {})}
                 >
                   {item.label}
                 </Link>
