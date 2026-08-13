@@ -1,5 +1,6 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+import type { ReseauStackParamList } from './ReseauStack';
 import type { SearchStackParamList } from './SearchStack';
 
 /**
@@ -18,7 +19,15 @@ export type AuthStackParamList = {
 /** Les 5 destinations D-94 : Accueil, Reseau, action centrale (+), Opportunites, Moi. */
 export type AppTabParamList = {
   Accueil: undefined;
-  Reseau: undefined;
+  /**
+   * L'onglet « Réseau » monte `ReseauStack` (fusion à plat de `NetworkScreen`,
+   * ISE-038 -> ISE-046 et ISE-047 -> ISE-054, D-169) : typé avec
+   * `NavigatorScreenParams` comme `ActionCentrale`, pour qu'une navigation
+   * externe puisse un jour cibler un écran précis de cette pile
+   * (`navigate('Reseau', { screen: 'Invitations' })`) avec la même rigueur
+   * de typage, même si rien ne le fait encore aujourd'hui.
+   */
+  Reseau: NavigatorScreenParams<ReseauStackParamList>;
   /**
    * L'action centrale « + » monte desormais `SearchStack` (ISE-034 ->
    * ISE-037, integration finale des tranches mobiles paralleles) au lieu

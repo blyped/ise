@@ -1,32 +1,20 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
-import { ConnectScreen } from '../screens/relations/ConnectScreen';
-import { ConnectionSentScreen } from '../screens/relations/ConnectionSentScreen';
-import { IntroductionOutcomeScreen } from '../screens/relations/IntroductionOutcomeScreen';
-import { IntroductionPathScreen } from '../screens/relations/IntroductionPathScreen';
-import { IntroductionsScreen } from '../screens/relations/IntroductionsScreen';
-import { InvitationDetailScreen } from '../screens/relations/InvitationDetailScreen';
-import { InvitationsScreen } from '../screens/relations/InvitationsScreen';
-import { RequestIntroductionScreen } from '../screens/relations/RequestIntroductionScreen';
-
 /**
- * Pile ISE-038 -> ISE-046 — Relations & introductions.
+ * Types de routes ISE-038 -> ISE-046 — Relations & introductions.
  *
- * NOUVELLE pile, distincte de `AppTabs` / `RootNavigator` (que cette
- * tranche n'a pas le droit de modifier — d'autres lots mobiles y
- * travaillent en parallele). Elle regroupe les 8 ecrans NEUFS de ce lot ;
- * ISE-040 (`NetworkScreen`, deja livre) n'y est pas duplique.
+ * Ce fichier ne contient plus de composant navigateur : la passe
+ * d'assemblage finale (D-169, tâche #114) a fusionné ses 8 écrans A PLAT
+ * dans `ReseauStack.tsx` (même navigateur que `NetworkScreen` et les
+ * appels au réseau, cf. le commentaire de ce fichier pour la raison —
+ * navigation croisée entre ces trois lots, donc un seul `Stack.Navigator`
+ * partagé plutôt que des navigateurs imbriqués).
  *
- * INTEGRATION RESTANTE (a faire par la prochaine passe d'assemblage de
- * `AppTabs.tsx`) : monter cette pile pour que ses ecrans deviennent
- * atteignables depuis l'onglet Reseau, par exemple en remplacant
- * `component={NetworkScreen}` par une petite pile locale qui a pour
- * premier ecran `NetworkScreen` (ISE-040) et qui inclut ensuite les
- * ecrans de `RelationsStack`. `NetworkScreen.tsx` expose deja, dans ce
- * commit, deux boutons ("Invitations reçues", "Mes introductions") qui
- * appellent `useNavigation<...>().navigate('Invitations' | 'Introductions')` :
- * ils resteront inertes (avertissement de dev, aucun crash) tant que cette
- * pile n'est pas montee quelque part dans l'arbre de navigation.
+ * `RelationsStackParamList` reste défini ICI et nulle part ailleurs : les 8
+ * écrans de `screens/relations/*` et `ReseauStack.tsx` l'importent tous
+ * directement depuis ce chemin (`from './RelationsStack'` /
+ * `from '../../navigation/RelationsStack'`) pour typer leurs props
+ * (`NativeStackScreenProps<RelationsStackParamList, '...'>`). Renommer ou
+ * déplacer ce type casserait ces imports sans bénéfice : il est donc
+ * conservé tel quel, seul le navigateur mort a été retiré.
  */
 export type RelationsStackParamList = {
   /** ISE-038 — Se connecter a un ISE, depuis son profil. */
@@ -51,20 +39,3 @@ export type RelationsStackParamList = {
   /** ISE-046 — Bilan d'une introduction. */
   IntroductionOutcome: { introductionId: string };
 };
-
-const Stack = createNativeStackNavigator<RelationsStackParamList>();
-
-export function RelationsStack() {
-  return (
-    <Stack.Navigator initialRouteName="Invitations" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Connect" component={ConnectScreen} />
-      <Stack.Screen name="ConnectionSent" component={ConnectionSentScreen} />
-      <Stack.Screen name="Invitations" component={InvitationsScreen} />
-      <Stack.Screen name="InvitationDetail" component={InvitationDetailScreen} />
-      <Stack.Screen name="IntroductionPath" component={IntroductionPathScreen} />
-      <Stack.Screen name="RequestIntroduction" component={RequestIntroductionScreen} />
-      <Stack.Screen name="Introductions" component={IntroductionsScreen} />
-      <Stack.Screen name="IntroductionOutcome" component={IntroductionOutcomeScreen} />
-    </Stack.Navigator>
-  );
-}
