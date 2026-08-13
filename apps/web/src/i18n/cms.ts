@@ -23,6 +23,7 @@ export const frCms = {
     dashboard: 'Tableau de bord',
     carousel: 'Carrousel',
     sections: 'Sections accueil',
+    pillars: 'Piliers réseau',
     news: 'Actualités',
     events: 'Événements',
     opportunities: 'Opportunités',
@@ -264,6 +265,35 @@ export const frCms = {
     sourceHelp:
       'Automatique : la section se remplit depuis les modules. Manuel : seuls les contenus épinglés paraissent. Mixte : les épinglages passent devant, le reste suit la source automatique.',
     cardsCount: (n: number) => `${n} carte${n > 1 ? 's' : ''}`,
+  },
+
+  /* ---------------------------------------------------------------- */
+  /* CMS-011 (0114) — Piliers « Un réseau conçu pour être utile »      */
+  /* ---------------------------------------------------------------- */
+  pillars: {
+    title: 'Piliers du réseau',
+    subtitle:
+      'Connecter, Entraider, Collaborer, Impacter — le titre et le texte de chaque pilier restent fixes. Le CMS pilote uniquement leur visuel, une légende optionnelle et le lien vers un écran réel.',
+    scopeNote:
+      'Ni le titre ni le texte des quatre piliers ne sont modifiables ici : ils relèvent du discours de marque. Un pilier sans lien choisi reste du texte seul — jamais un écran inventé (D-168).',
+    fieldMedia: 'Visuel du pilier',
+    fieldMediaNone: 'Aucun visuel',
+    fieldMediaHint:
+      'Visuel choisi dans la médiathèque publique — jamais un chemin recopié à la main. Format recommandé : 1600 × 900 px (ratio 16/9), JPEG/WebP/AVIF, 5 Mo maximum. Sans visuel, le pilier s’affiche en texte seul (0114).',
+    fieldCaption: 'Légende (optionnelle)',
+    fieldCaptionHint:
+      'S’ajoute au texte fixe du pilier, sans le remplacer. Laissez vide pour n’afficher que le texte de marque.',
+    fieldLink: 'Lien',
+    fieldLinkNone: 'Aucun lien (texte seul)',
+    linkOptions: {
+      search: 'Rechercher un ISE (/rechercher)',
+      calls: 'Appels au réseau (/appels)',
+      projects: 'Projets & consortiums (/projets)',
+      opportunities: 'Opportunités (/opportunites)',
+      applications: 'Mes candidatures (/candidatures)',
+    } as Record<string, string>,
+    submit: 'Enregistrer le pilier',
+    done: 'Pilier enregistré.',
   },
 
   /* ---------------------------------------------------------------- */
