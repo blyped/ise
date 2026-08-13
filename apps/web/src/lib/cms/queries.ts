@@ -421,6 +421,8 @@ export async function loadCmsNews(
     summary: str(row['summary']),
     categoryCode: str(row['category_code']),
     imagePath: nstr(row['image_path']),
+    coverMediaId: nstr(row['cover_media_id']),
+    coverHasText: bool(row['cover_has_text']),
     editorialStatus: str(row['editorial_status']),
     visibility: str(row['visibility']),
     landingVisibility: oneOf(row['landing_visibility'], ['hidden', 'visible'] as const, 'hidden'),

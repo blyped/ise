@@ -314,6 +314,32 @@ export async function setLandingCoverMedia(
 }
 
 /**
+ * 0117 — visuel de couverture d'une actualite, tire de la mediatheque
+ * publique, et son reglage `cover_has_text` (le titre est-il deja
+ * incruste dans l'image ?). `set_news_cover_media` valide seule le media
+ * (bucket public, alt_text) ; ce module ne fait que transmettre.
+ *
+ * `hasText = null` laisse le reglage existant inchange en base (utile
+ * quand seul le visuel change) ; `mediaId = null` retire explicitement
+ * la couverture.
+ */
+export async function setNewsCoverMedia(
+  newsId: string,
+  mediaId: string | null,
+  hasText: boolean | null,
+  correlationId: string,
+): Promise<MutationResult> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('set_news_cover_media', {
+    p_news_id: newsId,
+    p_media_id: mediaId,
+    p_has_text: hasText,
+  });
+  if (error) return failure(error, correlationId, 'set_news_cover_media');
+  return { ok: true, data: undefined };
+}
+
+/**
  * CMS-011 (0114) — image, legende optionnelle et lien d'un pilier de
  * « Un reseau concu pour etre utile ». `linkTarget` est deja une valeur de
  * la liste blanche base ('search' | 'calls' | 'projects' | 'opportunities'
