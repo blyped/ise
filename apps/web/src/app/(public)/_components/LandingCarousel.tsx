@@ -253,18 +253,33 @@ export function LandingCarousel({
               impose une alternative.
             */}
             <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
+              {/*
+                Rognage constate sur les diapositives sponsorisees (2026-08-13) :
+                un visuel de campagne partenaire est compose comme une affiche
+                (logo, accroche, ET une bande d'info fixe pres du bord bas), pas
+                comme une photo pleine page. Avec `object-cover` dans ce
+                conteneur cale sur `100dvh`, tout rapport largeur/hauteur de
+                fenetre different de celui de l'image rogne le haut ou le bas —
+                la bande du bas etait la premiere sacrifiee. Une diapositive
+                editoriale (photo) tolere ce recadrage ; une diapositive
+                sponsorisee ne le tolere pas : son visuel doit rester lisible en
+                entier. D'ou `object-contain` (mise en boite avec un filet
+                `bg-deep-navy` de part et d'autre) uniquement pour
+                `slide.sponsored`, les diapositives ordinaires restant en plein
+                cadre.
+              */}
               <LandingMediaImage
                 media={slide.media}
                 sizes="100vw"
                 priority={index === 0}
-                className={`object-cover ${dimClass} ${hasMobileVariant ? 'max-md:hidden' : ''}`}
+                className={`${slide.sponsored ? 'object-contain' : 'object-cover'} ${dimClass} ${hasMobileVariant ? 'max-md:hidden' : ''}`}
               />
               {hasMobileVariant ? (
                 <LandingMediaImage
                   media={slide.mobileMedia}
                   sizes="100vw"
                   priority={index === 0}
-                  className={`object-cover ${dimClass} md:hidden`}
+                  className={`${slide.sponsored ? 'object-contain' : 'object-cover'} ${dimClass} md:hidden`}
                 />
               ) : null}
             </div>
