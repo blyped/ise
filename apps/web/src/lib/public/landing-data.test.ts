@@ -256,13 +256,59 @@ describe('ISE du jour — get_landing_featured_profile()', () => {
         'displayName',
         'expertiseAreas',
         'organization',
+        'photo',
         'profileId',
         'promotionName',
         'promotionYear',
         'summary',
+        'tagline',
         'target',
       ].sort(),
     );
+  });
+
+  /**
+   * D-165 (migration 0112) — `photo` reste distinct de l'avatar prive
+   * (`avatar_path`, jamais projete depuis D-135) : c'est un media de la
+   * mediatheque PUBLIQUE, soumis aux memes controles que tout autre visuel
+   * editorial (bucket public, alt_text non vide).
+   */
+  it('D-165 — un visuel de médiathèque publique est retenu, avatar_path reste ignoré', () => {
+    const profile = featuredProfileSchema.parse({
+      ...PROFILE_PAYLOAD,
+      photo: {
+        bucket: 'landing-media',
+        path: 'featured/aminata.jpg',
+        alt_text: 'Aminata Mbaye lors de la conférence annuelle du réseau ISE.',
+        credit: null,
+        width: 800,
+        height: 600,
+      },
+      tagline: 'Aminata Mbaye, l’ISE qui a réformé la statistique nationale.',
+    });
+    expect(profile.photo).not.toBeNull();
+    expect(profile.photo?.bucket).toBe('landing-media');
+    expect(profile.tagline).toBe(
+      'Aminata Mbaye, l’ISE qui a réformé la statistique nationale.',
+    );
+  });
+
+  it('D-165 — un visuel dans un bucket privé (ou absent) ne produit aucune photo', () => {
+    const withoutPhoto = featuredProfileSchema.parse(PROFILE_PAYLOAD);
+    expect(withoutPhoto.photo).toBeNull();
+
+    const withPrivateBucket = featuredProfileSchema.parse({
+      ...PROFILE_PAYLOAD,
+      photo: {
+        bucket: 'avatars',
+        path: '66666666.png',
+        alt_text: 'Photo de profil',
+        credit: null,
+        width: null,
+        height: null,
+      },
+    });
+    expect(withPrivateBucket.photo).toBeNull();
   });
 
   it('§45 — aucune donnée privée ne traverse le parseur', () => {

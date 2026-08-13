@@ -600,4 +600,30 @@ describe('images — bucket public `landing-media`', () => {
     expect(markup).toContain('>AM<');
     expect(markup).toContain('Aminata Mbaye');
   });
+
+  /**
+   * D-165 (migration 0112). Quand l'admin a choisi un visuel de la
+   * mediatheque PUBLIQUE et redige une accroche, la carte les affiche tous
+   * les deux — le monogramme s'efface alors devant la vraie image, mais
+   * `avatar_path` (prive) n'a toujours aucun chemin pour atteindre le HTML.
+   */
+  it('D-165 — un visuel de médiathèque publique et son accroche s’affichent quand l’admin les a choisis', () => {
+    const withShowcase = featuredProfileSchema.parse({
+      ...PRIVATE_PAYLOAD,
+      photo: MEDIA,
+      tagline: 'Aminata Mbaye, l’ISE qui a réformé la statistique nationale.',
+    });
+    const markup = renderToStaticMarkup(
+      h(HighlightsSection, {
+        news: OK<LandingNews>([]),
+        featuredProfile: OK([withShowcase]),
+        events: OK<LandingEvent>([]),
+        opportunities: OK<LandingOpportunity>([]),
+      }),
+    );
+    expect(markup).toContain('<img');
+    expect(markup).toContain(MEDIA.alt_text);
+    expect(markup).not.toContain('avatars/');
+    expect(markup).toContain('Aminata Mbaye, l’ISE qui a réformé la statistique nationale.');
+  });
 });
