@@ -1,9 +1,14 @@
 'use client';
 
 import { frCms } from '@/i18n/cms';
-import type { CmsFeaturedCandidate, CmsFeaturedRules } from '@/lib/cms/types';
+import type { CmsFeaturedCandidate, CmsFeaturedRules, CmsMediaOption } from '@/lib/cms/types';
 import { CMS_INPUT_CLASS, CMS_TEXTAREA_CLASS, CmsField, CmsForm } from '../_components/CmsForm';
-import { excludeProfileAction, overrideProfileAction, updateRulesAction } from './actions';
+import {
+  excludeProfileAction,
+  overrideProfileAction,
+  setShowcaseAction,
+  updateRulesAction,
+} from './actions';
 
 const BALANCE_DIMENSIONS = ['none', 'promotion', 'country', 'sector', 'expertise'] as const;
 
@@ -218,6 +223,83 @@ export function RulesForm({
           </fieldset>
 
           <p className="text-caption text-text-muted max-w-[80ch]">{frCms.featured.rulesHelp}</p>
+        </>
+      )}
+    </CmsForm>
+  );
+}
+
+/**
+ * D-165 — visuel et accroche de la mise en avant courante.
+ *
+ * `mediaId` pointe UNIQUEMENT vers la médiathèque publique
+ * (`cms_media_assets`, bucket `landing-media`), la même que le carrousel et
+ * les actualités — jamais vers le bucket privé `avatars`. `set_featured_
+ * profile_showcase()` revalide ce point côté base ; ce formulaire ne fait
+ * qu'offrir le choix parmi les visuels déjà déposés en médiathèque.
+ */
+export function ShowcaseForm({
+  featuredDate,
+  mediaOptions,
+  currentMediaId,
+  currentTagline,
+  canManage,
+}: {
+  featuredDate: string | null;
+  mediaOptions: readonly CmsMediaOption[];
+  currentMediaId: string | null;
+  currentTagline: string | null;
+  canManage: boolean;
+}) {
+  if (featuredDate === null) {
+    return <p className="text-body-sm text-text-secondary">{frCms.featured.currentNoneBody}</p>;
+  }
+
+  return (
+    <CmsForm
+      action={setShowcaseAction}
+      submitLabel={frCms.featured.showcaseSubmit}
+      disabled={!canManage}
+      disabledReason={frCms.common.forbidden}
+    >
+      {(errors) => (
+        <>
+          <input type="hidden" name="featuredDate" value={featuredDate} />
+
+          <CmsField
+            name="mediaId"
+            label={frCms.featured.showcaseMedia}
+            hint={frCms.featured.showcaseHelp}
+            error={errors['mediaId']}
+          >
+            {(props) => (
+              <select {...props} defaultValue={currentMediaId ?? ''} className={CMS_INPUT_CLASS}>
+                <option value="">{frCms.featured.showcaseMediaNone}</option>
+                {mediaOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.filename}
+                  </option>
+                ))}
+              </select>
+            )}
+          </CmsField>
+
+          <CmsField
+            name="tagline"
+            label={frCms.featured.showcaseTagline}
+            hint={frCms.featured.showcaseTaglineHint}
+            error={errors['tagline']}
+          >
+            {(props) => (
+              <textarea
+                {...props}
+                rows={2}
+                maxLength={160}
+                defaultValue={currentTagline ?? ''}
+                className={CMS_TEXTAREA_CLASS}
+              />
+            )}
+          </CmsField>
         </>
       )}
     </CmsForm>

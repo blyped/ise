@@ -15,13 +15,14 @@ import { requireCmsAccess } from '@/lib/cms/permissions';
 import {
   loadFeaturedCandidates,
   loadFeaturedOverview,
+  loadMediaOptions,
   loadPublicFeaturedTeaser,
 } from '@/lib/cms/queries';
 import { formatDate, formatLongDateTime } from '@/lib/cms/format';
 import { CmsShell } from '../_components/CmsShell';
 import { PageHeader } from '../_components/PageHeader';
 import { ActionButton } from '../_components/ActionButton';
-import { ExcludeForm, OverrideForm, RulesForm } from './FeaturedForms';
+import { ExcludeForm, OverrideForm, RulesForm, ShowcaseForm } from './FeaturedForms';
 import { toggleAutomationAction } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -35,6 +36,8 @@ const TEASER_FIELDS = [
   [frCms.featured.fieldOrganization, 'current_organization'],
   [frCms.featured.fieldSummary, 'public_summary'],
   [frCms.featured.fieldExpertises, 'expertise_areas'],
+  [frCms.featured.showcaseMedia, 'photo'],
+  [frCms.featured.showcaseTagline, 'tagline'],
 ] as const;
 
 /**
@@ -53,10 +56,13 @@ export default async function CmsFeaturedProfilePage() {
   const correlationId = newCorrelationId();
   const canManage = access.can('cms.featured_profile.manage');
 
-  const [overview, candidates, teaser] = await Promise.all([
+  const [overview, candidates, mediaOptions, teaser] = await Promise.all([
     loadFeaturedOverview(correlationId),
     canManage
       ? loadFeaturedCandidates(null, correlationId)
+      : Promise.resolve({ ok: true as const, data: [] }),
+    canManage
+      ? loadMediaOptions(correlationId)
       : Promise.resolve({ ok: true as const, data: [] }),
     loadPublicFeaturedTeaser(correlationId),
   ]);
@@ -160,6 +166,21 @@ export default async function CmsFeaturedProfilePage() {
         <p className="text-caption text-text-muted">
           {data.eligibleCount} {frCms.featured.eligibleCount}
         </p>
+      </section>
+
+      <section aria-labelledby="ise-du-jour-showcase" className="flex flex-col gap-4">
+        <h2 id="ise-du-jour-showcase" className="text-h3 text-text-primary font-semibold">
+          {frCms.featured.showcaseTitle}
+        </h2>
+        <Card>
+          <ShowcaseForm
+            featuredDate={data.current?.featuredDate ?? null}
+            mediaOptions={mediaOptions.ok ? mediaOptions.data : []}
+            currentMediaId={data.current?.showcaseMediaId ?? null}
+            currentTagline={data.current?.showcaseTagline ?? null}
+            canManage={canManage}
+          />
+        </Card>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">

@@ -54,6 +54,7 @@ function Card({
   kicker,
   kickerClassName,
   title,
+  highlight,
   meta,
   visual,
   children,
@@ -61,6 +62,8 @@ function Card({
   kicker: string;
   kickerClassName?: string;
   title: string;
+  /** Accroche courte, mise en avant entre le titre et le meta (D-165). */
+  highlight?: string | null;
   meta?: string | null;
   visual?: ReactNode;
   children?: ReactNode;
@@ -70,6 +73,9 @@ function Card({
       {visual}
       <p className={`${KICKER} ${kickerClassName ?? 'text-primary'}`}>{kicker}</p>
       <h3 className="text-body text-text-primary font-semibold">{title}</h3>
+      {highlight ? (
+        <p className="text-body-sm text-ise-gold font-medium italic">{highlight}</p>
+      ) : null}
       {meta ? <p className="text-body-sm text-text-secondary">{meta}</p> : null}
       <div className="mt-auto pt-4">{children}</div>
     </article>
@@ -209,12 +215,18 @@ function ProfileMonogram({ displayName }: { displayName: string }) {
 }
 
 /**
- * ADDENDUM §11, §21, §45 — « ISE du jour ».
+ * ADDENDUM §11, §21, §45 ; D-165 — « ISE du jour ».
  *
  * Seuls les champs de la liste blanche de `LandingFeaturedProfile` sont
- * rendus : nom affichable, promotion, poste, organisation, resume public et
- * jusqu'a trois domaines d'expertise. Le courriel, le telephone, le score de
- * completude et le chemin d'avatar ne traversent meme pas le parseur.
+ * rendus : nom affichable, promotion, poste, organisation, resume public,
+ * jusqu'a trois domaines d'expertise, et desormais un visuel editorial et
+ * une accroche (D-165). Le courriel, le telephone, le score de completude et
+ * le chemin d'avatar ne traversent meme pas le parseur.
+ *
+ * `item.photo` n'est JAMAIS l'avatar prive du membre (D-135, inchangee) :
+ * c'est un media de la mediatheque PUBLIQUE choisi par l'admin pour cette
+ * mise en avant. Quand l'admin n'en a choisi aucun, le monogramme habituel
+ * reprend sa place — le composant n'a jamais besoin de deviner.
  */
 function FeaturedProfileCard({ item }: { item: LandingFeaturedProfile }) {
   const promotion =
@@ -235,8 +247,21 @@ function FeaturedProfileCard({ item }: { item: LandingFeaturedProfile }) {
       kicker={frPublic.kickers.featuredProfile}
       kickerClassName="text-ise-gold"
       title={item.displayName}
+      highlight={item.tagline}
       meta={joinMeta([meta, item.summary], ' — ')}
-      visual={<ProfileMonogram displayName={item.displayName} />}
+      visual={
+        item.photo === null ? (
+          <ProfileMonogram displayName={item.displayName} />
+        ) : (
+          <MediaFrame>
+            <LandingMediaImage
+              media={item.photo}
+              sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 260px"
+              className="object-cover"
+            />
+          </MediaFrame>
+        )
+      }
     >
       {route === null ? (
         <NoAction />
