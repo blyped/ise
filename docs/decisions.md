@@ -278,6 +278,8 @@ Le document annonçait lui-même qu'il « complète » ce journal. Ses arbitrage
 | D-149 | **ADOPTÉE** — ISE-092 est un **fil mixte** actualités + événements, uni en base par un curseur keyset unique (D-44), et non deux listes entrelacées côté client. | N-d |
 | D-150 | **ADOPTÉE** — `events.online_url_private` n'est jamais projeté, ni par `private.event_card()`, ni par un `select *`. Seul un booléen `online_url_available` sort ; l'URL passe par `public.get_event_online_url()`. | N-c |
 
+---
+
 ### 14.3 Arbitrages rapatriés de `docs/screen-traceability-matrix.md`
 
 La matrice consignait sept écarts de la tranche Recherche & découverte (`E-01` → `E-07`) et
@@ -884,3 +886,68 @@ maintenant présenté deux fois sur des props optionnelles passées telles quell
 qui peut valoir `undefined`, c'est le signe qu'il faut soit systématiser le spread conditionnel pour
 ce cas précis, soit typer ces props `T | undefined` explicitement plutôt qu'optionnelles — non fait
 ici, noté pour une passe de nettoyage ultérieure.
+
+---
+
+## 31. Image de couverture unique pour les actualités — admin, landing et page article (D-172)
+
+| #     | Décision | Source |
+| ----- | -------- | ------ |
+| D-172 | **ADOPTÉE** — Les actualités reçoivent le même patron d'image que les événements et les opportunités (D-166, migration 0113) : une colonne `news.cover_media_id` (FK optionnelle vers `cms_media_assets`, médiathèque publique `landing-media`), choisie UNE SEULE FOIS depuis `/cms/actualites`, et réutilisée telle quelle sur la carte de la landing (`get_landing_news()`) et sur la page de l'article (`private.news_card()`, `/actualites/[newsId]`). Une seconde colonne, `news.cover_has_text`, évite de dupliquer un titre déjà incrusté dans le visuel. `news.image_path` (texte libre, jamais validé) est déprécié mais conservé. Migration 0117. | `0117_news_cover_media.sql`, `cms/actualites/page.tsx`, `administration/actualites/NewsForm.tsx` / `NewsEditForm.tsx`, `HighlightsSection.tsx`, `actualites/[newsId]/page.tsx` |
+
+**Ce qui a motivé cette décision.** Retour direct du porteur (2026-08-13) : « où est-ce que je mets
+l'image liée à l'actualité... il faut aussi penser à mettre l'image pour l'encart de la landing page
+(avec les options avec ou sans texte) et l'image de la page de l'article elle-même. pense aussi à voir
+comment on gère leur version mobile de manière optimisée pour ne pas qu'on mette 4 images pour un seul
+article. » Le module Actualités était le seul des trois modules éditoriaux (actualités, événements,
+opportunités) resté sur l'ancien patron `image_path` (texte libre, 0013) : `events`/`opportunities`
+avaient déjà migré vers `cover_media_id` en 0113 (D-166). Cette décision applique EXACTEMENT le même
+patron au dernier module qui en manquait, et répond en une fois aux quatre volets de la question.
+
+**Principe directeur : une seule image, choisie une seule fois, réutilisée partout.** Il n'existe
+qu'un seul champ d'upload (la médiathèque publique, `/cms/mediatheque`) et qu'un seul geste de
+rattachement (`set_news_cover_media()`, appelé depuis `/cms/actualites`). Ni le formulaire de
+rédaction admin (`NewsForm.tsx`/`NewsEditForm.tsx`), ni la carte de la landing, ni la page article ne
+permettent de téléverser un second visuel : la carte lit `get_landing_news().cover`, la page article
+lit `private.news_card().cover` — les DEUX résolues par `private.landing_media(cover_media_id)`, la
+même fonction que pour les événements et les opportunités. Répond directement au risque nommé par le
+porteur (« ne pas mettre 4 images pour un seul article ») : il n'y a physiquement qu'une seule colonne
+à remplir, un seul endroit pour le faire. Le formulaire de rédaction admin n'affiche plus qu'un encart
+lecture seule (« couverture définie » / « aucune couverture »), avec un lien croisé vers `/cms/actualites`
+— même patron de lien croisé que D-171 — pour la gérer.
+
+**Le cas « avec ou sans texte incrusté ».** `news.cover_has_text` (booléen, défaut `false`) distingue
+une photo simple d'une affiche qui porte déjà son titre en incrustation. Quand `cover_has_text = true`,
+la carte de la landing (`HighlightsSection.tsx`, `NewsCard`) masque visuellement le titre affiché sous
+l'image (classe `sr-only`) plutôt que de le dupliquer sur un visuel qui le contient déjà — le titre
+reste dans le DOM, pour l'accessibilité et le SEO, jamais retiré. `cover_has_text` n'a aucun effet sur
+la page article : le `<h1>` d'une page de contenu reste toujours affiché, qu'il soit ou non redondant
+avec l'image, contrairement au titre compact d'une carte.
+
+**Version mobile : aucun second visuel, `sizes` fait le travail.** Aucun champ « image mobile » n'a
+été ajouté, contrairement au carrousel héros (`slide.mobile_media_id`, direction artistique
+volontairement différente entre desktop et mobile, hors sujet ici). Le patron déjà en place pour les
+cartes événement/opportunité est repris tel quel : `StorageImage` (`components/media/StorageImage.tsx`)
+encapsule `next/image` avec `fill` et une prop `sizes` par point de rupture (par exemple
+`(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 260px` sur la carte landing) ; Next.js génère les
+résolutions adaptées à la volée depuis l'unique original stocké dans `landing-media`. Aucun fichier
+séparé, aucun second téléversement — ni pour la carte, ni pour la page article. Aucun écran Actualités
+n'existe encore dans `apps/mobile` : rien à modifier côté mobile pour l'instant.
+
+**Détail technique : `set_news_cover_media()` diverge du brief initial sur un seul point, documenté
+dans la migration elle-même.** La fonction est calquée sur `set_landing_cover_media()` (0113) :
+`SECURITY DEFINER`, `search_path` figé, exige `cms.edit`, valide que le média est dans le bucket
+`landing-media` avec un `alt_text` non vide. Seul écart : son troisième paramètre, `p_has_text`, est
+`default null` (et non `default false`) — `null` signifie « ne pas modifier ce réglage », pas « le
+remettre à `false` ». Nécessaire pour que les deux contrôles distincts de l'écran CMS (le sélecteur de
+visuel, réutilisation telle quelle de `CoverMediaForm.tsx` déjà utilisé par `/cms/evenements` et
+`/cms/opportunites` ; et la case « texte déjà incrusté », à côté) puissent chacun écrire uniquement le
+champ qu'ils pilotent, sans lecture préalable de l'état courant côté client. `p_media_id`, lui, garde
+exactement la sémantique du brief : pas de défaut, `null` retire explicitement la couverture.
+
+**Ce que cette décision ne fait pas.** Elle ne supprime pas `news.image_path` (conservé, déprécié,
+même logique que D-137 pour l'ancien bucket `public-assets` : cesser de s'en servir sans rien casser).
+Elle ne touche à aucun champ éditorial (`editorial_status`, `visibility`, `landing_priority`) : le
+formulaire de rédaction admin (`content.publish`) garde son périmètre, l'exposition sur la landing
+(`cms.publish`/`cms.edit`) garde le sien (D-128), et le choix du visuel rejoint ce second périmètre —
+poser une image n'est pas un acte de publication, même raisonnement que D-166.
