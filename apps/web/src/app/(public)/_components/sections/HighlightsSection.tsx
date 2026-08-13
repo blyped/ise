@@ -141,7 +141,22 @@ function NewsCard({ item }: { item: LandingNews }) {
 function EventCard({ item }: { item: LandingEvent }) {
   const meta = joinMeta([item.city, formatLongDate(item.startsAt, item.timezone)]);
   return (
-    <Card kicker={frPublic.kickers.event} title={item.title} meta={meta}>
+    <Card
+      kicker={frPublic.kickers.event}
+      title={item.title}
+      meta={meta}
+      visual={
+        item.image === null ? null : (
+          <MediaFrame>
+            <LandingMediaImage
+              media={item.image}
+              sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 260px"
+              className="object-cover"
+            />
+          </MediaFrame>
+        )
+      }
+    >
       <NoAction />
     </Card>
   );
@@ -156,7 +171,22 @@ function OpportunityCard({ item }: { item: LandingOpportunity }) {
   const route = entityRoute(item.target);
 
   return (
-    <Card kicker={frPublic.kickers.opportunity} title={item.title} meta={meta}>
+    <Card
+      kicker={frPublic.kickers.opportunity}
+      title={item.title}
+      meta={meta}
+      visual={
+        item.image === null ? null : (
+          <MediaFrame>
+            <LandingMediaImage
+              media={item.image}
+              sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 260px"
+              className="object-cover"
+            />
+          </MediaFrame>
+        )
+      }
+    >
       {route === null ? (
         <NoAction />
       ) : (

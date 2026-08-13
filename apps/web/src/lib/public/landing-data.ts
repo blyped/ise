@@ -35,11 +35,11 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                         is_featured, is_pinned }
  *   get_landing_events(p_limit)        -> tableau { id, entity_type:'event', title, slug,
  *                                         event_type_code, starts_at, ends_at, timezone,
- *                                         format, city, country_code, is_pinned }
+ *                                         format, city, country_code, image, is_pinned }
  *   get_landing_opportunities(p_limit) -> tableau { id, entity_type:'opportunity', title,
  *                                         opportunity_type, contract_type, sector,
  *                                         country_code, city, remote_allowed, deadline,
- *                                         organization, is_pinned }
+ *                                         organization, image, is_pinned }
  *   get_landing_featured_profile()     -> objet **ou `null`** { entity_type:'profile',
  *                                         profile_id, display_name,
  *                                         promotion{id,name,graduation_year},
@@ -285,6 +285,13 @@ export interface LandingEvent {
   readonly countryCode: string | null;
   readonly pinned: boolean;
   readonly target: EntityRef;
+  /**
+   * 0113 — visuel editorial optionnel, choisi par l'admin dans la
+   * mediatheque PUBLIQUE (`landing-media`). `events` n'a pas de colonne
+   * d'image libre : un chemin non enregistre et decrit produit `null`,
+   * jamais une image cassee.
+   */
+  readonly image: LandingMedia | null;
 }
 
 /**
@@ -307,6 +314,12 @@ export interface LandingOpportunity {
   readonly organization: string | null;
   readonly pinned: boolean;
   readonly target: EntityRef;
+  /**
+   * 0113 — visuel editorial optionnel, choisi par l'admin dans la
+   * mediatheque PUBLIQUE (`landing-media`). Distinct de tout logo
+   * d'organisation : c'est un visuel propre a l'offre.
+   */
+  readonly image: LandingMedia | null;
 }
 
 /**
@@ -653,6 +666,7 @@ export const eventSchema = z
     format: nullableText,
     city: nullableText,
     country_code: nullableText,
+    image: z.unknown(),
     is_pinned: booleanFlag,
   })
   .transform<LandingEvent>((row) => ({
@@ -668,6 +682,7 @@ export const eventSchema = z
     countryCode: row.country_code,
     pinned: row.is_pinned,
     target: { entityType: 'event', entityId: row.id },
+    image: parseMedia(row.image),
   }));
 
 export const opportunitySchema = z
@@ -682,6 +697,7 @@ export const opportunitySchema = z
     remote_allowed: booleanFlag,
     deadline: nullableTimestamp,
     organization: nullableText,
+    image: z.unknown(),
     is_pinned: booleanFlag,
   })
   .transform<LandingOpportunity>((row) => ({
@@ -697,6 +713,7 @@ export const opportunitySchema = z
     organization: row.organization,
     pinned: row.is_pinned,
     target: { entityType: 'opportunity', entityId: row.id },
+    image: parseMedia(row.image),
   }));
 
 const promotionSchema = z.object({ name: nullableText, graduation_year: nullableInteger });
