@@ -220,6 +220,31 @@ export interface CmsEventRow {
   landingPriority: number;
   isUpcoming: boolean;
   isPinned: boolean;
+  /** 0113 — visuel de couverture choisi dans la médiathèque publique. */
+  coverMediaId: string | null;
+  pendingSchedule: CmsPendingSchedule | null;
+}
+
+/** CMS-006bis (0113) — miroir de CmsEventRow pour /cms/opportunites. */
+export interface CmsOpportunityRow {
+  id: string;
+  title: string;
+  opportunityType: string | null;
+  contractType: string | null;
+  sector: string | null;
+  countryCode: string | null;
+  city: string | null;
+  remoteAllowed: boolean;
+  deadline: string | null;
+  status: string;
+  moderationStatus: string;
+  visibility: string;
+  landingVisibility: 'hidden' | 'visible';
+  landingPriority: number;
+  coverMediaId: string | null;
+  publishedAt: string | null;
+  organization: string | null;
+  isPinned: boolean;
   pendingSchedule: CmsPendingSchedule | null;
 }
 
