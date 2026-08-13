@@ -557,7 +557,7 @@ un objet **différent** : c'est un visuel choisi par l'administrateur au moment 
 mise en avant, dans la **même** médiathèque publique que le carrousel et les actualités — un visuel
 déjà soumis à l'obligation d'un texte alternatif non vide (CMS-008, ADDENDUM §52). Il n'existe
 d'ailleurs aujourd'hui **aucun écran** permettant à un membre de déposer sa propre photo de profil
-(D-117 : « Dépôt de photo… non ouvert ») : il n'y a donc pas de photo personnelle à exposer par
+(D-117 : « Dépôt de photo… non ouvert ») : il n'y a donc pas de photo personnelle à exposer par
 accident, seulement un choix éditorial explicite de l'administrateur.
 
 **Pourquoi une accroche par mise en avant, et pas un champ sur le profil.** `showcase_tagline` vit
@@ -849,3 +849,38 @@ n'est pas une décision technique nouvelle : l'infrastructure existe déjà (`sl
 `description`, `ctaLabel` rendus par-dessus l'image selon `text_position`, §9/§26) — il s'agit d'une
 consigne de production de contenu pour les prochaines affiches, à appliquer côté CMS, pas d'un
 changement de code.
+---
+
+## 30. Lien de navigation croisé entre `/administration` et `/cms` (D-171)
+
+| #     | Décision | Source |
+| ----- | -------- | ------ |
+| D-171 | **ADOPTÉE** — Un lien « Aller au CMS » apparaît en bas du menu Administration, et un lien « Retour à l'administration » en bas du menu CMS. Chaque lien n'apparaît que si le compte courant a effectivement accès à la section cible (`cms.read` côté admin, au moins une permission d'administration côté CMS) — même règle que le reste de ces deux navigations : masquer une entrée que la base refuserait n'est pas une mesure de sécurité, c'est éviter un bouton décoratif (MASTER PROMPT §113). | `AdminShell.tsx`, `CmsShell.tsx`, `AdminNav.tsx`, `CmsNav.tsx` |
+
+**Ce que ça corrige.** Retour direct du porteur (2026-08-13) : les deux back-offices n'avaient aucune
+navigation croisée, obligeant à taper l'URL à la main pour passer de l'un à l'autre (« on a
+l'impression d'aller d'un bout à l'autre du monde »). `AdminShell` et `CmsShell` deviennent des
+composants serveur asynchrones : chacun lit, en plus de son propre accès, l'accès à l'AUTRE
+back-office (`readCmsAccess()` côté admin, `readAdminAccess()` côté CMS — les deux fonctions
+existaient déjà, `AdminShell`/`CmsShell` ne les appelaient simplement pas l'une l'autre) et décide
+d'afficher ou non le lien croisé en conséquence.
+
+**Pourquoi deux espaces de permissions distincts, et comment le lien les traverse.** `cms.read` (0058)
+et les permissions `AdminPermission` (`content.publish`, `profiles.read`, etc., 0076) sont deux
+listes fermées indépendantes, vérifiées par deux RPC différentes (`get_my_cms_permissions()` /
+`get_my_admin_permissions()`) : un `cms_editor` peut n'avoir aucune permission d'administration, et un
+`content_manager` peut ne pas avoir `cms.read`. Le lien croisé ne présuppose donc jamais l'un depuis
+l'autre : il vérifie la permission réelle de la section cible avant de s'afficher, plutôt que de
+réutiliser une permission de la section courante comme approximation.
+
+**Piège rencontré et corrigé au déploiement.** Le premier commit (`1e4d9a2`) passait
+`cmsLink={cmsLink}` / `adminLink={adminLink}` à `AdminNav`/`CmsNav`, où ces props sont déclarées
+optionnelles (`cmsLink?: {...}`). Sous `exactOptionalPropertyTypes: true` (déjà responsable du même
+échec sur `PublicHeader.tsx`, D-169), passer explicitement `undefined` à une prop optionnelle est une
+erreur de type (TS2375), pas une valeur licite — la prop doit être **absente** de l'objet props, pas
+présente avec la valeur `undefined`. Corrigé par le même motif de spread conditionnel
+(`{...(cmsLink ? { cmsLink } : {})}`) déjà utilisé pour `PublicHeader.tsx`. Ce piège s'étant
+maintenant présenté deux fois sur des props optionnelles passées telles quelles depuis une variable
+qui peut valoir `undefined`, c'est le signe qu'il faut soit systématiser le spread conditionnel pour
+ce cas précis, soit typer ces props `T | undefined` explicitement plutôt qu'optionnelles — non fait
+ici, noté pour une passe de nettoyage ultérieure.
