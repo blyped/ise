@@ -21,45 +21,46 @@ import {
 } from '@/lib/cms/mutations';
 
 /**
- * Server Actions des evenements (CMS-005, ADDENDUM §35).
+ * Server Actions des opportunites (CMS-006bis, 0113).
  *
- * SOURCE REELLE : `public.events`. Aucune donnee n'est recopiee, aucun
- * champ metier n'est modifiable ici. Le CMS pilote trois choses :
- *   * la visibilite landing (`landing_visibility`) ;
- *   * la priorite editoriale (`landing_priority`) ;
- *   * la MISE EN AVANT, qui n'est pas une colonne mais un override
- *     `pin` sur la section `events` — la primitive generique du §43.
- *     Elle est bornee dans le temps et expire d'elle-meme.
- *
- * Un evenement passe quitte la landing SANS intervention : la projection
- * publique filtre sur `starts_at > now()`. Il n'y a donc pas de bouton
- * « retirer un evenement passe » : il serait decoratif.
+ * SOURCE REELLE : `public.opportunities`. Aucun champ metier (statut,
+ * moderation, description, remuneration, contact, URL de candidature) n'est
+ * modifiable ici (ADDENDUM §13) — miroir exact des evenements (CMS-005).
+ * Le CMS pilote : la visibilite landing, la priorite, l'epinglage temporaire
+ * (override borne dans le temps, §43), et depuis 0113 le visuel de
+ * couverture (FK vers la mediatheque publique).
  */
 
-const EVENTS_SECTION_KEY = 'events';
+const OPPORTUNITIES_SECTION_KEY = 'opportunities';
 
-export async function setEventLandingVisibilityAction(
+export async function setOpportunityLandingVisibilityAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const eventId = requiredText(formData, 'eventId');
+  const opportunityId = requiredText(formData, 'opportunityId');
   const visible = requiredText(formData, 'visible') === 'true';
 
   const state = await runCmsPublishAction(
     'cms.publish',
     (correlationId) =>
-      setLandingExposure('event', eventId, visible ? 'visible' : 'hidden', null, correlationId),
+      setLandingExposure(
+        'opportunity',
+        opportunityId,
+        visible ? 'visible' : 'hidden',
+        null,
+        correlationId,
+      ),
     visible ? frCms.common.published : frCms.common.unpublished,
   );
-  if (state.status === 'success') revalidatePath(CMS_ROUTES.events);
+  if (state.status === 'success') revalidatePath(CMS_ROUTES.opportunities);
   return state;
 }
 
-export async function setEventPriorityAction(
+export async function setOpportunityPriorityAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const eventId = requiredText(formData, 'eventId');
+  const opportunityId = requiredText(formData, 'opportunityId');
   const priority = integer(formData, 'priority', 0);
   if (priority < 0 || priority > 1000) {
     return {
@@ -72,18 +73,19 @@ export async function setEventPriorityAction(
 
   const state = await runCmsAction(
     'cms.edit',
-    (correlationId) => setLandingExposure('event', eventId, null, priority, correlationId),
+    (correlationId) =>
+      setLandingExposure('opportunity', opportunityId, null, priority, correlationId),
     frCms.common.saved,
   );
-  if (state.status === 'success') revalidatePath(CMS_ROUTES.events);
+  if (state.status === 'success') revalidatePath(CMS_ROUTES.opportunities);
   return state;
 }
 
-export async function toggleEventPinAction(
+export async function toggleOpportunityPinAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const eventId = requiredText(formData, 'eventId');
+  const opportunityId = requiredText(formData, 'opportunityId');
   const pin = requiredText(formData, 'pin') === 'true';
   const endsAt = timestamp(formData, 'pinEndsAt');
 
@@ -92,41 +94,41 @@ export async function toggleEventPinAction(
     (correlationId) =>
       pin
         ? pinEntityInSection(
-            EVENTS_SECTION_KEY,
-            'event',
-            eventId,
+            OPPORTUNITIES_SECTION_KEY,
+            'opportunity',
+            opportunityId,
             endsAt,
             text(formData, 'reason'),
             correlationId,
           )
-        : unpinEntityInSection(EVENTS_SECTION_KEY, eventId, correlationId),
+        : unpinEntityInSection(OPPORTUNITIES_SECTION_KEY, opportunityId, correlationId),
     frCms.common.saved,
   );
-  if (state.status === 'success') revalidatePath(CMS_ROUTES.events);
+  if (state.status === 'success') revalidatePath(CMS_ROUTES.opportunities);
   return state;
 }
 
-export async function setEventCoverMediaAction(
+export async function setOpportunityCoverMediaAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const eventId = requiredText(formData, 'eventId');
+  const opportunityId = requiredText(formData, 'opportunityId');
   const mediaId = text(formData, 'mediaId');
 
   const state = await runCmsAction(
     'cms.edit',
-    (correlationId) => setLandingCoverMedia('event', eventId, mediaId, correlationId),
-    frCms.events.coverDone,
+    (correlationId) => setLandingCoverMedia('opportunity', opportunityId, mediaId, correlationId),
+    frCms.opportunities.coverDone,
   );
-  if (state.status === 'success') revalidatePath(CMS_ROUTES.events);
+  if (state.status === 'success') revalidatePath(CMS_ROUTES.opportunities);
   return state;
 }
 
-export async function scheduleEventAction(
+export async function scheduleOpportunityAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
-  const eventId = requiredText(formData, 'eventId');
+  const opportunityId = requiredText(formData, 'opportunityId');
   const publishAt = timestamp(formData, 'publishAt');
   const unpublishAt = timestamp(formData, 'unpublishAt');
 
@@ -153,11 +155,12 @@ export async function scheduleEventAction(
 
   const state = await runCmsAction(
     'cms.schedule',
-    (correlationId) => createScheduleOrder('event', eventId, publishAt, unpublishAt, correlationId),
+    (correlationId) =>
+      createScheduleOrder('opportunity', opportunityId, publishAt, unpublishAt, correlationId),
     frCms.schedule.created,
   );
   if (state.status === 'success') {
-    revalidatePath(CMS_ROUTES.events);
+    revalidatePath(CMS_ROUTES.opportunities);
     revalidatePath(CMS_ROUTES.schedule);
   }
   return state;
