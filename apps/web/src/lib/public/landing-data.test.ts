@@ -10,6 +10,7 @@ import {
   parseMedia,
   parseStats,
   partnerSchema,
+  pillarSchema,
   safeExternalUrl,
   sectionConfigSchema,
   sectionLimit,
@@ -111,6 +112,14 @@ const OPPORTUNITY_ROW = {
   organization: 'Organisation vérifiée',
   image: null,
   is_pinned: false,
+};
+
+/** Forme exacte d'une ligne de `get_landing_pillars()` (0114). */
+const PILLAR_ROW = {
+  pillar_key: 'connecter',
+  image: { ...MEDIA_ROW, path: 'sections/2026/08/connecter.webp' },
+  caption: 'Un annuaire vivant, mis à jour par chaque promotion.',
+  link_target: 'search',
 };
 
 /** Forme exacte de `get_landing_expertises()` : `id` est un **nombre**. */
@@ -489,6 +498,37 @@ describe('réglages de section — get_landing_sections()', () => {
   it('ignore une limite absurde', () => {
     const sections = [sectionConfigSchema.parse({ ...SECTION_ROW, max_items: 0 })];
     expect(sectionLimit(sections, 'news')).toBe(1);
+  });
+});
+
+describe('piliers — get_landing_pillars()', () => {
+  it('associe la clé du pilier à son image et son lien', () => {
+    const pillar = pillarSchema.parse(PILLAR_ROW);
+    expect(pillar.pillarKey).toBe('connecter');
+    expect(pillar.image?.path).toBe('sections/2026/08/connecter.webp');
+    expect(pillar.linkTarget).toBe('search');
+    expect(pillar.caption).toBe('Un annuaire vivant, mis à jour par chaque promotion.');
+  });
+
+  it('un pilier sans image ni lien reste du texte seul, jamais un lien inventé', () => {
+    const pillar = pillarSchema.parse({
+      ...PILLAR_ROW,
+      pillar_key: 'entraider',
+      image: null,
+      caption: null,
+      link_target: null,
+    });
+    expect(pillar.image).toBeNull();
+    expect(pillar.linkTarget).toBeNull();
+    expect(pillar.caption).toBeNull();
+  });
+
+  it('écarte une image sans alternative textuelle (§52), comme les autres sections', () => {
+    const pillar = pillarSchema.parse({
+      ...PILLAR_ROW,
+      image: { ...MEDIA_ROW, alt_text: null },
+    });
+    expect(pillar.image).toBeNull();
   });
 });
 
