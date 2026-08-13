@@ -5,13 +5,20 @@ import { frCms } from '@/i18n/cms';
 import { CMS_ROUTES } from '@/lib/routes/cms';
 import type { FormState } from '@/lib/form-state';
 import {
+  checkbox,
   integer,
   requiredText,
   runCmsAction,
   runCmsPublishAction,
+  text,
   timestamp,
 } from '@/lib/cms/action-support';
-import { createScheduleOrder, setLandingExposure, setNewsFeatured } from '@/lib/cms/mutations';
+import {
+  createScheduleOrder,
+  setLandingExposure,
+  setNewsCoverMedia,
+  setNewsFeatured,
+} from '@/lib/cms/mutations';
 
 /**
  * Server Actions des actualites (CMS-004, ADDENDUM §34).
@@ -54,6 +61,52 @@ export async function setNewsFeaturedAction(
     'cms.publish',
     (correlationId) => setNewsFeatured(newsId, featured, correlationId),
     frCms.common.saved,
+  );
+  if (state.status === 'success') revalidatePath(CMS_ROUTES.news);
+  return state;
+}
+
+/**
+ * 0117 — visuel de couverture, choisi dans la mediatheque publique
+ * (comme evenements/opportunites). Ne touche pas `cover_has_text` : le
+ * reglage existant est preserve (`set_news_cover_media` avec
+ * `p_has_text = null`), pour que ce formulaire reste EXACTEMENT celui
+ * reutilise tel quel sur /cms/evenements et /cms/opportunites.
+ */
+export async function setNewsCoverMediaAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const newsId = requiredText(formData, 'newsId');
+  const mediaId = text(formData, 'mediaId');
+
+  const state = await runCmsAction(
+    'cms.edit',
+    (correlationId) => setNewsCoverMedia(newsId, mediaId, null, correlationId),
+    frCms.news.coverDone,
+  );
+  if (state.status === 'success') revalidatePath(CMS_ROUTES.news);
+  return state;
+}
+
+/**
+ * 0117 — bascule `cover_has_text`, a cote du selecteur de visuel. Le
+ * visuel courant est transmis tel quel (champ cache `mediaId`, prerempli
+ * par la ligne du tableau) : cette action ne modifie jamais la
+ * couverture elle-meme, uniquement le reglage « texte deja incruste ».
+ */
+export async function setNewsCoverHasTextAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const newsId = requiredText(formData, 'newsId');
+  const mediaId = text(formData, 'mediaId');
+  const hasText = checkbox(formData, 'hasText');
+
+  const state = await runCmsAction(
+    'cms.edit',
+    (correlationId) => setNewsCoverMedia(newsId, mediaId, hasText, correlationId),
+    frCms.news.coverDone,
   );
   if (state.status === 'success') revalidatePath(CMS_ROUTES.news);
   return state;

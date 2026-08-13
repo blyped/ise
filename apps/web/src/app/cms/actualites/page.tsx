@@ -3,15 +3,18 @@ import { frCms } from '@/i18n/cms';
 import { CMS_ROUTES } from '@/lib/routes/cms';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireCmsAccess } from '@/lib/cms/permissions';
-import { loadCmsNews } from '@/lib/cms/queries';
+import { loadCmsNews, loadMediaOptions } from '@/lib/cms/queries';
 import { formatDate, formatDateTime } from '@/lib/cms/format';
 import { CmsShell } from '../_components/CmsShell';
 import { PageHeader, SearchField } from '../_components/PageHeader';
 import { RowCard, RowList } from '../_components/RowCard';
 import { ActionButton } from '../_components/ActionButton';
+import { CoverMediaForm } from '../_components/CoverMediaForm';
 import { EntityScheduleForm } from './NewsScheduleForm';
 import {
   scheduleNewsAction,
+  setNewsCoverHasTextAction,
+  setNewsCoverMediaAction,
   setNewsFeaturedAction,
   setNewsLandingVisibilityAction,
 } from './actions';
@@ -38,8 +41,13 @@ export default async function CmsNewsPage({
   const query = typeof rawQuery === 'string' && rawQuery.trim().length > 0 ? rawQuery.trim() : null;
 
   const correlationId = newCorrelationId();
-  const news = await loadCmsNews(query, correlationId);
+  const [news, mediaOptionsResult] = await Promise.all([
+    loadCmsNews(query, correlationId),
+    loadMediaOptions(correlationId),
+  ]);
+  const mediaOptions = mediaOptionsResult.ok ? mediaOptionsResult.data : [];
 
+  const canEdit = access.can('cms.edit');
   const canPublish = access.can('cms.publish');
   const canSchedule = access.can('cms.schedule');
 
@@ -88,7 +96,7 @@ export default async function CmsNewsPage({
                   </span>
                 }
                 meta={`${row.categoryCode} · ${frCms.news.editorialStatus} : ${row.editorialStatus} · ${
-                  row.imagePath === null ? frCms.news.noCover : frCms.news.cover
+                  row.coverMediaId === null ? frCms.news.noCover : frCms.news.cover
                 } · priorité ${row.landingPriority}`}
                 statusText={visible ? frCms.news.landingVisible : frCms.news.landingHidden}
                 status={visible ? 'published' : 'draft'}
@@ -139,6 +147,51 @@ export default async function CmsNewsPage({
                   label={row.title}
                   canSchedule={canSchedule}
                 />
+                <CoverMediaForm
+                  action={setNewsCoverMediaAction}
+                  idFieldName="newsId"
+                  entityId={row.id}
+                  label={row.title}
+                  currentMediaId={row.coverMediaId}
+                  mediaOptions={mediaOptions}
+                  fieldLabel={frCms.news.coverMedia}
+                  fieldHint={frCms.news.coverHelp}
+                  noMediaLabel={frCms.news.coverMediaNone}
+                  submitLabel={frCms.news.coverSubmit}
+                  summaryLabel={frCms.news.coverLabel}
+                  canEdit={canEdit}
+                />
+                {row.coverMediaId !== null ? (
+                  <div className="border-border mt-4 flex flex-wrap items-center gap-3 rounded-lg border p-4">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-body-sm text-text-primary font-medium">
+                        {frCms.news.coverHasText}
+                      </p>
+                      <p className="text-caption text-text-muted max-w-[60ch]">
+                        {frCms.news.coverHasTextHelp}
+                      </p>
+                      <p className="text-caption text-text-secondary">
+                        {row.coverHasText ? frCms.news.coverHasTextOn : frCms.news.coverHasTextOff}
+                      </p>
+                    </div>
+                    <ActionButton
+                      action={setNewsCoverHasTextAction}
+                      fields={{
+                        newsId: row.id,
+                        mediaId: row.coverMediaId,
+                        hasText: row.coverHasText ? 'false' : 'true',
+                      }}
+                      label={
+                        row.coverHasText ? frCms.news.coverHasTextOff : frCms.news.coverHasTextOn
+                      }
+                      srLabel={`${
+                        row.coverHasText ? frCms.news.coverHasTextOff : frCms.news.coverHasTextOn
+                      } — ${row.title}`}
+                      disabled={!canEdit}
+                      {...(canEdit ? {} : { disabledReason: frCms.common.forbidden })}
+                    />
+                  </div>
+                ) : null}
               </RowCard>
             );
           })}

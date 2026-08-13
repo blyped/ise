@@ -320,8 +320,24 @@ export const frCms = {
     priority: 'Priorité éditoriale',
     cover: 'Couverture',
     noCover: 'Aucune couverture',
+    /**
+     * 0117 — une seule image par article, choisie ici, réutilisée telle
+     * quelle sur la carte de la landing et sur la page article : plus de
+     * chemin recopié à la main (`news.image_path`, déprécié), plus de
+     * second visuel à téléverser ailleurs.
+     */
+    coverLabel: 'Visuel',
+    coverMedia: 'Visuel de couverture',
+    coverMediaNone: 'Aucun visuel',
     coverHelp:
-      'La couverture est l’image du module Actualités (news.image_path). Elle n’est pas dupliquée dans la médiathèque.',
+      'Visuel choisi dans la médiathèque publique (comme le carrousel, les événements et les opportunités) — jamais un chemin recopié à la main. Réutilisé automatiquement sur la carte de la landing et sur la page de l’article : un seul visuel à téléverser pour tout l’article. Format recommandé : 1600 × 900 px (ratio 16/9), JPEG/WebP/AVIF, 5 Mo maximum. Sans visuel, la carte et l’article s’affichent sans image (0117).',
+    coverSubmit: 'Enregistrer le visuel',
+    coverDone: 'Visuel enregistré.',
+    coverHasText: 'Texte déjà incrusté dans l’image',
+    coverHasTextOn: 'Contient déjà un titre',
+    coverHasTextOff: 'Photo simple, sans texte',
+    coverHasTextHelp:
+      'À activer quand le visuel est une affiche ou un visuel d’événement qui porte déjà son titre : la carte d’accueil n’affiche alors plus le titre en double sous l’image (il reste présent pour les lecteurs d’écran). Sans effet sur la page de l’article, où le titre reste toujours affiché.',
     scheduleLabel: 'Programmer l’exposition',
     pendingSchedule: 'Programmation en attente',
   },
