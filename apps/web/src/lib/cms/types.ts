@@ -311,6 +311,17 @@ export interface CmsFeaturedCurrent {
   status: string;
   publishedAt: string | null;
   selectionContext: Record<string, unknown>;
+  /** D-165 — visuel de la médiathèque publique choisi pour cette mise en avant. */
+  showcaseMediaId: string | null;
+  /** D-165 — accroche courte propre à cette mise en avant (3-160 caractères). */
+  showcaseTagline: string | null;
+}
+
+/** Option d'une liste déroulante « choisir un visuel » (CMS-008, réutilisée par CMS-006). */
+export interface CmsMediaOption {
+  id: string;
+  filename: string;
+  altText: string;
 }
 
 export interface CmsFeaturedHistoryRow {

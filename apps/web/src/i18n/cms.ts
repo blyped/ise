@@ -389,6 +389,16 @@ export const frCms = {
     previewTitle: 'Aperçu du teaser public',
     previewNote:
       'Ce teaser est celui que sert get_landing_featured_profile() : la même projection que le site public, sans champ privé.',
+    showcaseTitle: 'Visuel et accroche (D-165)',
+    showcaseHelp:
+      'Visuel choisi dans la médiathèque publique (comme le carrousel), jamais la photo privée du profil : la politique « pas d’avatar » (D-135) ne change pas.',
+    showcaseMedia: 'Visuel',
+    showcaseMediaNone: 'Aucun visuel',
+    showcaseTagline: 'Accroche',
+    showcaseTaglineHint:
+      'Exemple : « Gilles N’Gatta, le ISE qui voulait parler l’anglais, indétrônable bosseur ». 3 à 160 caractères.',
+    showcaseSubmit: 'Enregistrer le visuel',
+    showcaseDone: 'Visuel et accroche enregistrés.',
   },
 
   /* ---------------------------------------------------------------- */
