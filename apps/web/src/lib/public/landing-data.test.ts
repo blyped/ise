@@ -93,6 +93,7 @@ const EVENT_ROW = {
   format: 'online',
   city: null,
   country_code: 'CI',
+  image: null,
   is_pinned: false,
 };
 
@@ -108,6 +109,7 @@ const OPPORTUNITY_ROW = {
   remote_allowed: true,
   deadline: '2026-10-01T00:00:00+00:00',
   organization: 'Organisation vérifiée',
+  image: null,
   is_pinned: false,
 };
 
@@ -214,6 +216,7 @@ describe('actualités, événements, opportunités', () => {
         'countryCode',
         'deadline',
         'id',
+        'image',
         'opportunityType',
         'organization',
         'pinned',
@@ -223,6 +226,24 @@ describe('actualités, événements, opportunités', () => {
         'title',
       ].sort(),
     );
+  });
+
+  /**
+   * 0113 — le visuel de couverture d'un evenement ou d'une opportunite suit
+   * exactement les memes regles que celui du carrousel ou des actualites :
+   * mediatheque PUBLIQUE, alternative textuelle obligatoire.
+   */
+  it('0113 — un visuel de médiathèque publique est retenu sur un événement et une opportunité', () => {
+    const cover = { ...MEDIA_ROW, path: 'events/2026/09/webinaire.webp' };
+    expect(eventSchema.parse({ ...EVENT_ROW, image: cover }).image?.bucket).toBe('landing-media');
+    expect(
+      opportunitySchema.parse({ ...OPPORTUNITY_ROW, image: cover }).image?.path,
+    ).toBe('events/2026/09/webinaire.webp');
+  });
+
+  it('0113 — sans visuel choisi, image reste null plutôt qu’une image cassée', () => {
+    expect(eventSchema.parse(EVENT_ROW).image).toBeNull();
+    expect(opportunitySchema.parse(OPPORTUNITY_ROW).image).toBeNull();
   });
 
   it('écarte un horodatage inexploitable au lieu d’afficher « Invalid Date »', () => {

@@ -626,4 +626,86 @@ describe('images — bucket public `landing-media`', () => {
     expect(markup).not.toContain('avatars/');
     expect(markup).toContain('Aminata Mbaye, l’ISE qui a réformé la statistique nationale.');
   });
+
+  /**
+   * 0113. Même patron que le carrousel, les actualités et « ISE du jour » :
+   * un visuel de la médiathèque publique, choisi par l'admin, s'affiche sur
+   * la carte Événement et la carte Opportunité — absent par défaut, jamais
+   * une image cassée.
+   */
+  it('0113 — un événement avec un visuel choisi affiche l’image, sans visuel il n’y a aucune balise img', () => {
+    const withCover = eventSchema.parse({
+      id: '22222222-3333-4444-8555-666666666666',
+      title: 'Webinaire Data & politiques publiques',
+      slug: 'webinaire',
+      event_type_code: 'webinar',
+      starts_at: '2026-09-24T14:00:00+00:00',
+      ends_at: null,
+      timezone: 'Africa/Abidjan',
+      format: 'online',
+      city: 'Abidjan',
+      country_code: 'CI',
+      image: MEDIA,
+      is_pinned: false,
+    });
+    const markupWithCover = renderToStaticMarkup(
+      h(HighlightsSection, {
+        news: OK<LandingNews>([]),
+        featuredProfile: OK<LandingFeaturedProfile>([]),
+        events: OK([withCover]),
+        opportunities: OK<LandingOpportunity>([]),
+      }),
+    );
+    expect(markupWithCover).toContain('<img');
+    expect(markupWithCover).toContain(MEDIA.alt_text);
+
+    const markupWithoutCover = renderToStaticMarkup(
+      h(HighlightsSection, {
+        news: OK<LandingNews>([]),
+        featuredProfile: OK<LandingFeaturedProfile>([]),
+        events: OK([EVENT]),
+        opportunities: OK<LandingOpportunity>([]),
+      }),
+    );
+    expect(markupWithoutCover).not.toContain('<img');
+    expect(markupWithoutCover).toContain('Webinaire Data');
+  });
+
+  it('0113 — une opportunité avec un visuel choisi affiche l’image, sans visuel il n’y a aucune balise img', () => {
+    const withCover = opportunitySchema.parse({
+      id: '33333333-4444-4555-8666-777777777777',
+      title: 'Expert senior suivi-évaluation',
+      opportunity_type: 'job',
+      contract_type: 'cdi',
+      sector: 'Santé',
+      country_code: 'SN',
+      city: 'Dakar',
+      remote_allowed: false,
+      deadline: null,
+      organization: 'Institut régional',
+      image: { ...MEDIA, path: 'opportunities/2026/08/poste.webp' },
+      is_pinned: false,
+    });
+    const markupWithCover = renderToStaticMarkup(
+      h(HighlightsSection, {
+        news: OK<LandingNews>([]),
+        featuredProfile: OK<LandingFeaturedProfile>([]),
+        events: OK<LandingEvent>([]),
+        opportunities: OK([withCover]),
+      }),
+    );
+    expect(markupWithCover).toContain('<img');
+    expect(markupWithCover).toContain('opportunities/2026/08/poste.webp');
+
+    const markupWithoutCover = renderToStaticMarkup(
+      h(HighlightsSection, {
+        news: OK<LandingNews>([]),
+        featuredProfile: OK<LandingFeaturedProfile>([]),
+        events: OK<LandingEvent>([]),
+        opportunities: OK([OPPORTUNITY]),
+      }),
+    );
+    expect(markupWithoutCover).not.toContain('<img');
+    expect(markupWithoutCover).toContain('Expert senior suivi-évaluation');
+  });
 });
