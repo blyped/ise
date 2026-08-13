@@ -31,8 +31,12 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                         display_order, source_mode, max_items, cta_label,
  *                                         cta_entity_type, cta_entity_id, configuration }
  *   get_landing_news(p_limit)          -> tableau { id, entity_type:'news', title, slug,
- *                                         summary, category_code, image, published_at,
- *                                         is_featured, is_pinned }
+ *                                         summary, category_code, cover, cover_has_text,
+ *                                         published_at, is_featured, is_pinned }
+ *                                       (0117 : "cover" resolue par cover_media_id, comme
+ *                                        evenements/opportunites, au lieu du chemin nu
+ *                                        image_path ; "cover_has_text" indique si le titre
+ *                                        est deja incruste dans l'image.)
  *   get_landing_events(p_limit)        -> tableau { id, entity_type:'event', title, slug,
  *                                         event_type_code, starts_at, ends_at, timezone,
  *                                         format, city, country_code, is_pinned }
@@ -266,12 +270,20 @@ export interface LandingNews {
   readonly pinned: boolean;
   readonly target: EntityRef;
   /**
-   * Couverture. `news.image_path` est un chemin libre, anterieur au CMS : la
-   * projection le resout dans la mediatheque (0068). Une couverture qui n'y
-   * est pas enregistree, decrite et mesuree vaut `null` — la carte s'affiche
-   * alors sans visuel, jamais avec une image cassee.
+   * Couverture unique de l'article (0117), reutilisee telle quelle sur la
+   * page de l'article : `news.cover_media_id` resolu dans la mediatheque
+   * publique (meme fonction que evenements/opportunites). `null` si aucune
+   * couverture n'est choisie, ou si le media n'y est plus enregistre,
+   * decrit et mesure — la carte s'affiche alors sans visuel, jamais avec
+   * une image cassee.
    */
-  readonly image: LandingMedia | null;
+  readonly cover: LandingMedia | null;
+  /**
+   * 0117 — `true` si le visuel porte deja un titre incruste (affiche) :
+   * la carte masque alors visuellement (jamais dans le DOM) le titre
+   * affiche sous l'image, pour ne pas le dupliquer.
+   */
+  readonly coverHasText: boolean;
 }
 
 /** ADDENDUM §13 — un evenement a venir. */
@@ -661,7 +673,8 @@ export const newsSchema = z
     slug: nullableText,
     summary: nullableText,
     category_code: nullableText,
-    image: z.unknown(),
+    cover: z.unknown(),
+    cover_has_text: booleanFlag,
     published_at: nullableTimestamp,
     is_featured: booleanFlag,
     is_pinned: booleanFlag,
@@ -676,7 +689,8 @@ export const newsSchema = z
     featured: row.is_featured,
     pinned: row.is_pinned,
     target: { entityType: 'news', entityId: row.id },
-    image: parseMedia(row.image),
+    cover: parseMedia(row.cover),
+    coverHasText: row.cover_has_text,
   }));
 
 export const eventSchema = z
