@@ -39,6 +39,7 @@ export const frAdmin = {
     analytics: 'Analytics',
     settings: 'Paramètres plateforme',
     audit: "Journal d'audit",
+    openCms: 'Aller au CMS',
   },
 
   common: {

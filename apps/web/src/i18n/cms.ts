@@ -32,6 +32,7 @@ export const frCms = {
     media: 'Médiathèque',
     schedule: 'Programmation',
     preview: 'Aperçu',
+    backToAdmin: "Retour à l'administration",
   },
 
   /** Vocabulaire d'etat commun (docs/cms.md §3). */
