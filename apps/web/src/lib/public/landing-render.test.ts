@@ -99,6 +99,7 @@ const {
   newsSchema,
   eventSchema,
   opportunitySchema,
+  pillarSchema,
 } = await import('./landing-data');
 
 /** Texte reellement lisible a l'ecran, balises et attributs retires. */
@@ -169,6 +170,14 @@ const OPPORTUNITY = opportunitySchema.parse({
   organization: 'Institut régional',
   is_pinned: false,
 });
+
+/** Les 4 piliers tels que `get_landing_pillars()` (0114) les renvoie. */
+const PILLARS = [
+  { pillar_key: 'connecter', image: null, caption: null, link_target: 'search' },
+  { pillar_key: 'entraider', image: null, caption: null, link_target: null },
+  { pillar_key: 'collaborer', image: null, caption: null, link_target: null },
+  { pillar_key: 'impacter', image: null, caption: null, link_target: null },
+].map((row) => pillarSchema.parse(row));
 
 /** Charge utile volontairement polluee de champs prives. */
 const PRIVATE_PAYLOAD = {
@@ -247,7 +256,7 @@ function fullPage(statsPayload: unknown): ReactElement {
       events: OK([EVENT]),
       opportunities: OK([OPPORTUNITY]),
     }),
-    h(NetworkSection, { stats: parseStats(statsPayload) }),
+    h(NetworkSection, { stats: parseStats(statsPayload), pillars: OK(PILLARS) }),
     h(ExpertisesSection, { section: OK(EXPERTISES) }),
     h(PartnersSection, { section: OK([CAMPAIGN]) }),
     h(FinalCtaSection, null),
@@ -399,7 +408,7 @@ describe('ADDENDUM §47 — dégradation propre', () => {
         opportunities: OK([OPPORTUNITY]),
       }),
     );
-    expect(text).toContain('momentanément indisponible');
+    expect(text).toContain('momenténement indisponible');
     expect(text).toContain('Aminata Mbaye');
     expect(text).toContain('Webinaire Data');
   });
@@ -427,7 +436,7 @@ describe('ADDENDUM §47 — dégradation propre', () => {
         opportunities: OK<LandingOpportunity>([]),
       }),
     );
-    expect(text).toContain('La mise en avant du jour est momentanément indisponible.');
+    expect(text).toContain('La mise en avant du jour est momenténement indisponible.');
   });
 
   it('aucune campagne : un état vide honnête, pas un bloc fantôme', () => {
