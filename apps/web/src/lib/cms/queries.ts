@@ -14,6 +14,7 @@ import type {
   CmsMediaAsset,
   CmsMediaOption,
   CmsNewsRow,
+  CmsOpportunityRow,
   CmsOrganizationOption,
   CmsPartnerCampaign,
   CmsPendingSchedule,
@@ -463,6 +464,50 @@ export async function loadCmsEvents(
     landingVisibility: oneOf(row['landing_visibility'], ['hidden', 'visible'] as const, 'hidden'),
     landingPriority: num(row['landing_priority']),
     isUpcoming: bool(row['is_upcoming']),
+    isPinned: bool(row['is_pinned']),
+    coverMediaId: nstr(row['cover_media_id']),
+    pendingSchedule: toPendingSchedule(row['pending_schedule']),
+  }));
+
+  return { ok: true, data: { total: num(root['total']), rows } };
+}
+
+/* ------------------------------------------------------------------ */
+/* CMS-006bis (0113) — Opportunites                                   */
+/* ------------------------------------------------------------------ */
+
+export async function loadCmsOpportunities(
+  query: string | null,
+  correlationId: string,
+  limit = 40,
+): Promise<CmsResult<CmsPage<CmsOpportunityRow>>> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc('list_cms_opportunities', {
+    p_query: query,
+    p_limit: limit,
+    p_offset: 0,
+  });
+  if (error) return fail(error, correlationId, 'list_cms_opportunities');
+
+  const root = asRow(data);
+  const rows: CmsOpportunityRow[] = asRows(root['rows']).map((row) => ({
+    id: str(row['id']),
+    title: str(row['title']),
+    opportunityType: nstr(row['opportunity_type']),
+    contractType: nstr(row['contract_type']),
+    sector: nstr(row['sector']),
+    countryCode: nstr(row['country_code']),
+    city: nstr(row['city']),
+    remoteAllowed: bool(row['remote_allowed']),
+    deadline: nstr(row['deadline']),
+    status: str(row['status']),
+    moderationStatus: str(row['moderation_status']),
+    visibility: str(row['visibility']),
+    landingVisibility: oneOf(row['landing_visibility'], ['hidden', 'visible'] as const, 'hidden'),
+    landingPriority: num(row['landing_priority']),
+    coverMediaId: nstr(row['cover_media_id']),
+    publishedAt: nstr(row['published_at']),
+    organization: nstr(row['organization']),
     isPinned: bool(row['is_pinned']),
     pendingSchedule: toPendingSchedule(row['pending_schedule']),
   }));
