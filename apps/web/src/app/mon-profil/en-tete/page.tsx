@@ -7,7 +7,9 @@ import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { requireProfile } from '@/lib/profile-guard';
 import { loadCountries, loadOrganizations, loadVisibilityRules } from '@/lib/queries/reference';
 import { loadProfileVisibility } from '@/lib/queries/profile-sections';
+import { signedAvatarUrl } from '@/lib/queries/member-profile';
 import { AppShell } from '@/components/layout/AppShell';
+import { AvatarForm } from './AvatarForm';
 import { ProfileHeaderForm } from './ProfileHeaderForm';
 
 export const dynamic = 'force-dynamic';
@@ -19,10 +21,23 @@ const LINK_CLASS =
 /**
  * ISE-017 — Modifier l'en-tete et A propos.
  *
- * ECART ASSUME : le bloc « Identite visuelle » (changer / supprimer la
- * photo) n'est pas rendu comme un bouton. Le bucket `avatars` existe
- * (0027) mais aucun ecran de depot n'est livre : un bouton sans
- * televersement serait decoratif (MASTER PROMPT §113). L'ecran le dit.
+ * ECART D-117 LEVE LE 14/08/2026 — le bloc « Identite visuelle » est
+ * desormais un VRAI formulaire de depot (`AvatarForm`), avec remplacement
+ * et retrait.
+ *
+ * Ce que disait l'ecart, et pourquoi il tombe : le bucket `avatars`
+ * existait depuis 0027, mais aucun ecran de televersement n'etait livre ;
+ * afficher un bouton « Changer la photo » sans depot aurait ete un bouton
+ * decoratif (MASTER PROMPT §113). Le mecanisme manquant a ete construit
+ * depuis, pour le portrait public (0120, `publishPublicPhotoAction`), et il
+ * est ici transpose au bucket prive `avatars` : lecture de la signature
+ * binaire, borne de 2 Mo (celle du bucket), chemin `<profile_id>/<uuid>`,
+ * effacement de l'ancien objet a chaque remplacement. Le motif du refus a
+ * disparu ; la decision est donc revisee plutot que reconduite.
+ *
+ * Deux images, deux choses : celle-ci est PRIVEE (lien signe, membres
+ * autorises seulement). Le portrait publie sur le site ouvert reste un
+ * objet distinct, avec son consentement propre, sur « Ma vitrine publique ».
  */
 export default async function EditProfileHeaderPage() {
   const context = await requireProfile();
@@ -64,6 +79,12 @@ export default async function EditProfileHeaderPage() {
 
   const displayName = profile.displayName ?? `${profile.firstName} ${profile.lastName}`.trim();
 
+  // Bucket PRIVE : il n'existe aucune URL publique. Le lien est signe ici,
+  // cote serveur, et expire. Un echec de signature retombe sur les initiales.
+  const avatarUrl = (await signedAvatarUrl(profile.avatarPath)) ?? null;
+  const initials =
+    `${profile.firstName.charAt(0)}${profile.lastName.charAt(0)}`.toUpperCase() || '?';
+
   return (
     <AppShell currentPath={PROFILE_ROUTES.header} displayName={displayName}>
       <div className="flex flex-col gap-7">
@@ -72,9 +93,7 @@ export default async function EditProfileHeaderPage() {
           <p className="text-body text-text-secondary">{frProfile.header.subtitle}</p>
         </header>
 
-        <Alert variant="info" title={frProfile.header.photoTitle}>
-          {frProfile.header.photoUnavailable}
-        </Alert>
+        <AvatarForm avatarUrl={avatarUrl} initials={initials} />
 
         {/* Entrée vers « Ma vitrine publique » : brève description et les deux
             consentements de parution sur le site public (révision D-135,

@@ -33,8 +33,18 @@ import { saveProfileHeaderAction } from '../actions';
 const LINK_CLASS =
   'inline-flex min-h-[44px] items-center text-body-sm font-medium text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue';
 
-/** Champs dont la visibilite est reglable depuis cet ecran (D-73). */
+/**
+ * Champs dont la visibilite est reglable depuis cet ecran (D-73).
+ *
+ * `photo` y figure depuis la revision de D-117 (14/08/2026) : la ligne
+ * existait dans `profile_visibility_defaults` depuis l'origine, avec ses
+ * quatre niveaux et son defaut `members` (D-74), mais elle n'etait proposee
+ * nulle part tant qu'aucune photo ne pouvait etre deposee. Le depot est
+ * ouvert, le reglage devient utile — et il est desormais applique par la
+ * base a la lecture, comme les autres.
+ */
 const VISIBILITY_FIELDS = [
+  'photo',
   'headline',
   'bio',
   'current_position',
