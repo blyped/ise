@@ -169,6 +169,21 @@ export interface EventCard {
   completedAt: string | null;
   createdAt: string;
   landingVisibility: string;
+  /**
+   * 0113 / D-166 — visuel de couverture de l'evenement, resolu dans la
+   * mediatheque PUBLIQUE (`landing-media`) par `events.cover_media_id`.
+   *
+   * C'est EXACTEMENT le meme media que celui de l'encart d'accueil : une
+   * seule image est televersee et decrite dans le CMS, puis reutilisee sur
+   * la carte et sur la page de l'evenement. Les resolutions du mobile sont
+   * produites a la volee par `next/image`, jamais par un second fichier
+   * (meme regle que l'actualite, D-172).
+   *
+   * `null` si aucune couverture n'est choisie, ou si le media n'est plus
+   * enregistre, decrit et dans un bucket public : la page s'affiche alors
+   * SANS visuel, jamais avec un cadre vide ni une image cassee.
+   */
+  cover: LandingMedia | null;
   organizerType: string;
   organizerLabel: string | null;
   isOrganizer: boolean;
@@ -365,6 +380,7 @@ export function toEventCard(value: unknown): EventCard | null {
     completedAt: str(raw['completed_at']),
     createdAt: str(raw['created_at']) ?? '',
     landingVisibility: str(raw['landing_visibility']) ?? 'hidden',
+    cover: parseMedia(raw['cover']),
     organizerType: str(raw['organizer_type']) ?? 'platform',
     organizerLabel: str(raw['organizer_label']),
     isOrganizer: bool(raw['is_organizer']),

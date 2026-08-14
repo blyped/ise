@@ -2,6 +2,8 @@ import { Badge, Card, CardHeader, CardTitle } from '@ise/ui-web';
 import { MetaList } from '@ise/ui-web/cards';
 import { frOpportunities, to } from '@/i18n/opportunities';
 import { formatDate } from '@/lib/network-view';
+import { landingMediaUrl } from '@/lib/public/landing-data';
+import { StorageImage } from '@/components/media/StorageImage';
 import type { OpportunityDetail } from '@/lib/opportunities-view';
 
 /**
@@ -18,6 +20,25 @@ export function OpportunityDetailView({ opportunity }: { opportunity: Opportunit
   return (
     <div className="flex flex-col gap-7">
       <Card>
+        {/*
+          Visuel de l'offre : EXACTEMENT le media choisi une seule fois dans
+          /cms/opportunites (`opportunities.cover_media_id`, D-166), celui-la
+          meme qui illustre l'encart de la page d'accueil. Aucun second
+          televersement « version mobile » : `next/image` derive les
+          resolutions de l'original via `sizes` (meme regle que l'actualite,
+          D-172). Sans visuel, rien n'est rendu — pas de cadre vide.
+        */}
+        {opportunity.cover === null ? null : (
+          <div className="bg-surface-muted rounded-base relative mb-5 aspect-[16/9] w-full overflow-hidden">
+            <StorageImage
+              src={landingMediaUrl(opportunity.cover) ?? ''}
+              alt={opportunity.cover.alt}
+              sizes="(max-width: 1279px) 100vw, 800px"
+              className="object-cover"
+              priority
+            />
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-caption text-primary font-semibold uppercase tracking-wide">
             {frOpportunities.type[opportunity.opportunityType] ?? opportunity.opportunityType}

@@ -16,6 +16,7 @@ import {
   type Page,
 } from '@/lib/network-view';
 import { toRelevance, type Relevance, type WeightedTag } from '@/lib/calls-view';
+import { parseMedia, type LandingMedia } from '@/lib/public/landing-data';
 
 export type { Page, NetworkProfileCard, Relevance, WeightedTag };
 
@@ -146,6 +147,21 @@ export interface OpportunityCard {
   canApplyInternally: boolean;
   isManager: boolean;
   isSaved: boolean;
+  /**
+   * 0113 / D-166 — visuel editorial de l'offre, resolu dans la mediatheque
+   * PUBLIQUE (`landing-media`) par `opportunities.cover_media_id`.
+   *
+   * C'est le MEME media que celui de l'encart d'accueil : une seule image
+   * televersee et decrite dans /cms/opportunites, reutilisee sur la carte
+   * et sur la page de l'offre. Les resolutions du mobile sont produites a
+   * la volee par `next/image`, jamais par un second fichier (D-172).
+   *
+   * Distinct de tout logo d'organisation. `null` si aucun visuel n'est
+   * choisi ou si le media n'est plus publiable (bucket public + alternative
+   * textuelle) : la page s'affiche alors sans visuel, jamais avec un cadre
+   * vide ni une image cassee.
+   */
+  cover: LandingMedia | null;
   author: NetworkProfileCard | null;
   contact: NetworkProfileCard | null;
   skills: WeightedTag[];
@@ -232,6 +248,7 @@ export function toOpportunityCard(value: unknown): OpportunityCard | null {
     canApplyInternally: bool(raw['can_apply_internally']),
     isManager: bool(raw['is_manager']),
     isSaved: bool(raw['is_saved']),
+    cover: parseMedia(raw['cover']),
     author: toProfileCard(raw['author']),
     contact: toProfileCard(raw['contact']),
     skills: toWeightedTags(raw['skills']),

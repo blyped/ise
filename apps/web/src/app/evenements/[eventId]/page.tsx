@@ -19,6 +19,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { loadViewerContext } from '@/lib/queries/viewer';
 import { loadEvent, loadEventOnlineUrl } from '@/lib/queries/content';
 import { formatEventDayBadge, formatEventMoment } from '@/lib/content-view';
+import { landingMediaUrl } from '@/lib/public/landing-data';
+import { StorageImage } from '@/components/media/StorageImage';
 import { AppShell } from '@/components/layout/AppShell';
 import { EventRegistrationForm } from '@/components/collab/EventRegistrationForm';
 import { CancelRegistrationForm } from '@/components/collab/CancelRegistrationForm';
@@ -121,6 +123,27 @@ export default async function EventDetailPage({
         </Link>{' '}
         <span aria-hidden="true">›</span> <span>{detail.title}</span>
       </nav>
+
+      {/*
+        Couverture de l'evenement : EXACTEMENT le media choisi une seule fois
+        dans /cms/evenements (`events.cover_media_id`, D-166), celui-la meme
+        qui illustre l'encart de la page d'accueil. Aucun second televersement
+        « version mobile » : `next/image` derive les resolutions de l'original
+        via `sizes` (meme regle que l'actualite, D-172).
+
+        Sans couverture, rien n'est rendu — pas de cadre vide en attente.
+      */}
+      {detail.cover === null ? null : (
+        <div className="bg-surface-muted rounded-base relative aspect-[16/9] w-full overflow-hidden">
+          <StorageImage
+            src={landingMediaUrl(detail.cover) ?? ''}
+            alt={detail.cover.alt}
+            sizes="(max-width: 1279px) 100vw, 1200px"
+            className="object-cover"
+            priority
+          />
+        </div>
+      )}
 
       <header className="rounded-base bg-[#0F172A] p-7 text-white max-md:p-5">
         <div className="flex flex-wrap items-start gap-5">
