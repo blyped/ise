@@ -499,7 +499,8 @@ export async function setFeaturedProfileShowcase(
 export interface FeaturedRulesDraft {
   minDaysBetweenFeatures: number;
   requireClaimedProfile: boolean;
-  requireAvatar: boolean;
+  /** Portrait public consenti exigé (0123), et non plus l'avatar privé. */
+  requirePublicPhoto: boolean;
   requirePromotion: boolean;
   requireExpertiseOrPosition: boolean;
   balanceDimension: string;
@@ -516,7 +517,7 @@ export async function updateFeaturedRules(
     .update({
       min_days_between_features: draft.minDaysBetweenFeatures,
       require_claimed_profile: draft.requireClaimedProfile,
-      require_avatar: draft.requireAvatar,
+      require_public_photo: draft.requirePublicPhoto,
       require_promotion: draft.requirePromotion,
       require_expertise_or_position: draft.requireExpertiseOrPosition,
       balance_dimension: draft.balanceDimension,

@@ -31,6 +31,7 @@ export const frCms = {
     partners: 'Partenaires',
     media: 'Médiathèque',
     schedule: 'Programmation',
+    landingQueue: 'File « À la une »',
     preview: 'Aperçu',
     backToAdmin: "Retour à l'administration",
   },

@@ -544,7 +544,7 @@ export async function loadFeaturedOverview(
           : {
               minDaysBetweenFeatures: num(asRow(rulesRow)['min_days_between_features'], 90),
               requireClaimedProfile: bool(asRow(rulesRow)['require_claimed_profile']),
-              requireAvatar: bool(asRow(rulesRow)['require_avatar']),
+              requirePublicPhoto: bool(asRow(rulesRow)['require_public_photo']),
               requirePromotion: bool(asRow(rulesRow)['require_promotion']),
               requireExpertiseOrPosition: bool(asRow(rulesRow)['require_expertise_or_position']),
               balanceDimension: str(asRow(rulesRow)['balance_dimension'], 'none'),
