@@ -38,6 +38,14 @@ export const DONATION_ROUTES = {
   cinetpayWebhook: '/api/dons/cinetpay',
   /** Passerelle de retour, cf. commentaire ci-dessus. */
   returnBridge: '/api/dons/retour',
+
+  /**
+   * Suivi administratif du registre des dons. Vit dans ce fichier plutot que
+   * dans `ADMIN_ROUTES` pour garder toute la tranche « don » en un seul
+   * endroit ; la navigation du back-office l'importe explicitement.
+   * Exige la permission `donations.read`.
+   */
+  adminList: '/administration/dons',
 } as const;
 
 /** Nom du parametre portant NOTRE reference de don dans les URL de retour. */

@@ -1,5 +1,7 @@
 import { frAdmin } from '@/i18n/admin';
+import { frDonations } from '@/i18n/donations';
 import { ADMIN_ROUTES } from '@/lib/routes/admin';
+import { DONATION_ROUTES } from '@/lib/routes/donations';
 import type { AdminAccess, AdminPermission } from '@/lib/admin/permissions';
 
 /**
@@ -59,6 +61,13 @@ const CORE_NAV: readonly AdminNavItem[] = [
   },
   { href: ADMIN_ROUTES.moderation, label: frAdmin.nav.moderation, requires: ['profiles.moderate'] },
   { href: ADMIN_ROUTES.support, label: frAdmin.nav.support, requires: ['support.manage'] },
+  // 0134 — registre des dons. Permission dediee : le registre nomme des
+  // personnes et des sommes, aucune permission existante ne couvrait cela.
+  {
+    href: DONATION_ROUTES.adminList,
+    label: frDonations.admin.navLabel,
+    requires: ['donations.read'],
+  },
 ];
 
 /**
