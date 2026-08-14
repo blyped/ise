@@ -18,8 +18,15 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
  * Jamais de pourcentage de progression ni d'heure de retour estimee.
  */
 
-export type MaintenanceScope =
-  'all' | 'web' | 'mobile' | 'imports' | 'notifications' | 'search' | 'messaging';
+/**
+ * C-08 : le perimetre `messaging` a disparu avec la messagerie ISE<->ISE.
+ * La contrainte CHECK de `maintenance_windows.affected_scope` l'accepte
+ * encore — elle n'a pas ete rejouee, et aucune fenetre ne l'a jamais
+ * porte — mais l'ecran d'administration ne le propose plus et ce type
+ * ne l'expose plus. Une eventuelle ligne heritee retomberait sur le
+ * libelle brut, `scopeLabel()` ayant un repli.
+ */
+export type MaintenanceScope = 'all' | 'web' | 'mobile' | 'imports' | 'notifications' | 'search';
 
 export interface MaintenanceWindow {
   id: string;
@@ -43,7 +50,8 @@ export interface MaintenanceState {
 }
 
 export type MaintenanceResult =
-  { ok: true; data: MaintenanceState } | { ok: false; error: BusinessError };
+  | { ok: true; data: MaintenanceState }
+  | { ok: false; error: BusinessError };
 
 /**
  * Une fenetre est ACTIVE si son statut est `in_progress` (fait declare
@@ -57,7 +65,6 @@ function isActive(window: MaintenanceWindow, now: Date): boolean {
 }
 
 const SERVICE_ROUTE_PREFIXES: Record<string, readonly string[]> = {
-  messaging: ['/messages'],
   search: ['/rechercher'],
   notifications: ['/notifications'],
 };

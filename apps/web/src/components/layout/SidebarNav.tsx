@@ -7,7 +7,6 @@ import {
   Handshake,
   Home,
   Megaphone,
-  MessageSquare,
   Newspaper,
   Settings,
   UserRound,
@@ -24,7 +23,6 @@ import { OPPORTUNITY_ROUTES } from '@/lib/routes/opportunities';
 import { PROMOTION_ROUTES } from '@/lib/routes/promotions';
 import { COMMUNITY_ROUTES } from '@/lib/routes/communities';
 import { CONTENT_ROUTES } from '@/lib/routes/content';
-import { MESSAGING_ROUTES } from '@/lib/routes/messaging';
 import { SETTINGS_ROUTES } from '@/lib/routes/settings';
 import { SUPPORT_ROUTES } from '@/lib/routes/support';
 
@@ -66,8 +64,11 @@ const ITEMS: readonly NavItem[] = [
   { key: 'news', label: fr.nav.news, icon: Newspaper, href: CONTENT_ROUTES.news },
   // ISE-094 -> ISE-096 livres.
   { key: 'events', label: fr.nav.events, icon: CalendarDays, href: CONTENT_ROUTES.events },
-  // ISE-097 livre.
-  { key: 'messages', label: fr.nav.messages, icon: MessageSquare, href: MESSAGING_ROUTES.inbox },
+  // ISE-097 RETIRE (C-08) : la messagerie ISE<->ISE est abandonnee. Aucun
+  // item n'est laisse « À venir » ici : la section ne reviendra pas sous
+  // cette forme. Le futur module Communication sera VERTICAL (ISE ->
+  // Administration, Administration -> ISE / Promotion / Tous) et prendra
+  // sa propre entree le jour ou il existera.
   { key: 'profile', label: fr.nav.myProfile, icon: UserRound, href: PROFILE_ROUTES.overview },
   // ISE-032 / ISE-033 livres : « Ma disponibilité » a une destination reelle.
   {

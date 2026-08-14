@@ -1,22 +1,21 @@
-import {
-  asArray,
-  asObject,
-  bool,
-  num,
-  str,
-  toProfileCard,
-  type NetworkProfileCard,
-} from '@/lib/network-view';
+import { asArray, asObject, bool, num, str } from '@/lib/network-view';
 
 /**
- * Types de vue et conversions PURES des tranches MESSAGERIE (ISE-097),
- * NOTIFICATIONS (ISE-098), PARAMETRES (ISE-099) et SUPPORT (ISE-100).
+ * Types de vue et conversions PURES des tranches NOTIFICATIONS (ISE-098),
+ * PARAMETRES (ISE-099) et SUPPORT (ISE-100).
  *
- * Meme motif que `lib/network-view.ts` : `MessageThread` est un composant
- * CLIENT. S'il importait quoi que ce soit depuis `lib/queries/*`, le
- * bundler tirerait `lib/supabase/server.ts` — donc `next/headers` — dans
- * le bundle navigateur. Tout ce qui est partage vit ici, sans aucune
- * dependance serveur.
+ * NOM TROMPEUR, CONSERVE VOLONTAIREMENT : ce fichier s'appelle encore
+ * `messaging-view.ts` parce qu'il est ne avec la tranche ISE-097 -> 100,
+ * mais il n'a plus rien de la messagerie depuis C-08. Il est importe par
+ * les parametres, le support, les notifications et les membres bloques.
+ * Le renommer imposerait de toucher une douzaine d'ecrans etrangers a la
+ * decision : le cout depasse le benefice.
+ *
+ * Meme motif que `lib/network-view.ts` : les consommateurs sont parfois
+ * des composants CLIENT. S'ils importaient quoi que ce soit depuis
+ * `lib/queries/*`, le bundler tirerait `lib/supabase/server.ts` — donc
+ * `next/headers` — dans le bundle navigateur. Tout ce qui est partage vit
+ * ici, sans aucune dependance serveur.
  */
 
 /* ------------------------------------------------------------------ */
@@ -27,167 +26,6 @@ export interface CursorPage<T> {
   rows: T[];
   /** Curseur SCELLE (`lib/opaque-cursor.ts`). `null` = fin de liste. */
   nextCursor: string | null;
-}
-
-/* ------------------------------------------------------------------ */
-/* ISE-097 — Messagerie                                                */
-/* ------------------------------------------------------------------ */
-
-/**
- * D-83 — etats d'un message.
- *   `pending` n'existe QUE dans le navigateur, tant que le serveur n'a
- *   pas accuse reception. L'interface n'affiche jamais « Envoyé » avant.
- *   `sent` est pose par la base, et par elle seule.
- *   `failed` est local : l'envoi n'a pas abouti, le message est rejouable
- *   avec le meme `clientMessageId` (idempotence).
- */
-export type MessageDeliveryStatus = 'pending' | 'sent' | 'failed';
-
-export function toDeliveryStatus(value: unknown): MessageDeliveryStatus {
-  return value === 'pending' || value === 'failed' ? value : 'sent';
-}
-
-export interface ConversationPreview {
-  excerpt: string | null;
-  deleted: boolean;
-  fromMe: boolean;
-  isSystem: boolean;
-  at: string | null;
-}
-
-export interface ConversationRow {
-  conversationId: string;
-  conversationType: string;
-  contextType: string | null;
-  contextLabel: string | null;
-  title: string | null;
-  lastMessageAt: string | null;
-  unreadCount: number;
-  archived: boolean;
-  participantCount: number;
-  counterpart: NetworkProfileCard | null;
-  preview: ConversationPreview;
-}
-
-export interface ConversationInbox extends CursorPage<ConversationRow> {
-  unreadTotal: number;
-  archivedTotal: number;
-}
-
-export interface ConversationHeader {
-  conversationId: string;
-  conversationType: string;
-  contextType: string | null;
-  contextId: string | null;
-  contextLabel: string | null;
-  initiationReason: string | null;
-  title: string | null;
-  createdAt: string | null;
-  messageCount: number;
-  archived: boolean;
-  unreadCount: number;
-  counterpart: NetworkProfileCard | null;
-  counterpartId: string | null;
-  isBlocked: boolean;
-  canReply: boolean;
-  /** Reglage du DESTINATAIRE : s'il le refuse, « Lu » n'est jamais affiche. */
-  showReadReceipts: boolean;
-}
-
-export interface MessageRow {
-  messageId: string;
-  clientMessageId: string | null;
-  messageType: string;
-  body: string | null;
-  deleted: boolean;
-  createdAt: string | null;
-  editedAt: string | null;
-  deliveryStatus: MessageDeliveryStatus;
-  fromMe: boolean;
-  senderName: string | null;
-  readByOther: boolean;
-  hasAttachments: boolean;
-}
-
-export function toConversationPreview(value: unknown): ConversationPreview {
-  const raw = asObject(value);
-  return {
-    excerpt: str(raw['excerpt']),
-    deleted: bool(raw['deleted']),
-    fromMe: bool(raw['from_me']),
-    isSystem: bool(raw['is_system']),
-    at: str(raw['at']),
-  };
-}
-
-export function toConversationRow(value: unknown): ConversationRow | null {
-  const raw = asObject(value);
-  const conversationId = str(raw['conversation_id']);
-  if (conversationId === null) return null;
-  return {
-    conversationId,
-    conversationType: str(raw['conversation_type']) ?? 'direct',
-    contextType: str(raw['context_type']),
-    contextLabel: str(raw['context_label']),
-    title: str(raw['title']),
-    lastMessageAt: str(raw['last_message_at']),
-    unreadCount: num(raw['unread_count']) ?? 0,
-    archived: bool(raw['archived']),
-    participantCount: num(raw['participant_count']) ?? 0,
-    counterpart: toProfileCard(raw['counterpart']),
-    preview: toConversationPreview(raw['preview']),
-  };
-}
-
-export function toConversationHeader(value: unknown): ConversationHeader | null {
-  const raw = asObject(value);
-  const conversationId = str(raw['conversation_id']);
-  if (conversationId === null) return null;
-  return {
-    conversationId,
-    conversationType: str(raw['conversation_type']) ?? 'direct',
-    contextType: str(raw['context_type']),
-    contextId: str(raw['context_id']),
-    contextLabel: str(raw['context_label']),
-    initiationReason: str(raw['initiation_reason']),
-    title: str(raw['title']),
-    createdAt: str(raw['created_at']),
-    messageCount: num(raw['message_count']) ?? 0,
-    archived: bool(raw['archived']),
-    unreadCount: num(raw['unread_count']) ?? 0,
-    counterpart: toProfileCard(raw['counterpart']),
-    counterpartId: str(raw['counterpart_id']),
-    isBlocked: bool(raw['is_blocked']),
-    canReply: bool(raw['can_reply']),
-    showReadReceipts: raw['show_read_receipts'] !== false,
-  };
-}
-
-export function toMessageRow(value: unknown): MessageRow | null {
-  const raw = asObject(value);
-  const messageId = str(raw['message_id']);
-  if (messageId === null) return null;
-  return {
-    messageId,
-    clientMessageId: str(raw['client_message_id']),
-    messageType: str(raw['message_type']) ?? 'text',
-    body: str(raw['body']),
-    deleted: bool(raw['deleted']),
-    createdAt: str(raw['created_at']),
-    editedAt: str(raw['edited_at']),
-    deliveryStatus: toDeliveryStatus(raw['delivery_status']),
-    fromMe: bool(raw['from_me']),
-    senderName: str(raw['sender_name']),
-    readByOther: bool(raw['read_by_other']),
-    hasAttachments: bool(raw['has_attachments']),
-  };
-}
-
-export function toMessageRows(value: unknown): MessageRow[] {
-  return asArray(value).flatMap((entry) => {
-    const row = toMessageRow(entry);
-    return row === null ? [] : [row];
-  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -214,13 +52,17 @@ export interface NotificationRow {
   createdAt: string | null;
 }
 
+/**
+ * C-08 : `unreadMessages` a disparu avec la messagerie. La RPC
+ * `my_notification_summary()` ne renvoie plus la cle `unread_messages`
+ * (migration 0128) et plus aucun ecran ne l'affichait.
+ */
 export interface NotificationSummary {
   unread: number;
   actionRequired: number;
   readNotArchived: number;
   total: number;
   byCategory: { category: string; total: number; unread: number }[];
-  unreadMessages: number;
 }
 
 export function toNotificationRow(value: unknown): NotificationRow | null {
@@ -268,7 +110,6 @@ export function toNotificationSummary(value: unknown): NotificationSummary {
             },
           ];
     }),
-    unreadMessages: num(raw['unread_messages']) ?? 0,
   };
 }
 
@@ -276,13 +117,20 @@ export function toNotificationSummary(value: unknown): NotificationSummary {
 /* ISE-099 — Parametres                                                */
 /* ------------------------------------------------------------------ */
 
+/**
+ * C-08 : `directMessagePolicy` (« Qui peut m'ecrire ») et
+ * `showReadReceipts` (« accuses de lecture ») ne sont plus projetes. Les
+ * COLONNES restent en base — aucune donnee n'est detruite, la decision
+ * reste reversible — mais plus rien ne les lit ni ne les ecrit : leur
+ * seul lecteur etait `private.can_message_profile()`, supprimee par la
+ * migration 0128. Un reglage sans effet ne doit pas rester visible du
+ * membre (MASTER PROMPT §113).
+ */
 export interface MemberSettings {
   interfaceLanguage: string;
   timezone: string;
   notificationPreset: string;
   emailDigestFrequency: string;
-  directMessagePolicy: string;
-  showReadReceipts: boolean;
   appearInMatching: boolean;
   appearInAttendeeLists: boolean;
   isPaused: boolean;
@@ -343,8 +191,6 @@ export function toMemberSettings(value: unknown): MemberSettings {
     timezone: str(raw['timezone']) ?? 'UTC',
     notificationPreset: str(raw['notification_preset']) ?? 'recommended',
     emailDigestFrequency: str(raw['email_digest_frequency']) ?? 'weekly',
-    directMessagePolicy: str(raw['direct_message_policy']) ?? 'connections',
-    showReadReceipts: raw['show_read_receipts'] !== false,
     appearInMatching: raw['appear_in_matching'] !== false,
     appearInAttendeeLists: bool(raw['appear_in_attendee_lists']),
     isPaused: bool(raw['is_paused']),
@@ -601,8 +447,6 @@ const DATE_ONLY = new Intl.DateTimeFormat('fr-FR', {
   year: 'numeric',
 });
 
-const TIME_ONLY = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
 export function formatDateTime(value: string | null): string {
   if (value === null) return '';
   const date = new Date(value);
@@ -613,10 +457,4 @@ export function formatDate(value: string | null): string {
   if (value === null) return '';
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '' : DATE_ONLY.format(date);
-}
-
-export function formatTime(value: string | null): string {
-  if (value === null) return '';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : TIME_ONLY.format(date);
 }

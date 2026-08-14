@@ -103,6 +103,10 @@ export const AUTH_ROUTE_PREFIXES: readonly string[] = [
  * relatif : une cible inconnue est refusee, meme si elle est syntaxiquement
  * interne. Cette liste enumere les prefixes reels de l'espace membre ;
  * elle grandit avec les tranches verticales.
+ *
+ * C-08 : `/messages` en est sorti avec la messagerie ISE<->ISE. Une cible
+ * `redirectTo=/messages` est desormais refusee comme n'importe quelle
+ * route inconnue.
  */
 export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
   '/tableau-de-bord',
@@ -114,7 +118,6 @@ export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
   '/appels',
   '/opportunites',
   '/candidatures',
-  '/messages',
   '/notifications',
   '/parametres',
   '/aide',
