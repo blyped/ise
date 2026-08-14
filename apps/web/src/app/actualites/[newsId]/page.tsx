@@ -14,7 +14,6 @@ import { frContent } from '@/i18n/content';
 import { ROUTES } from '@/lib/routes';
 import { CONTENT_ROUTES, newsRoute } from '@/lib/routes/content';
 import { memberProfileRoute } from '@/lib/routes/search';
-import { composeRoute } from '@/lib/routes/messaging';
 import { reportRoute } from '@/lib/routes/support';
 import { newCorrelationId } from '@/lib/correlation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -38,10 +37,10 @@ export const metadata = { title: frContent.news.breadcrumb };
  * affiché, jamais modifiable ici — l'exposer relève de `cms.publish`
  * (D-131), et le circuit éditorial de `content.publish` (D-128).
  *
- * ÉCART ASSUMÉ : le bouton « Féliciter » de la maquette n'ouvre pas un
- * compteur de félicitations. Il ouvre une conversation : un message vaut
- * mieux qu'un compteur, et le MASTER PROMPT §1 exclut la mécanique de
- * réaction.
+ * ÉCART ASSUMÉ : le bouton « Féliciter » de la maquette n'existe pas.
+ * Le MASTER PROMPT §1 exclut la mécanique de réaction, et C-08 a retiré
+ * la messagerie ISE<->ISE qui en tenait lieu. Il ne reste donc qu'un
+ * accès au profil de la personne concernée.
  */
 export default async function NewsDetailPage({ params }: { params: Promise<{ newsId: string }> }) {
   const supabase = await createSupabaseServerClient();
@@ -136,12 +135,13 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ new
                       .join(' · ')}
                   </p>
                 </div>
+                {/* C-08 : le bouton « Envoyer un message » a disparu avec la
+                    messagerie ISE<->ISE. Le profil reste la porte d'entree :
+                    c'est de la que partent la demande de relation et la
+                    demande d'introduction, qui restent des canaux reels. */}
                 <span className="ml-auto flex flex-wrap gap-3">
                   <Link href={memberProfileRoute(mainProfile.profileId)} className={ACTION_LINK}>
                     {frContent.common.seeProfile}
-                  </Link>
-                  <Link href={composeRoute(mainProfile.profileId)} className={ACTION_LINK}>
-                    {frContent.newsDetail.sendMessage}
                   </Link>
                 </span>
               </div>
