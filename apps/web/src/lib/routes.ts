@@ -1,3 +1,5 @@
+import { DONATION_ROUTES } from './routes/donations';
+
 /** Chemins de l'application Web, en francais (MASTER PROMPT §66). */
 export const ROUTES = {
   /**
@@ -78,6 +80,16 @@ export const SYSTEM_ROUTES: readonly string[] = [
   ROUTES.sessionExpired,
   ROUTES.accessDenied,
   ROUTES.landingRevalidation,
+  // 0134 — appels MACHINE des prestataires de paiement. Aucune session ne
+  // peut exister : Stripe et CinetPay appellent depuis leurs serveurs.
+  // Leur authenticite est etablie par la signature du message, verifiee
+  // dans le gestionnaire, jamais par un cookie.
+  DONATION_ROUTES.stripeWebhook,
+  DONATION_ROUTES.cinetpayWebhook,
+  // 0134 — passerelle de retour du donateur (POST inter-sites de CinetPay,
+  // que les cookies `SameSite=Lax` n'accompagnent pas). Elle ne lit que la
+  // reference et redirige ; elle ne decide d'aucun statut.
+  DONATION_ROUTES.returnBridge,
 ];
 
 /**
@@ -132,6 +144,9 @@ export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
   '/projets',
   '/actualites',
   '/evenements',
+  // 0134 — « Faire un don » et ses ecrans de retour. Espace membre :
+  // le donateur est un ISE connecte, son don est rattache a son profil.
+  DONATION_ROUTES.home,
   '/administration',
 ];
 
