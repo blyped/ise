@@ -107,7 +107,14 @@ function visibilityEntries(formData: FormData, fieldKeys: readonly string[]) {
 /* ISE-017 — En-tete et A propos                                       */
 /* ------------------------------------------------------------------ */
 
+/**
+ * `photo` est accepte depuis la revision de D-117 (14/08/2026) : l'ecran
+ * propose desormais ce reglage, et une valeur postee sans etre traitee ici
+ * serait un champ decoratif. Le niveau reste verifie contre
+ * `profile_visibility_defaults.allowed_levels` comme tous les autres.
+ */
 const HEADER_VISIBILITY_FIELDS = [
+  'photo',
   'headline',
   'bio',
   'current_position',
