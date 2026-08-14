@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { frAdmin } from '@/i18n/admin';
 import type { AdminAccess } from '@/lib/admin/permissions';
+import { ROUTES } from '@/lib/routes';
 import { CMS_ROUTES } from '@/lib/routes/cms';
 import { readCmsAccess } from '@/lib/cms/permissions';
 import { visibleNavItems } from './nav';
@@ -27,12 +28,20 @@ export interface AdminShellProps {
  * aucune navigation croisée, obligeant à taper l'URL à la main. Le lien
  * n'apparaît que si le compte a réellement `cms.read` — même règle « rien
  * de décoratif » que le reste de cette navigation.
+ *
+ * Retour vers l'espace membre (§30, D-171) : le back-office n'offrait aucune
+ * sortie vers le tableau de bord membre — « d'administration, je ne sais
+ * pas comment retourner à mon profil ». Le lien est construit sur le meme
+ * patron que `cmsLink`, sans condition de permission : toute personne qui
+ * atteint l'administration a par construction une session membre, donc la
+ * destination n'est jamais un écran refusé.
  */
 export async function AdminShell({ access, currentPath, screenTitle, children }: AdminShellProps) {
   const cmsAccess = await readCmsAccess();
   const cmsLink = cmsAccess?.can('cms.read')
     ? { href: CMS_ROUTES.dashboard, label: frAdmin.nav.openCms }
     : undefined;
+  const memberLink = { href: ROUTES.dashboard, label: frAdmin.nav.backToMember };
 
   return (
     <div className="bg-background min-h-dvh lg:flex">
@@ -45,6 +54,7 @@ export async function AdminShell({ access, currentPath, screenTitle, children }:
         screenTitle={screenTitle}
         items={visibleNavItems(access)}
         {...(cmsLink ? { cmsLink } : {})}
+        {...(memberLink ? { memberLink } : {})}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">

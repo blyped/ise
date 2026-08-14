@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
-import { ArrowLeftRight, Menu, X } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, Menu, X } from 'lucide-react';
 import { frAdmin } from '@/i18n/admin';
 import { isCurrentNavItem, type AdminNavItem } from './nav';
 
@@ -17,6 +17,14 @@ export interface AdminNavProps {
    * `undefined` masque l'entree.
    */
   cmsLink?: { href: string; label: string };
+  /**
+   * Retour vers l'espace membre (§30, D-171), meme patron que `cmsLink` : le
+   * back-office etait un cul-de-sac, on n'en sortait qu'en retapant l'URL.
+   * Tout compte qui atteint l'administration a une session membre, donc
+   * l'entree n'est pas conditionnee par une permission — `undefined` la
+   * masque tout de meme, pour rester alignee sur `cmsLink`.
+   */
+  memberLink?: { href: string; label: string };
 }
 
 const LINK_BASE =
@@ -32,7 +40,7 @@ const LINK_BASE =
  * destination courante : la couleur ne porte jamais seule l'information
  * (D-90). Chaque cible fait au moins 44 px.
  */
-export function AdminNav({ currentPath, screenTitle, items, cmsLink }: AdminNavProps) {
+export function AdminNav({ currentPath, screenTitle, items, cmsLink, memberLink }: AdminNavProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -111,15 +119,26 @@ export function AdminNav({ currentPath, screenTitle, items, cmsLink }: AdminNavP
           {list}
         </nav>
 
-        {cmsLink ? (
-          <div className="border-border mx-3 mb-4 border-t pt-3">
-            <Link
-              href={cmsLink.href}
-              className={`${LINK_BASE} text-text-secondary hover:bg-surface-muted hover:text-text-primary gap-2`}
-            >
-              <ArrowLeftRight size={16} aria-hidden="true" />
-              {cmsLink.label}
-            </Link>
+        {cmsLink || memberLink ? (
+          <div className="border-border mx-3 mb-4 flex flex-col gap-1 border-t pt-3">
+            {cmsLink ? (
+              <Link
+                href={cmsLink.href}
+                className={`${LINK_BASE} text-text-secondary hover:bg-surface-muted hover:text-text-primary gap-2`}
+              >
+                <ArrowLeftRight size={16} aria-hidden="true" />
+                {cmsLink.label}
+              </Link>
+            ) : null}
+            {memberLink ? (
+              <Link
+                href={memberLink.href}
+                className={`${LINK_BASE} text-text-secondary hover:bg-surface-muted hover:text-text-primary gap-2`}
+              >
+                <ArrowLeft size={16} aria-hidden="true" />
+                {memberLink.label}
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </div>

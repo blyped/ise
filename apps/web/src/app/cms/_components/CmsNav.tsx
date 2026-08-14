@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
-import { ArrowLeftRight, Menu, X } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, Menu, X } from 'lucide-react';
 import { frCms } from '@/i18n/cms';
 import { isCurrentNavItem, type CmsNavItem } from './nav';
 
@@ -17,6 +17,14 @@ export interface CmsNavProps {
    * (MASTER PROMPT §113). `undefined` masque l'entree.
    */
   adminLink?: { href: string; label: string };
+  /**
+   * Retour vers l'espace membre (§30, D-171), meme patron que `adminLink` : le
+   * CMS etait un cul-de-sac, on n'en sortait qu'en retapant l'URL. Tout
+   * compte qui atteint le CMS a une session membre, donc l'entree n'est
+   * pas conditionnee par une permission — `undefined` la masque tout de
+   * meme, pour rester alignee sur `adminLink`.
+   */
+  memberLink?: { href: string; label: string };
 }
 
 const LINK_BASE =
@@ -34,7 +42,7 @@ const LINK_BASE =
  *     porte jamais seule l'information (D-90) ;
  *   * chaque cible fait au moins 44 px de haut.
  */
-export function CmsNav({ currentPath, screenTitle, items, adminLink }: CmsNavProps) {
+export function CmsNav({ currentPath, screenTitle, items, adminLink, memberLink }: CmsNavProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -116,15 +124,26 @@ export function CmsNav({ currentPath, screenTitle, items, adminLink }: CmsNavPro
           {list}
         </nav>
 
-        {adminLink ? (
-          <div className="border-border mx-3 mb-4 border-t pt-3">
-            <Link
-              href={adminLink.href}
-              className={`${LINK_BASE} text-text-secondary hover:bg-surface-muted hover:text-text-primary gap-2`}
-            >
-              <ArrowLeftRight size={16} aria-hidden="true" />
-              {adminLink.label}
-            </Link>
+        {adminLink || memberLink ? (
+          <div className="border-border mx-3 mb-4 flex flex-col gap-1 border-t pt-3">
+            {adminLink ? (
+              <Link
+                href={adminLink.href}
+                className={`${LINK_BASE} text-text-secondary hover:bg-surface-muted hover:text-text-primary gap-2`}
+              >
+                <ArrowLeftRight size={16} aria-hidden="true" />
+                {adminLink.label}
+              </Link>
+            ) : null}
+            {memberLink ? (
+              <Link
+                href={memberLink.href}
+                className={`${LINK_BASE} text-text-secondary hover:bg-surface-muted hover:text-text-primary gap-2`}
+              >
+                <ArrowLeft size={16} aria-hidden="true" />
+                {memberLink.label}
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </div>

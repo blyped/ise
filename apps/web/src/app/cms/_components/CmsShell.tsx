@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { frCms } from '@/i18n/cms';
+import { ROUTES } from '@/lib/routes';
 import { ADMIN_ROUTES } from '@/lib/routes/admin';
 import { readAdminAccess } from '@/lib/admin/permissions';
 import { CMS_NAV } from './nav';
@@ -27,6 +28,11 @@ export interface CmsShellProps {
  * Lien croisé vers l'administration (§30, D-171) : meme raisonnement que
  * `AdminShell` cote CMS -> Admin. N'apparait que si le compte a au moins
  * une permission d'administration (meme critere que `requireAdminAccess`).
+ *
+ * Retour vers l'espace membre (§30, D-171) : meme manque que cote Admin — une
+ * fois dans le CMS, aucun chemin de retour vers le tableau de bord membre.
+ * Aucune condition de permission : toute personne qui atteint le CMS a par
+ * construction une session membre.
  */
 export async function CmsShell({ currentPath, screenTitle, children }: CmsShellProps) {
   const adminAccess = await readAdminAccess();
@@ -34,6 +40,7 @@ export async function CmsShell({ currentPath, screenTitle, children }: CmsShellP
     adminAccess !== null && adminAccess.permissions.size > 0
       ? { href: ADMIN_ROUTES.root, label: frCms.nav.backToAdmin }
       : undefined;
+  const memberLink = { href: ROUTES.dashboard, label: frCms.nav.backToMember };
 
   return (
     <div className="bg-background min-h-dvh lg:flex">
@@ -46,6 +53,7 @@ export async function CmsShell({ currentPath, screenTitle, children }: CmsShellP
         screenTitle={screenTitle}
         items={CMS_NAV}
         {...(adminLink ? { adminLink } : {})}
+        {...(memberLink ? { memberLink } : {})}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
