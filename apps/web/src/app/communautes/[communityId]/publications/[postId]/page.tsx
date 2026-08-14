@@ -13,7 +13,6 @@ import {
 import { frCommunities } from '@/i18n/communities';
 import { ROUTES } from '@/lib/routes';
 import { COMMUNITY_ROUTES, communityRoute } from '@/lib/routes/communities';
-import { composeRoute } from '@/lib/routes/messaging';
 import { memberProfileRoute } from '@/lib/routes/search';
 import { newCorrelationId } from '@/lib/correlation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -37,9 +36,10 @@ export const metadata = { title: frCommunities.tracking.title };
  * aucune table ne porte de pièce jointe de publication, et un compteur
  * toujours à zéro serait un faux indicateur (MASTER PROMPT §98).
  *
- * « Remercier les contributeurs » n'envoie aucun message automatique :
- * l'écran ouvre une conversation, et c'est la personne qui écrit
- * (MASTER PROMPT §27).
+ * C-08 : la liste des contributeurs proposait « Envoyer un message ».
+ * La messagerie ISE<->ISE ayant été retirée, l'action restante est
+ * « Voir le profil » — la même que dans le fil de réponses. Aucun
+ * remerciement automatique n'est envoyé (MASTER PROMPT §27).
  *
  * Un lecteur qui n'est pas l'auteur voit la même publication et le même
  * fil de réponses, sans les panneaux de suivi.
@@ -308,10 +308,10 @@ export default async function CommunityPostPage({
                           {contributor.displayName}
                         </span>
                         <Link
-                          href={composeRoute(contributor.profileId)}
+                          href={memberProfileRoute(contributor.profileId)}
                           className="text-caption text-primary hover:underline"
                         >
-                          {frCommunities.tracking.thank}
+                          Voir le profil
                         </Link>
                       </li>
                     ))}
