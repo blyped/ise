@@ -362,12 +362,17 @@ export interface CmsMediaOption {
 export type CmsPillarLinkTarget = 'search' | 'calls' | 'projects' | 'opportunities' | 'applications';
 
 /**
- * CMS-011 (0114) — un pilier de « Un reseau concu pour etre utile ». Le
- * titre et le corps restent fixes (fr.public.pillars) : cette ligne ne
- * porte que la partie editoriale variable (image, legende, lien).
+ * CMS-011 (0114, etendu par 0129) — un pilier de « Un reseau concu pour
+ * etre utile ». Depuis 0129, le titre et le corps sont eux aussi pilotes
+ * par le CMS : `null` signifie « valeur d'origine » (repli sur
+ * `fr.public.pillars.defaults`), jamais « carte vide ».
  */
 export interface CmsPillarRow {
   pillarKey: 'connecter' | 'entraider' | 'collaborer' | 'impacter';
+  /** 0129 — sur-titre saisi par l'administrateur, ou `null` = valeur d'origine. */
+  title: string | null;
+  /** 0129 — corps saisi par l'administrateur, ou `null` = valeur d'origine. */
+  body: string | null;
   mediaId: string | null;
   caption: string | null;
   linkTarget: CmsPillarLinkTarget | null;

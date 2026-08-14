@@ -889,6 +889,10 @@ export async function loadCmsPillars(
     ok: true,
     data: asRows(data).map((row) => ({
       pillarKey: oneOf(row['pillar_key'], PILLAR_KEYS, 'connecter'),
+      // 0129 — `null` veut dire « valeur d'origine », pas « vide » : l'ecran
+      // CMS affiche alors le texte d'usine dans le champ pre-rempli.
+      title: nstr(row['title']),
+      body: nstr(row['body']),
       mediaId: nstr(row['media_id']),
       caption: nstr(row['caption']),
       linkTarget: optionalOneOf(row['link_target'], PILLAR_LINK_TARGETS),
