@@ -1008,7 +1008,6 @@ export function parseStats(payload: unknown): LandingStatsSection {
   }
 
   const source = payload as Record<string, unknown>;
-
   const items: LandingStat[] = [];
   for (const id of STAT_IDS) {
     const parsed = statValueSchema.safeParse(source[id]);
