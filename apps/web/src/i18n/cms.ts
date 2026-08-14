@@ -29,6 +29,7 @@ export const frCms = {
     opportunities: 'Opportunités',
     featuredProfile: 'ISE du jour',
     partners: 'Partenaires',
+    landingOrganizations: 'Organisations (logos)',
     media: 'Médiathèque',
     schedule: 'Programmation',
     landingQueue: 'File « À la une »',
@@ -64,7 +65,10 @@ export const frCms = {
     partners_band: 'Bandeau partenaires',
     news_inline: 'Dans les actualités',
     sidebar: 'Colonne latérale',
-    footer: 'Pied de page',
+    // 0133 — le libelle dit ce que l'emplacement fait reellement depuis que
+    // le bandeau image du bas de page existe. « Pied de page » seul laissait
+    // croire a un encart dans le pied de page du site.
+    footer: 'Bandeau bas de page (image seule)',
   } as Record<string, string>,
 
   selectionMode: {
@@ -513,7 +517,15 @@ export const frCms = {
     fieldMedia: 'Visuel Desktop',
     fieldMobileMedia: 'Visuel Mobile',
     fieldMediaHelp:
-      'Deux visuels distincts : le Desktop est cadré en 16/9, le Mobile en portrait. Formats recommandés : Desktop 1920 × 1080 px (16/9), Mobile 1080 × 1350 px (4/5), JPEG/WebP/AVIF, 5 Mo maximum.',
+      'Deux visuels distincts : le Desktop est cadré en 16/9, le Mobile en portrait. Formats recommandés : Desktop 1920 × 1080 px (16/9), Mobile 1080 × 1350 px (4/5), JPEG/WebP/AVIF, 5 Mo maximum. Pour l’emplacement « Bandeau bas de page », le format attendu est différent : 1920 × 480 px (ratio 4:1).',
+    /**
+     * 0133 — rappel affiché sous le sélecteur d'emplacement. Le format du
+     * bandeau n'est pas une préférence : c'est la taille annoncée au porteur,
+     * et le conteneur de la page d'accueil est calé dessus. Une image d'un
+     * autre rapport n'est pas rognée — elle apparaît avec des bandes.
+     */
+    placementFooterHelp:
+      '« Bandeau bas de page » : la campagne s’affiche en bas de la page d’accueil sous la forme d’une image seule, qui défile avec les autres bandeaux. Ni titre, ni description, ni bouton ne sont affichés — seul le visuel Desktop (et le visuel Mobile s’il existe). Format attendu : 1920 × 480 px (ratio 4:1), JPEG ou WebP, 5 Mo maximum. Pour cet emplacement uniquement, l’adresse cible est facultative.',
     fieldCta: 'Libellé du bouton',
     fieldTargetUrl: 'Adresse cible (https)',
     fieldTargetEntityType: 'Ou ressource interne — type',
@@ -539,6 +551,52 @@ export const frCms = {
     deleteBody:
       'La campagne sera supprimée. Les slides de carrousel qui la référencent perdront leur mention et cesseront d’être diffusées.',
     deleteConfirm: 'Supprimer définitivement',
+  },
+
+  /* ---------------------------------------------------------------- */
+  /* CMS-013 (0133) — Organisations affichees sur la page d'accueil    */
+  /* ---------------------------------------------------------------- */
+  landingOrganizations: {
+    title: 'Organisations (logos)',
+    subtitle:
+      'Choisissez les organisations dont le logo paraît sur la page d’accueil, et leur ordre.',
+    /**
+     * Le CMS DIT ce que la section est, et ce qu'elle n'est pas. Sans cette
+     * phrase, un administrateur peut croire que la liste se remplit toute
+     * seule à partir des employeurs saisis par les membres — ce n'est pas le
+     * cas, et ce serait indésirable (voir l'en-tête de la migration 0133).
+     */
+    scopeNote:
+      'Cette liste est entièrement manuelle. Rien n’y entre automatiquement : ni les employeurs saisis par les membres, ni les organisations les plus fréquentes. Vous seul décidez qui paraît, dans quel ordre, et à partir de quand. La page publique n’affiche que les logos — aucun nom, aucun chiffre, aucun texte.',
+    emptyTitle: 'Aucune organisation retenue',
+    emptyBody:
+      'Aucun logo n’est encore affiché sur la page d’accueil. La section reste entièrement absente de la page tant qu’aucun logo publié n’est affichable.',
+    addTitle: 'Ajouter une organisation',
+    fieldOrganization: 'Organisation',
+    fieldOrganizationHelp:
+      'Organisation du référentiel. Le CMS ne crée pas d’organisation : seule sa présence sur la page d’accueil se règle ici.',
+    fieldOrganizationEmpty:
+      'Le référentiel des organisations est vide : aucune organisation ne peut encore être ajoutée.',
+    fieldMedia: 'Logo',
+    fieldMediaHelp:
+      'Logo choisi dans la médiathèque publique. À défaut, le logo enregistré sur la fiche de l’organisation est utilisé s’il figure dans la médiathèque avec son texte alternatif. Format recommandé : logo détouré sur fond transparent ou blanc, environ 400 × 200 px, PNG/WebP, 5 Mo maximum.',
+    fieldMediaNone: 'Logo de la fiche organisation',
+    fieldOrder: 'Ordre d’affichage',
+    fieldOrderHelp: 'Croissant, de 0 à 999. À égalité, les logos suivent l’ordre alphabétique.',
+    fieldPublished: 'Afficher sur la page d’accueil',
+    logoReady: 'Logo affichable',
+    /**
+     * Signalé AVANT publication : sans cette alerte, l'administrateur
+     * découvrirait sur la vitrine que sa ligne ne paraît pas — sans savoir
+     * pourquoi. La projection écarte silencieusement toute ligne sans logo.
+     */
+    logoMissing:
+      'Aucun logo affichable : cette organisation ne paraîtra pas, même publiée. Choisissez un logo dans la médiathèque.',
+    submit: 'Enregistrer',
+    add: 'Ajouter',
+    remove: 'Retirer',
+    done: 'Organisation enregistrée.',
+    removed: 'Organisation retirée de la page d’accueil.',
   },
 
   /* ---------------------------------------------------------------- */
