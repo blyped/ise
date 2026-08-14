@@ -64,6 +64,11 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                         placement, title, description, cta_label,
  *                                         target_entity_type, target_entity_id, target_url,
  *                                         sponsored_label, media, mobile_media }
+ *   get_landing_organizations()        -> tableau { organization_id, organization_name,
+ *                                         display_order, logo } (0133). Choix
+ *                                         EDITORIAL : `cms_landing_organizations`,
+ *                                         pas un calcul sur les profils. Une ligne
+ *                                         sans logo affichable n'est pas projetee.
  *   get_landing_stats()                -> **objet** { profiles{value,source},
  *                                         promotions{...}, countries{...},
  *                                         organizations{...}, computed_at }
@@ -102,6 +107,12 @@ export const LANDING_FUNCTIONS = {
   partners: 'get_landing_partners',
   stats: 'get_landing_stats',
   pillars: 'get_landing_pillars',
+  /**
+   * 0133 — logos des organisations retenues par l'administration pour la
+   * section « ou travaillent les ISE ». Projection editoriale : elle ne
+   * calcule rien sur les profils (voir l'en-tete de la migration).
+   */
+  organizations: 'get_landing_organizations',
 } as const;
 
 /**
@@ -121,6 +132,15 @@ export const LANDING_SECTION_KEYS = {
   partners: 'partners',
   /** 0114 — analytique des clics sur les piliers, distincte de `highlights`. */
   pillars: 'network_pillars',
+  /**
+   * 0133 — bandeau sponsorise du bas de page. Ce n'est PAS une ligne de
+   * `cms_sections` : la cle ne sert qu'a etiqueter les evenements
+   * d'analytique (§50), exactement comme `network_pillars`. Le bandeau n'a
+   * volontairement ni titre ni reglage editorial — c'est la demande meme.
+   */
+  sponsorBand: 'sponsor_band',
+  /** 0133 — logos des organisations. Meme remarque : etiquette, pas section CMS. */
+  organizations: 'landing_organizations',
 } as const;
 
 export type LandingSectionKey = (typeof LANDING_SECTION_KEYS)[keyof typeof LANDING_SECTION_KEYS];
@@ -142,6 +162,16 @@ const DEFAULT_MAX_ITEMS: Record<string, number> = {
   [LANDING_SECTION_KEYS.expertises]: 8,
   [LANDING_SECTION_KEYS.partners]: 3,
 };
+
+/**
+ * 0133 — emplacement reserve au bandeau image du bas de page.
+ *
+ * `cms_partner_campaigns.placement` connait cinq valeurs depuis 0057.
+ * `'footer'` est celle du bandeau : ni titre, ni description, ni bouton,
+ * juste un visuel qui defile. La migration 0133 a leve pour ce seul
+ * emplacement l'obligation de porter une cible cliquable.
+ */
+export const SPONSOR_BAND_PLACEMENT = 'footer';
 
 // ---------------------------------------------------------------------------
 // Interface par section
@@ -423,6 +453,21 @@ export interface LandingPillar {
   readonly linkTarget: string | null;
 }
 
+/**
+ * 0133 — un logo de la section « les organisations ou travaillent les ISE ».
+ *
+ * La section n'affiche QUE des logos : `name` n'est jamais rendu a l'ecran.
+ * Il sert de cle de tri stable et de nom accessible de repli. `logo` n'est
+ * jamais `null` : la projection ecarte deja les lignes dont le logo n'est pas
+ * affichable, et le parseur refait la verification — une section « uniquement
+ * des logos » ne peut pas afficher une case vide.
+ */
+export interface LandingOrganizationLogo {
+  readonly organizationId: string;
+  readonly name: string;
+  readonly logo: LandingMedia;
+}
+
 /** ADDENDUM §23 — un chiffre du reseau, calcule en base. */
 export type LandingStatId = 'profiles' | 'promotions' | 'countries' | 'organizations';
 
@@ -466,6 +511,15 @@ export interface LandingData {
   readonly stats: LandingStatsSection;
   /** 0114 — toujours 4 elements (un par pilier), jamais filtre par max_items. */
   readonly pillars: LandingSection<LandingPillar>;
+  /**
+   * 0133 — bandeau sponsorise du bas de page. Meme type que `partners` : ce
+   * sont les MEMES campagnes, lues par la meme projection, simplement
+   * reparties selon leur emplacement. Une campagne y figure sans titre ni
+   * bouton : seule son image est rendue.
+   */
+  readonly sponsorBand: LandingSection<LandingPartnerCampaign>;
+  /** 0133 — logos des organisations, choisis un a un par l'administration. */
+  readonly organizations: LandingSection<LandingOrganizationLogo>;
 }
 
 // ---------------------------------------------------------------------------
@@ -895,6 +949,29 @@ export const partnerSchema = z
     sponsoredLabel: normalizeSponsoredLabel(row.sponsored_label),
   }));
 
+/**
+ * 0133 — un logo de la section « organisations ».
+ *
+ * `refine` avant `transform` : une ligne dont le media ne franchit pas
+ * `parseMedia()` (bucket non public, alternative textuelle absente) est
+ * REFUSEE, pas rendue avec un trou. La projection l'ecarte deja cote base ;
+ * la refuser ici aussi tient la promesse du type `LandingOrganizationLogo`,
+ * dont le champ `logo` n'est pas nullable.
+ */
+export const organizationLogoSchema = z
+  .object({
+    organization_id: identifier,
+    organization_name: requiredText,
+    logo: z.unknown(),
+  })
+  .refine((row) => parseMedia(row.logo) !== null, { message: 'logo-non-affichable' })
+  .transform<LandingOrganizationLogo>((row) => ({
+    organizationId: row.organization_id,
+    name: row.organization_name,
+    // Non nul : `refine` ci-dessus vient de le verifier sur la meme valeur.
+    logo: parseMedia(row.logo) as LandingMedia,
+  }));
+
 const STAT_IDS: readonly LandingStatId[] = ['profiles', 'promotions', 'countries', 'organizations'];
 
 const statValueSchema = z.object({ value: nonNegativeCount, source: nullableText });
@@ -1119,6 +1196,7 @@ async function fetchLandingData(): Promise<LandingData> {
     partnersRead,
     statsRead,
     pillarsRead,
+    organizationsRead,
   ] = await Promise.all([
     readList(LANDING_FUNCTIONS.sections, {}, sectionConfigSchema),
     readList(LANDING_FUNCTIONS.carousel, {}, slideSchema),
@@ -1135,6 +1213,7 @@ async function fetchLandingData(): Promise<LandingData> {
     readList(LANDING_FUNCTIONS.partners, { p_placement: null }, partnerSchema),
     readStats(),
     readList(LANDING_FUNCTIONS.pillars, {}, pillarSchema),
+    readList(LANDING_FUNCTIONS.organizations, {}, organizationLogoSchema),
   ]);
 
   const sectionsSection = withLastKnownGood('sections', sectionsRead);
@@ -1144,9 +1223,34 @@ async function fetchLandingData(): Promise<LandingData> {
   const opportunities = withLastKnownGood('opportunities', opportunitiesRead);
   const featuredProfile = withLastKnownGood('featuredProfile', featuredRead);
   const expertises = withLastKnownGood('expertises', expertisesRead);
-  const partners = withLastKnownGood('partners', partnersRead);
+  const partnerCampaigns = withLastKnownGood('partners', partnersRead);
   const stats = withLastKnownGood('stats', statsRead);
   const pillars = withLastKnownGood('pillars', pillarsRead);
+  const organizations = withLastKnownGood('organizations', organizationsRead);
+
+  /*
+   * 0133 — UNE lecture, DEUX sections.
+   *
+   * `get_landing_partners(null)` ramene toutes les campagnes diffusables,
+   * tous emplacements confondus. Les separer ici plutot que d'appeler la
+   * projection deux fois evite un second aller-retour, et surtout garantit
+   * qu'une campagne de bandeau ne peut pas reapparaitre en carte de texte
+   * dans « Entreprises & partenaires » : c'est exactement ce que le porteur
+   * ne veut pas. Les deux sections partagent donc le meme etat de sante —
+   * ce qui est correct, puisqu'elles partagent la meme lecture.
+   */
+  const partners: LandingSection<LandingPartnerCampaign> = {
+    ...partnerCampaigns,
+    items: partnerCampaigns.items.filter(
+      (campaign) => campaign.placement !== SPONSOR_BAND_PLACEMENT,
+    ),
+  };
+  const sponsorBand: LandingSection<LandingPartnerCampaign> = {
+    ...partnerCampaigns,
+    items: partnerCampaigns.items.filter(
+      (campaign) => campaign.placement === SPONSOR_BAND_PLACEMENT,
+    ),
+  };
 
   const sections = sectionsSection.items;
   const servedFromLastKnownGood = [
@@ -1157,9 +1261,10 @@ async function fetchLandingData(): Promise<LandingData> {
     opportunities,
     featuredProfile,
     expertises,
-    partners,
+    partnerCampaigns,
     stats,
     pillars,
+    organizations,
   ].some((section) => section.stale === true);
 
   return {
@@ -1179,6 +1284,14 @@ async function fetchLandingData(): Promise<LandingData> {
     stats,
     // Pas de `limited()` : 4 elements fixes, aucun reglage `max_items` cote CMS.
     pillars,
+    /*
+     * 0133 — ni l'une ni l'autre ne passe par `limited()` : elles n'existent
+     * pas dans `cms_sections`, donc aucun `max_items` ne les concerne. Le
+     * bandeau montre toutes les campagnes 'footer' en cours de diffusion (la
+     * base a deja filtre sur la periode), la grille tous les logos publies.
+     */
+    sponsorBand,
+    organizations,
   };
 }
 
