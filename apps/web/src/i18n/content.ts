@@ -61,8 +61,13 @@ export const frContent = {
       'Le fil se remplit à mesure que le réseau publie. Rejoindre une communauté ou compléter votre promotion élargit ce que vous recevez.',
     emptyAction: 'Voir tout le réseau',
     submitTitle: 'Vous avez une information utile ?',
+    // 0132 — la voie est ouverte. Le texte disait « pas encore ouverte
+    // depuis cet écran » : ce n'est plus vrai, et un écran qui décrit un
+    // état révolu est un écran qui ment.
     submitBody:
-      'La proposition d’actualité passe par un circuit éditorial : relecture, vérification de la source et accord de la personne concernée. Elle n’est pas encore ouverte depuis cet écran.',
+      'La proposition d’actualité passe par un circuit éditorial : relecture, vérification de la source et accord de la personne concernée. Rien n’est visible du réseau avant la validation de l’administration.',
+    submitAction: 'Proposer une actualité',
+    submitTrack: 'Mes propositions',
   },
 
   newsDetail: {
@@ -130,8 +135,10 @@ export const frContent = {
     nearbyUnavailableBody:
       'L’onglet « À proximité » s’appuie sur le pays déclaré dans votre profil.',
     proposeTitle: 'Un événement utile au réseau ?',
+    // 0132 — la proposition d'événement est livrée. Le texte annonçait une
+    // livraison à venir et l'absence de bouton : les deux sont caduques.
     proposeBody:
-      'La création d’un événement (type, programme, intervenants, visibilité) fera l’objet d’une livraison dédiée. Aucun bouton n’est affiché tant qu’elle n’existe pas.',
+      'Proposez-le : l’administration le relit, puis le publie. Rien n’entre dans l’agenda du réseau avant sa décision.',
   },
 
   eventDetail: {

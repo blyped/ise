@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { EmptyState, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
 import { frAdminNews } from '@/i18n/admin-news';
+import { frContentProposals } from '@/i18n/content-proposals';
 import { ADMIN_ROUTES, adminNewsRoute } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
@@ -86,7 +87,14 @@ export default async function AdminNewsPage({
       title={frAdminNews.list.title}
       subtitle={frAdminNews.list.subtitle}
       action={{ href: ADMIN_ROUTES.newsNew, label: frAdminNews.list.newNews }}
-    />
+    >
+      {/* 0132 — la file des actualites PROPOSEES par les ISE est un autre
+          ecran : ici on redige, la-bas on tranche. Sans ce lien, la file
+          serait injoignable autrement qu'en tapant l'URL. */}
+      <Link href={ADMIN_ROUTES.newsProposals} className={DETAIL_LINK}>
+        {frContentProposals.admin.queueLinkNews}
+      </Link>
+    </PageHeader>
   );
 
   if (!page.ok) {

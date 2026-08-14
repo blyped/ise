@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { EmptyState, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
 import { frAdminEvents } from '@/i18n/admin-events';
+import { frContentProposals } from '@/i18n/content-proposals';
 import { ADMIN_ROUTES, adminEventRoute } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
@@ -64,7 +65,15 @@ export default async function AdminEventsPage({
       title={frAdminEvents.list.title}
       subtitle={frAdminEvents.list.subtitle}
       action={{ href: ADMIN_ROUTES.eventNew, label: frAdminEvents.list.newEvent }}
-    />
+    >
+      {/* 0132 — la file des evenements PROPOSES par les ISE est un autre
+          ecran : celui-ci suit le cycle operationnel des evenements deja
+          admis, celui-la sert a trancher. Sans ce lien, la file serait
+          injoignable autrement qu'en tapant l'URL. */}
+      <Link href={ADMIN_ROUTES.eventProposals} className={DETAIL_LINK}>
+        {frContentProposals.admin.queueLinkEvents}
+      </Link>
+    </PageHeader>
   );
 
   if (!page.ok) {
