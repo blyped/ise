@@ -49,10 +49,23 @@ export const ADMIN_ROUTES = {
   events: '/administration/evenements',
   /** SA-030 — Creation d'un evenement. */
   eventNew: '/administration/evenements/nouveau',
+  /**
+   * File de validation des EVENEMENTS proposes par les ISE (0132).
+   * Permission `events.manage`, la meme que la gestion des evenements :
+   * qui decide de l'agenda decide des propositions qui l'alimentent.
+   */
+  eventProposals: '/administration/evenements/propositions',
   /** Redaction administrative des actualites (0110, tache #83). */
   news: '/administration/actualites',
   /** Creation d'un article. */
   newsNew: '/administration/actualites/nouveau',
+  /**
+   * File de validation des ACTUALITES proposees par les ISE (0132).
+   * Permission `content.publish`. Deux files distinctes plutot qu'un
+   * ecran unique : les deux permissions sont distinctes en base, et un
+   * ecran commun montrerait a chacun une moitie vide.
+   */
+  newsProposals: '/administration/actualites/propositions',
   /** SA-018 / SA-038 — Moderation & signalements. */
   moderation: '/administration/moderation',
   /** SA-038 — File des tickets support. */
@@ -163,4 +176,14 @@ export function adminEventRoute(eventId: string): string {
 /** Fiche d'un article : edition du contenu + cycle de vie editorial (0110). */
 export function adminNewsRoute(newsId: string): string {
   return `${ADMIN_ROUTES.news}/${encodeURIComponent(newsId)}`;
+}
+
+/** Examen d'une proposition d'actualite recue d'un ISE (0132). */
+export function adminNewsProposalRoute(newsId: string): string {
+  return `${ADMIN_ROUTES.newsProposals}/${encodeURIComponent(newsId)}`;
+}
+
+/** Examen d'une proposition d'evenement recue d'un ISE (0132). */
+export function adminEventProposalRoute(eventId: string): string {
+  return `${ADMIN_ROUTES.eventProposals}/${encodeURIComponent(eventId)}`;
 }
