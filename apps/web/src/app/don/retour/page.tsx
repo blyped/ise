@@ -3,7 +3,11 @@ import { redirect } from 'next/navigation';
 import { Alert, Card } from '@ise/ui-web';
 import { frDonations } from '@/i18n/donations';
 import { ROUTES } from '@/lib/routes';
-import { DONATION_REFERENCE_PARAM, DONATION_ROUTES } from '@/lib/routes/donations';
+import {
+  DONATION_REFERENCE_PARAM,
+  DONATION_ROUTES,
+  donationReturnRoute,
+} from '@/lib/routes/donations';
 import { newCorrelationId } from '@/lib/correlation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { loadViewerContext } from '@/lib/queries/viewer';
@@ -159,8 +163,17 @@ export default async function DonationReturnPage({
         )}
 
         <div className="flex flex-wrap gap-3">
-          {/* Une simple navigation vers la meme page : elle relit l'etat reel
-              en base. Aucun statut n'est « force » par ce bouton. */}
+          {/* Tant que le prestataire n'a rien confirme, le texte ci-dessus
+              demande d'actualiser : voici le lien qui le fait. C'est une
+              simple navigation vers la MEME adresse, qui relit l'etat reel en
+              base sous la session du membre. Il ne « force » aucun statut et
+              n'ecrit rien — seule la notification serveur a serveur le peut. */}
+          {donation !== null &&
+          (donation.status === 'pending' || donation.status === 'processing') ? (
+            <Link href={donationReturnRoute(donation.reference)} className={LINK}>
+              {frDonations.returnPage.refresh}
+            </Link>
+          ) : null}
           <Link href={DONATION_ROUTES.home} className={LINK}>
             {frDonations.returnPage.newDonation}
           </Link>
