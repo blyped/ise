@@ -29,6 +29,8 @@ export const CMS_ROUTES = {
   /** CMS-007 — Partenaires. */
   partners: '/cms/partenaires',
   partnersNew: '/cms/partenaires/nouveau',
+  /** CMS-013 (0133) — Organisations affichees sur la page d'accueil (logos). */
+  landingOrganizations: '/cms/organisations',
   /** CMS-008 — Mediatheque. */
   media: '/cms/mediatheque',
   /** CMS-009 — Programmation globale. */
