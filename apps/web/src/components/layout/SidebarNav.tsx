@@ -4,6 +4,7 @@ import {
   Briefcase,
   CalendarDays,
   CircleHelp,
+  Gift,
   Handshake,
   Home,
   Megaphone,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cx } from '@ise/ui-web';
 import { fr } from '@/i18n/fr';
+import { frDonations } from '@/i18n/donations';
 import { ROUTES } from '@/lib/routes';
 import { AVAILABILITY_ROUTES, PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { NETWORK_ROUTES } from '@/lib/routes/network';
@@ -25,6 +27,7 @@ import { COMMUNITY_ROUTES } from '@/lib/routes/communities';
 import { CONTENT_ROUTES } from '@/lib/routes/content';
 import { SETTINGS_ROUTES } from '@/lib/routes/settings';
 import { SUPPORT_ROUTES } from '@/lib/routes/support';
+import { DONATION_ROUTES } from '@/lib/routes/donations';
 
 interface NavItem {
   key: string;
@@ -39,57 +42,87 @@ interface NavItem {
  * Les sections non encore livrees sont affichees sans lien et marquees
  * « À venir » : un item de navigation qui ne mene nulle part serait un
  * bouton decoratif (§113).
+ *
+ * `donationsAvailable` — 0134. L'entree « Faire un don » n'apparait QUE si
+ * au moins une voie de paiement est reellement configuree cote serveur.
+ * Elle n'est pas non plus affichee « À venir » : ce n'est pas une section a
+ * livrer, c'est une section livree dont la configuration manque — dire
+ * « À venir » au membre serait faux. Le calcul se fait dans `AppShell`,
+ * composant serveur : aucun secret ne descend jusqu'ici, seulement un
+ * booleen.
  */
-const ITEMS: readonly NavItem[] = [
-  { key: 'home', label: fr.nav.home, icon: Home, href: ROUTES.dashboard },
-  // ISE-040 -> ISE-046 livres : la section « Réseau » a desormais une
-  // destination reelle, « Mes relations ».
-  { key: 'network', label: fr.nav.network, icon: Waypoints, href: NETWORK_ROUTES.connections },
-  // ISE-047 -> ISE-054 livres : la section « Appels au réseau » a
-  // desormais une destination reelle.
-  { key: 'calls', label: fr.nav.networkCalls, icon: Megaphone, href: CALL_ROUTES.list },
-  // ISE-055 -> ISE-066 livres.
-  {
-    key: 'opportunities',
-    label: fr.nav.opportunities,
-    icon: Briefcase,
-    href: OPPORTUNITY_ROUTES.list,
-  },
-  // ISE-067 -> ISE-083 livres : « Collaborer » ouvre le hub qui reunit
-  // la promotion, les stages et le mentorat.
-  { key: 'collaborate', label: fr.nav.collaborate, icon: Handshake, href: PROMOTION_ROUTES.hub },
-  // ISE-084 -> ISE-087 livres.
-  { key: 'communities', label: fr.nav.communities, icon: Users, href: COMMUNITY_ROUTES.list },
-  // ISE-092 / ISE-093 livres : le fil melange actualites et evenements.
-  { key: 'news', label: fr.nav.news, icon: Newspaper, href: CONTENT_ROUTES.news },
-  // ISE-094 -> ISE-096 livres.
-  { key: 'events', label: fr.nav.events, icon: CalendarDays, href: CONTENT_ROUTES.events },
-  // ISE-097 RETIRE (C-08) : la messagerie ISE<->ISE est abandonnee. Aucun
-  // item n'est laisse « À venir » ici : la section ne reviendra pas sous
-  // cette forme. Le futur module Communication sera VERTICAL (ISE ->
-  // Administration, Administration -> ISE / Promotion / Tous) et prendra
-  // sa propre entree le jour ou il existera.
-  { key: 'profile', label: fr.nav.myProfile, icon: UserRound, href: PROFILE_ROUTES.overview },
-  // ISE-032 / ISE-033 livres : « Ma disponibilité » a une destination reelle.
-  {
-    key: 'availability',
-    label: fr.nav.myAvailability,
-    icon: Bell,
-    href: AVAILABILITY_ROUTES.overview,
-  },
-  // ISE-099 livre.
-  { key: 'settings', label: fr.nav.settings, icon: Settings, href: SETTINGS_ROUTES.overview },
-  // ISE-100 livre.
-  { key: 'help', label: fr.nav.help, icon: CircleHelp, href: SUPPORT_ROUTES.help },
-];
+function buildItems(donationsAvailable: boolean): readonly NavItem[] {
+  return [
+    { key: 'home', label: fr.nav.home, icon: Home, href: ROUTES.dashboard },
+    // ISE-040 -> ISE-046 livres : la section « Réseau » a desormais une
+    // destination reelle, « Mes relations ».
+    { key: 'network', label: fr.nav.network, icon: Waypoints, href: NETWORK_ROUTES.connections },
+    // ISE-047 -> ISE-054 livres : la section « Appels au réseau » a
+    // desormais une destination reelle.
+    { key: 'calls', label: fr.nav.networkCalls, icon: Megaphone, href: CALL_ROUTES.list },
+    // ISE-055 -> ISE-066 livres.
+    {
+      key: 'opportunities',
+      label: fr.nav.opportunities,
+      icon: Briefcase,
+      href: OPPORTUNITY_ROUTES.list,
+    },
+    // ISE-067 -> ISE-083 livres : « Collaborer » ouvre le hub qui reunit
+    // la promotion, les stages et le mentorat.
+    { key: 'collaborate', label: fr.nav.collaborate, icon: Handshake, href: PROMOTION_ROUTES.hub },
+    // ISE-084 -> ISE-087 livres.
+    { key: 'communities', label: fr.nav.communities, icon: Users, href: COMMUNITY_ROUTES.list },
+    // ISE-092 / ISE-093 livres : le fil melange actualites et evenements.
+    { key: 'news', label: fr.nav.news, icon: Newspaper, href: CONTENT_ROUTES.news },
+    // ISE-094 -> ISE-096 livres.
+    { key: 'events', label: fr.nav.events, icon: CalendarDays, href: CONTENT_ROUTES.events },
+    // ISE-097 RETIRE (C-08) : la messagerie ISE<->ISE est abandonnee. Aucun
+    // item n'est laisse « À venir » ici : la section ne reviendra pas sous
+    // cette forme. Le futur module Communication sera VERTICAL (ISE ->
+    // Administration, Administration -> ISE / Promotion / Tous) et prendra
+    // sa propre entree le jour ou il existera.
+    { key: 'profile', label: fr.nav.myProfile, icon: UserRound, href: PROFILE_ROUTES.overview },
+    // ISE-032 / ISE-033 livres : « Ma disponibilité » a une destination reelle.
+    {
+      key: 'availability',
+      label: fr.nav.myAvailability,
+      icon: Bell,
+      href: AVAILABILITY_ROUTES.overview,
+    },
+    // 0134 — « Faire un don », demande du porteur. Presente uniquement si
+    // une voie de paiement existe reellement.
+    ...(donationsAvailable
+      ? [
+          {
+            key: 'donation',
+            label: frDonations.navLabel,
+            icon: Gift,
+            href: DONATION_ROUTES.home,
+          } satisfies NavItem,
+        ]
+      : []),
+    // ISE-099 livre.
+    { key: 'settings', label: fr.nav.settings, icon: Settings, href: SETTINGS_ROUTES.overview },
+    // ISE-100 livre.
+    { key: 'help', label: fr.nav.help, icon: CircleHelp, href: SUPPORT_ROUTES.help },
+  ];
+}
 
 const ROW = 'flex items-center gap-4 rounded-base px-5 py-3 text-body-sm';
 
-export function SidebarNav({ currentPath }: { currentPath: string }) {
+export function SidebarNav({
+  currentPath,
+  donationsAvailable = false,
+}: {
+  currentPath: string;
+  donationsAvailable?: boolean;
+}) {
+  const items = buildItems(donationsAvailable);
+
   return (
     <nav aria-label={fr.nav.sidebarLabel} className="px-4 py-5">
       <ul className="flex flex-col gap-1">
-        {ITEMS.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const isCurrent = item.href !== null && item.href === currentPath;
 

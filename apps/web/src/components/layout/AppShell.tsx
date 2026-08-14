@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { newCorrelationId } from '@/lib/correlation';
 import { readAdminAccess } from '@/lib/admin/permissions';
+import { isDonationModuleAvailable } from '@/lib/donations/config';
 import { loadMaintenanceState, scopeMatchesPath } from '@/lib/queries/maintenance';
 import {
   MaintenanceScreen,
@@ -46,6 +47,11 @@ export async function AppShell({ currentPath, displayName, contextLine, children
   const adminAccess = await readAdminAccess();
   const showAdminLink = adminAccess !== null && adminAccess.permissions.size > 0;
 
+  // 0134 — l'entree « Faire un don » n'existe que si une voie de paiement
+  // est reellement configuree. Le calcul reste ICI, dans un composant
+  // serveur : la sidebar ne recoit qu'un booleen, jamais un secret.
+  const donationsAvailable = isDonationModuleAvailable();
+
   if (!currentPath.startsWith('/administration')) {
     const maintenance = await loadMaintenanceState(newCorrelationId());
     if (maintenance.ok) {
@@ -78,7 +84,7 @@ export async function AppShell({ currentPath, displayName, contextLine, children
         <div className="flex h-[var(--layout-topbar)] items-center px-6">
           <BrandLogo />
         </div>
-        <SidebarNav currentPath={currentPath} />
+        <SidebarNav currentPath={currentPath} donationsAvailable={donationsAvailable} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
