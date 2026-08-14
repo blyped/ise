@@ -37,6 +37,8 @@ export const ADMIN_PERMISSIONS = [
   'settings.manage',
   'audit.read',
   'roles.manage',
+  /** 0134 — registre des dons. Accordee au seul superadmin. */
+  'donations.read',
 ] as const;
 
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];

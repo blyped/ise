@@ -1,4 +1,11 @@
-import { readPublicEnv, readServerEnv, type PublicEnv, type ServerEnv } from '@ise/config';
+import {
+  readDonationEnv,
+  readPublicEnv,
+  readServerEnv,
+  type DonationEnv,
+  type PublicEnv,
+  type ServerEnv,
+} from '@ise/config';
 
 /**
  * Lecture validee des variables publiques. Les references sont ecrites en
@@ -31,5 +38,27 @@ export function serverEnv(): ServerEnv {
     EMAIL_PROVIDER: process.env.EMAIL_PROVIDER,
     EMAIL_FROM: process.env.EMAIL_FROM,
     EMAIL_API_KEY: process.env.EMAIL_API_KEY,
+  });
+}
+
+/**
+ * MODULE DE DON (0134) — secrets des prestataires de paiement.
+ *
+ * SERVEUR UNIQUEMENT, et sans exception : aucune de ces variables n'est
+ * prefixee `NEXT_PUBLIC_`, donc aucune ne peut se retrouver dans le bundle
+ * du navigateur. Le paiement se deroulant sur les pages HEBERGEES de Stripe
+ * et de CinetPay, le navigateur n'a besoin d'AUCUNE cle.
+ *
+ * Cette lecture NE LEVE JAMAIS : une variable absente rend simplement son
+ * prestataire indisponible. L'application demarre sans elles, et le module
+ * de don s'annonce alors indisponible plutot que de planter.
+ */
+export function donationEnv(): DonationEnv {
+  return readDonationEnv({
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    CINETPAY_API_KEY: process.env.CINETPAY_API_KEY,
+    CINETPAY_SITE_ID: process.env.CINETPAY_SITE_ID,
+    CINETPAY_SECRET_KEY: process.env.CINETPAY_SECRET_KEY,
   });
 }
