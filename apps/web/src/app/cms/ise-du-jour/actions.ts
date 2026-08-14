@@ -175,7 +175,7 @@ export async function updateRulesAction(
         {
           minDaysBetweenFeatures: minDays,
           requireClaimedProfile: checkbox(formData, 'requireClaimedProfile'),
-          requireAvatar: checkbox(formData, 'requireAvatar'),
+          requirePublicPhoto: checkbox(formData, 'requirePublicPhoto'),
           requirePromotion: checkbox(formData, 'requirePromotion'),
           requireExpertiseOrPosition: checkbox(formData, 'requireExpertiseOrPosition'),
           balanceDimension: requiredText(formData, 'balanceDimension') || 'promotion',

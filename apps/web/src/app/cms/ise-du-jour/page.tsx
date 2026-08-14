@@ -18,6 +18,7 @@ import {
   loadMediaOptions,
   loadPublicFeaturedTeaser,
 } from '@/lib/cms/queries';
+import { loadFeaturedEligibilityReport } from '@/lib/cms/landing-queue';
 import { formatDate, formatLongDateTime } from '@/lib/cms/format';
 import { CmsShell } from '../_components/CmsShell';
 import { PageHeader } from '../_components/PageHeader';
@@ -56,7 +57,7 @@ export default async function CmsFeaturedProfilePage() {
   const correlationId = newCorrelationId();
   const canManage = access.can('cms.featured_profile.manage');
 
-  const [overview, candidates, mediaOptions, teaser] = await Promise.all([
+  const [overview, candidates, mediaOptions, teaser, eligibility] = await Promise.all([
     loadFeaturedOverview(correlationId),
     canManage
       ? loadFeaturedCandidates(null, correlationId)
@@ -65,6 +66,7 @@ export default async function CmsFeaturedProfilePage() {
       ? loadMediaOptions(correlationId)
       : Promise.resolve({ ok: true as const, data: [] }),
     loadPublicFeaturedTeaser(correlationId),
+    loadFeaturedEligibilityReport(correlationId),
   ]);
 
   const shell = (children: React.ReactNode) => (
@@ -166,6 +168,63 @@ export default async function CmsFeaturedProfilePage() {
         <p className="text-caption text-text-muted">
           {data.eligibleCount} {frCms.featured.eligibleCount}
         </p>
+
+        {/*
+          POURQUOI LE VIVIER EST-IL VIDE ? (0123)
+
+          Un compteur a zero ne dit pas ou agir. Ce tableau compte, exigence
+          par exigence, combien de profils la franchissent : on voit d'un
+          coup d'oeil si ce sont les consentements, les resumes ou les
+          portraits qui manquent. Les nombres viennent de la base.
+        */}
+        {eligibility.ok && eligibility.data.eligibleCount === 0 ? (
+          <Alert variant="warning" title="Aucun profil éligible : ce qui manque">
+            <p className="mb-3">
+              La sélection automatique ne peut désigner personne tant qu’aucun profil ne remplit
+              toutes les conditions. Sur {eligibility.data.base} profils actifs :
+            </p>
+            <ul className="flex flex-col gap-1">
+              <li>
+                {eligibility.data.allowPublicFeature} ont accepté d’être mis en avant
+                <span className="text-text-muted"> (consentement obligatoire)</span>
+              </li>
+              <li>
+                {eligibility.data.publicSummary} ont rédigé une brève description publique
+                <span className="text-text-muted"> (obligatoire)</span>
+              </li>
+              <li>
+                {eligibility.data.publicPhoto} ont un portrait public consenti
+                <span className="text-text-muted">
+                  {eligibility.data.requirePublicPhoto ? ' (exigé par la règle)' : ' (non exigé)'}
+                </span>
+              </li>
+              <li>
+                {eligibility.data.claimed} ont réclamé leur profil
+                <span className="text-text-muted">
+                  {eligibility.data.requireClaimedProfile ? ' (exigé)' : ' (non exigé)'}
+                </span>
+              </li>
+              <li>
+                {eligibility.data.promotion} ont une promotion renseignée
+                <span className="text-text-muted">
+                  {eligibility.data.requirePromotion ? ' (exigé)' : ' (non exigé)'}
+                </span>
+              </li>
+              <li>
+                {eligibility.data.expertiseOrPosition} ont une expertise ou une fonction
+                <span className="text-text-muted">
+                  {eligibility.data.requireExpertiseOrPosition ? ' (exigé)' : ' (non exigé)'}
+                </span>
+              </li>
+            </ul>
+            <p className="mt-3">
+              Les deux premières conditions relèvent du membre lui-même : elles se remplissent
+              depuis « Ma vitrine publique » sur son profil. Elles ne peuvent pas être contournées
+              depuis le back-office, puisqu’elles portent son consentement. En attendant, la page
+              d’accueil affiche un encart de repli plutôt qu’un espace vide.
+            </p>
+          </Alert>
+        ) : null}
       </section>
 
       <section aria-labelledby="ise-du-jour-showcase" className="flex flex-col gap-4">

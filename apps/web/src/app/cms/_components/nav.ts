@@ -28,6 +28,8 @@ export const CMS_NAV: readonly CmsNavItem[] = [
   { href: CMS_ROUTES.partners, label: frCms.nav.partners, requires: 'cms.read' },
   { href: CMS_ROUTES.media, label: frCms.nav.media, requires: 'cms.read' },
   { href: CMS_ROUTES.schedule, label: frCms.nav.schedule, requires: 'cms.read' },
+  // CMS-012 (0121) — file de passage des encarts « À la une du réseau ».
+  { href: CMS_ROUTES.landingQueue, label: frCms.nav.landingQueue, requires: 'cms.read' },
   { href: CMS_ROUTES.preview, label: frCms.nav.preview, requires: 'cms.read' },
 ];
 

@@ -197,7 +197,11 @@ export function RulesForm({
                   frCms.featured.ruleRequireClaimed,
                   rules?.requireClaimedProfile,
                 ],
-                ['requireAvatar', frCms.featured.ruleRequireAvatar, rules?.requireAvatar],
+                [
+                  'requirePublicPhoto',
+                  frCms.featured.ruleRequirePublicPhoto,
+                  rules?.requirePublicPhoto,
+                ],
                 ['requirePromotion', frCms.featured.ruleRequirePromotion, rules?.requirePromotion],
                 [
                   'requireExpertiseOrPosition',
