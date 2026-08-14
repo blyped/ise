@@ -64,6 +64,54 @@ export const profileManagement = {
     websiteLabel: 'Site web',
     hint: 'Décrivez surtout ce que vous savez faire et où vous êtes utile.',
     errorTitle: 'Impossible de charger votre en-tête.',
+
+    /**
+     * Photo de profil — révision de D-117 (14/08/2026).
+     *
+     * Le dépôt est désormais OUVERT sur mobile (`expo-image-picker`) : ces
+     * libellés ne doivent plus renvoyer le membre vers le site web. Ils
+     * reprennent les formulations de `apps/web/src/i18n/profile.ts`, pour que
+     * l'écran web et l'écran mobile parlent le même français (MASTER PROMPT
+     * §66), en n'ajoutant que ce qui n'a pas d'équivalent sur le web : les
+     * autorisations système de l'appareil photo et de la galerie.
+     */
+    photo: {
+      title: 'Photo de profil',
+      currentNotice: 'Cette photo n’est visible que des membres autorisés.',
+      noneNotice: 'Vos initiales sont utilisées tant qu’aucune photo n’est déposée.',
+      formatsHint:
+        'PNG, JPEG ou WebP, 2 Mo maximum. Un cadrage carré du visage donne le meilleur rendu.',
+      replaceHint: 'Déposer une nouvelle photo remplacera celle-ci ; l’ancienne sera effacée.',
+      cameraAction: 'Prendre une photo',
+      libraryAction: 'Choisir dans la galerie',
+      uploadPending: 'Dépôt en cours…',
+      uploadSucceeded: 'Votre photo de profil a été enregistrée.',
+      removeAction: 'Retirer ma photo',
+      removePending: 'Retrait en cours…',
+      removeConfirm: 'Votre photo sera effacée. Vos initiales reprendront sa place.',
+      removeFailed: 'Le retrait de la photo a échoué. Réessayez dans un instant.',
+      visibilityNote:
+        'Qui voit votre photo se règle plus bas, avec la visibilité des autres informations.',
+
+      /** Autorisations système, demandées à l'usage et jamais au démarrage. */
+      permissionTitle: 'Autorisation nécessaire',
+      cameraDenied:
+        'L’accès à l’appareil photo est refusé. Autorisez-le dans les réglages du téléphone, ou choisissez plutôt une image dans votre galerie.',
+      libraryDenied:
+        'L’accès à vos photos est refusé. Autorisez-le dans les réglages du téléphone, ou prenez plutôt une photo avec l’appareil.',
+      openSettings: 'Ouvrir les réglages',
+
+      /** Refus du dépôt : mêmes motifs, mêmes phrases que sur le web. */
+      errors: {
+        unreadable:
+          'Ce fichier n’est pas une image exploitable. Choisissez un PNG, un JPEG ou un WebP.',
+        wrong_type:
+          'Ce format d’image n’est pas accepté ici. Choisissez un PNG, un JPEG ou un WebP.',
+        too_large: 'Cette image dépasse 2 Mo. Choisissez un fichier plus léger.',
+        upload_failed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
+        save_failed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
+      },
+    },
   },
 
   experiences: {

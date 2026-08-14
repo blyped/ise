@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Screen } from '../../components/Screen';
 import { TextField } from '../../components/TextField';
 import { profileManagement as pm } from '../../i18n/profile-management';
+import {
+  AVATAR_BUCKET,
+  pickAvatarFromCamera,
+  pickAvatarFromLibrary,
+  uploadAvatar,
+  type AvatarPick,
+} from '../../lib/avatar';
 import { useAuth } from '../../lib/auth/AuthProvider';
 import { getSupabaseClient } from '../../lib/supabase/client';
 import {
@@ -56,46 +63,32 @@ type LoadState =
   | { status: 'error'; correlationId: string }
   | { status: 'ready'; header: ProfileHeader | null };
 
-/** Bucket PRIVÉ de la photo de profil (0027). Jamais servi au web ouvert. */
-const AVATAR_BUCKET = 'avatars';
-
-/**
- * Libellés du bloc photo. Ils vivent ici, et non dans
- * `src/i18n/profile-management.ts`, parce que ce fichier appartient à un
- * autre lot en cours d'écriture : les mêmes formulations qu'à l'écran web
- * sont reprises (MASTER PROMPT §66).
- */
-const PHOTO_TEXT = {
-  title: 'Photo de profil',
-  current: 'Cette photo n’est visible que des membres autorisés.',
-  none: 'Vos initiales sont utilisées tant qu’aucune photo n’est déposée.',
-  webOnly:
-    'Le dépôt d’une nouvelle photo se fait depuis le site web, dans « Modifier l’en-tête & À propos ». L’application mobile ne propose pas encore de sélecteur d’image.',
-  removeAction: 'Retirer ma photo',
-  removePending: 'Retrait en cours…',
-  removeConfirm: 'Votre photo sera effacée. Vos initiales reprendront sa place.',
-  removeFailed: 'Le retrait de la photo a échoué. Réessayez dans un instant.',
-} as const;
+/** Libellés du bloc photo : `pm.header.photo` (aucune chaîne en dur). */
+const PHOTO_TEXT = pm.header.photo;
 
 /**
  * ISE-017 — En-tête & À propos.
  *
- * PHOTO DE PROFIL — révision de D-117 (14/08/2026), partiellement portée ici.
+ * PHOTO DE PROFIL — révision de D-117 (14/08/2026), désormais COMPLÈTE ici.
  *
- * CE QUI EST FAIT SUR CET ÉCRAN : la photo existante est AFFICHÉE (URL signée
- * du bucket privé `avatars`, comme sur le web) et peut être RETIRÉE. Ces deux
- * gestes ne demandent aucune dépendance supplémentaire.
+ * L'écart annoncé par la version précédente de cet écran est levé :
+ * `expo-image-picker` et `expo-file-system` figurent maintenant dans
+ * `apps/mobile/package.json`, aux versions du SDK Expo 52 utilisé par le
+ * projet. Le membre peut donc PRENDRE UNE PHOTO ou en CHOISIR UNE dans sa
+ * galerie — prendre la photo depuis le téléphone est souvent plus simple que
+ * de la transférer sur un ordinateur —, la DÉPOSER, et la RETIRER.
  *
- * CE QUI N'EST PAS FAIT, ET POURQUOI : le DÉPÔT d'une nouvelle photo suppose
- * un sélecteur d'image natif (galerie ou appareil photo). Le projet Expo ne
- * contient à ce jour ni `expo-image-picker` ni `expo-file-system`
- * (`apps/mobile/package.json`), et ajouter une dépendance native de force
- * — hors validation du porteur et sans build vérifié — serait plus risqué
- * qu'utile. Plutôt qu'un bouton « Changer la photo » qui n'ouvrirait rien
- * (bouton décoratif, MASTER PROMPT §113), l'écran DIT où le dépôt se fait :
- * sur le web. Le jour où la dépendance est ajoutée, seul le bloc ci-dessous
- * change ; la garde reste en base (politique `ise_avatars_write`, contrainte
- * `ise_profiles_avatar_path_scope` de 0126).
+ * La mécanique du dépôt vit dans `src/lib/avatar.ts`, qui rejoue exactement
+ * la séquence du web (`apps/web/src/app/mon-profil/en-tete/actions.ts`) :
+ * téléverser sous un chemin neuf, écrire `avatar_path`, puis seulement
+ * effacer l'ancien objet. Cet écran ne fait qu'appeler, afficher un état
+ * d'attente et traduire un refus en français.
+ *
+ * LA GARDE RESTE EN BASE : politique Storage `ise_avatars_write` (0027),
+ * `ise_profiles_update_own` (0021), contrainte
+ * `ise_profiles_avatar_path_scope` (0126). Les contrôles côté écran
+ * (2 Mo, PNG/JPEG/WebP, AVIF et HEIC refusés) ne font qu'annoncer en
+ * français ce que le bucket refuserait de toute façon.
  */
 export function HeaderEditScreen({ navigation }: Props) {
   const { user } = useAuth();
@@ -128,6 +121,14 @@ export function HeaderEditScreen({ navigation }: Props) {
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [removingPhoto, setRemovingPhoto] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  /**
+   * Erreur PROPRE au bloc photo : déposer une image et enregistrer le
+   * formulaire sont deux gestes distincts, leurs messages ne doivent pas se
+   * chasser l'un l'autre.
+   */
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoNotice, setPhotoNotice] = useState<string | null>(null);
 
   const loadAvatar = useCallback(async () => {
     const supabase = getSupabaseClient();
@@ -153,7 +154,8 @@ export function HeaderEditScreen({ navigation }: Props) {
   async function removePhoto() {
     if (avatarPath === null) return;
     setRemovingPhoto(true);
-    setError(null);
+    setPhotoError(null);
+    setPhotoNotice(null);
 
     const supabase = getSupabaseClient();
     // Les octets d'abord, la colonne ensuite : une fois `avatar_path` remis à
@@ -167,11 +169,53 @@ export function HeaderEditScreen({ navigation }: Props) {
 
     setRemovingPhoto(false);
     if (updateError) {
-      setError(PHOTO_TEXT.removeFailed);
+      setPhotoError(PHOTO_TEXT.removeFailed);
       return;
     }
     setAvatarPath(null);
     setAvatarUrl(null);
+  }
+
+  /**
+   * Autorisation système refusée. On ne plante pas et on ne se tait pas : on
+   * explique, et on offre le seul geste qui débloque vraiment la situation
+   * quand le système ne redemandera plus rien — ouvrir les réglages.
+   */
+  function alertPermissionDenied(message: string) {
+    Alert.alert(PHOTO_TEXT.permissionTitle, message, [
+      { text: pm.common.cancel, style: 'cancel' },
+      { text: PHOTO_TEXT.openSettings, onPress: () => void Linking.openSettings() },
+    ]);
+  }
+
+  /**
+   * Chemin commun aux deux entrées (appareil photo, galerie) : choisir, puis
+   * déposer. L'abandon du sélecteur n'est pas une erreur — il ne produit
+   * aucun message.
+   */
+  async function pickThenUpload(pick: () => Promise<AvatarPick>, deniedMessage: string) {
+    setPhotoError(null);
+    setPhotoNotice(null);
+
+    const picked = await pick();
+    if (picked.status === 'canceled') return;
+    if (picked.status === 'denied') {
+      alertPermissionDenied(deniedMessage);
+      return;
+    }
+
+    setUploadingPhoto(true);
+    const outcome = await uploadAvatar(profileId, picked.uri, avatarPath);
+    setUploadingPhoto(false);
+
+    if (!outcome.ok) {
+      setPhotoError(PHOTO_TEXT.errors[outcome.reason]);
+      return;
+    }
+    setPhotoNotice(PHOTO_TEXT.uploadSucceeded);
+    // On relit le chemin puis on redemande une URL signée : l'ancienne ne
+    // désigne plus rien.
+    await loadAvatar();
   }
 
   function confirmRemovePhoto() {
@@ -249,6 +293,9 @@ export function HeaderEditScreen({ navigation }: Props) {
     navigation.goBack();
   }
 
+  /** Un seul geste photo à la fois : déposer et retirer se verrouillent. */
+  const photoBusy = uploadingPhoto || removingPhoto;
+
   if (state.status === 'loading') return <Screen><LoadingView /></Screen>;
   if (state.status === 'error') {
     return (
@@ -279,20 +326,49 @@ export function HeaderEditScreen({ navigation }: Props) {
             <View style={styles.photoTexts}>
               <Text style={styles.photoTitle}>{PHOTO_TEXT.title}</Text>
               <Text style={styles.photoNotice}>
-                {avatarUrl !== null ? PHOTO_TEXT.current : PHOTO_TEXT.none}
+                {avatarUrl !== null ? PHOTO_TEXT.currentNotice : PHOTO_TEXT.noneNotice}
               </Text>
             </View>
           </View>
 
-          <Text style={styles.photoNotice}>{PHOTO_TEXT.webOnly}</Text>
+          <Text style={styles.photoNotice}>
+            {avatarPath !== null ? PHOTO_TEXT.replaceHint : PHOTO_TEXT.formatsHint}
+          </Text>
+
+          {/* Deux entrées, pas une : l'appareil photo est le geste central sur
+              mobile, la galerie sert aux photos déjà prises. */}
+          <View style={styles.photoActions}>
+            <View style={styles.photoAction}>
+              <SecondaryButton
+                label={PHOTO_TEXT.cameraAction}
+                onPress={() => void pickThenUpload(pickAvatarFromCamera, PHOTO_TEXT.cameraDenied)}
+                disabled={photoBusy}
+              />
+            </View>
+            <View style={styles.photoAction}>
+              <SecondaryButton
+                label={PHOTO_TEXT.libraryAction}
+                onPress={() => void pickThenUpload(pickAvatarFromLibrary, PHOTO_TEXT.libraryDenied)}
+                disabled={photoBusy}
+              />
+            </View>
+          </View>
+
+          {uploadingPhoto ? (
+            <Text style={styles.photoNotice}>{PHOTO_TEXT.uploadPending}</Text>
+          ) : null}
+          {photoNotice !== null ? <Text style={styles.photoSuccess}>{photoNotice}</Text> : null}
+          {photoError !== null ? <Text style={styles.error}>{photoError}</Text> : null}
 
           {avatarPath !== null ? (
             <SecondaryButton
               label={removingPhoto ? PHOTO_TEXT.removePending : PHOTO_TEXT.removeAction}
               onPress={confirmRemovePhoto}
-              disabled={removingPhoto}
+              disabled={photoBusy}
             />
           ) : null}
+
+          <Text style={styles.photoNotice}>{PHOTO_TEXT.visibilityNote}</Text>
         </View>
 
         <TextField label={pm.header.firstNameLabel} value={firstName} onChangeText={setFirstName} />
@@ -410,6 +486,17 @@ const styles = StyleSheet.create({
   photoNotice: {
     ...textStyle.caption,
     color: colors.textMuted,
+  },
+  photoSuccess: {
+    ...textStyle.caption,
+    color: colors.success,
+  },
+  photoActions: {
+    flexDirection: 'row',
+    gap: space[3],
+  },
+  photoAction: {
+    flex: 1,
   },
   error: {
     ...textStyle.bodySm,
