@@ -107,9 +107,36 @@ export const frProfile = {
     visibilityTitle: 'Visibilité de ces informations',
     visibilityHint:
       'Chaque champ porte sa propre visibilité (4 niveaux). Le choix est enregistré et appliqué par la base.',
+    /**
+     * Identité visuelle — révision de D-117 (14/08/2026).
+     * Le dépôt de photo est OUVERT : ces libellés ne doivent plus annoncer
+     * une indisponibilité. L'ancien message « pas encore ouvert » a été
+     * retiré ici et l'écran porte désormais un vrai formulaire.
+     */
     photoTitle: 'Identité visuelle',
-    photoUnavailable:
-      'Le dépôt de photo n’est pas encore ouvert : aucun écran d’envoi de fichier n’est livré à ce jour. Vos initiales sont utilisées en attendant.',
+    photoIntro:
+      'Votre photo n’est visible que des membres connectés autorisés : le stockage est privé et l’image est servie par un lien signé qui expire. Elle n’est jamais publiée sur le site public — cela relève de « Ma vitrine publique », avec un consentement distinct.',
+    photoCurrentTitle: 'Photo actuelle',
+    photoCurrentHint: 'Déposer une nouvelle image remplacera celle-ci ; l’ancienne sera effacée.',
+    photoCurrentAlt: 'Votre photo de profil actuelle',
+    photoNoneTitle: 'Aucune photo pour l’instant',
+    photoNoneHint: 'Vos initiales sont utilisées tant qu’aucune photo n’est déposée.',
+    photoFileLabel: 'Fichier image',
+    photoFileHint:
+      'PNG, JPEG ou WebP, 2 Mo maximum. Un cadrage carré du visage (au moins 400 × 400 px) donne le meilleur rendu.',
+    photoSubmit: 'Déposer ma photo',
+    photoReplaceSubmit: 'Remplacer ma photo',
+    photoSubmitPending: 'Dépôt en cours…',
+    photoSaved: 'Votre photo de profil a été enregistrée.',
+    photoRemove: 'Retirer ma photo',
+    photoRemovePending: 'Retrait en cours…',
+    photoRemoved: 'Votre photo de profil a été retirée.',
+    photoInvalid: 'Ce fichier n’est pas une image exploitable. Choisissez un PNG, un JPEG ou un WebP.',
+    photoWrongType: 'Ce format d’image n’est pas accepté ici. Choisissez un PNG, un JPEG ou un WebP.',
+    photoTooLarge: 'Cette image dépasse 2 Mo. Choisissez un fichier plus léger.',
+    photoUploadFailed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
+    photoVisibilityNote:
+      'Qui voit votre photo se règle plus bas, avec la visibilité des autres informations.',
   },
 
   /** ISE-018 — Mes expériences. */
