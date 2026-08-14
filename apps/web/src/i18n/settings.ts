@@ -23,7 +23,7 @@ export const frSettings = {
     notifications: 'Notifications',
     notificationsBody: 'Recevez d’abord ce qui demande réellement votre attention.',
     account: 'Compte & sollicitations',
-    accountBody: 'Qui peut vous écrire, et comment vous apparaissez dans le réseau.',
+    accountBody: 'Comment vous apparaissez dans le réseau, et le rythme de vos résumés par e-mail.',
     blocked: 'Membres bloqués',
     blockedBody: 'Les membres que vous avez bloqués et le moyen de les débloquer.',
     data: 'Mes données & mon compte',
@@ -82,18 +82,14 @@ export const frSettings = {
       'Seules les notifications dans l’application sont émises aujourd’hui. Les envois par e-mail et par notification push ne partent pas encore : aucun service d’envoi n’est déployé.',
   },
 
+  /**
+   * C-08 : « Qui peut m’écrire » (`directMessagePolicy`) et « accusés de
+   * lecture » (`readReceipts`) ont été retirés avec la messagerie
+   * ISE<->ISE. Les colonnes restent en base mais plus rien ne les lit :
+   * un réglage sans effet ne doit pas être montré au membre.
+   */
   account: {
     title: 'Compte & sollicitations',
-    directMessagePolicy: 'Qui peut m’écrire',
-    directMessagePolicyHint:
-      'Appliqué par la plateforme : un membre non autorisé ne peut pas ouvrir de conversation avec vous.',
-    policy: {
-      members: 'Tous les membres ISE',
-      connections: 'Mes relations uniquement',
-      none: 'Personne pour le moment',
-    } as Record<string, string>,
-    readReceipts: 'Indiquer à mes interlocuteurs que j’ai lu leurs messages',
-    readReceiptsHint: 'Si vous le désactivez, la mention « Lu » n’est plus transmise.',
     appearInMatching: 'Apparaître dans les recommandations et le matching',
     appearInAttendeeLists: 'Apparaître dans les listes de participants aux événements',
     digestFrequency: 'Fréquence du résumé par e-mail',
@@ -104,7 +100,7 @@ export const frSettings = {
     } as Record<string, string>,
     pause: 'Mettre mon profil en pause',
     pauseHint:
-      'Votre profil n’est plus proposé dans le matching. Votre compte, vos conversations et vos données sont conservés. C’est réversible à tout moment.',
+      'Votre profil n’est plus proposé dans le matching. Votre compte et vos données sont conservés. C’est réversible à tout moment.',
     pauseReasonLabel: 'Motif (facultatif)',
     paused: 'Votre profil est en pause depuis le {date}.',
     resume: 'Réactiver mon profil',
@@ -115,12 +111,12 @@ export const frSettings = {
   blocked: {
     title: 'Membres bloqués',
     subtitle:
-      'Un membre bloqué ne peut plus vous écrire ni vous solliciter. Il n’en est jamais informé.',
+      'Un membre bloqué ne peut plus vous solliciter, et son profil vous reste masqué. Il n’en est jamais informé.',
     unblock: 'Débloquer',
     unblocked: 'Ce membre n’est plus bloqué.',
     blockedOn: 'Bloqué le {date}',
     emptyTitle: 'Aucun membre bloqué',
-    emptyBody: 'Vous pouvez bloquer un membre depuis une conversation.',
+    emptyBody: 'Aucun blocage n’est en place sur votre compte.',
   },
 
   data: {
@@ -170,7 +166,7 @@ export const frSettings = {
       'Votre compte de connexion, vos coordonnées privées, vos réglages, vos préférences de notification et vos recherches enregistrées.',
     deleteWhatRemains: 'Ce qui n’est pas supprimé',
     deleteWhatRemainsBody:
-      'Votre profil ISE référencé subsiste. Il n’appartient pas au compte : il fait partie de l’annuaire des ISE. Il redevient simplement un profil non réclamé, que vous — ou une vérification ultérieure — pourrez réclamer à nouveau. Les preuves de consentement sont conservées, comme la loi l’exige.',
+      'Votre profil ISE réفérencé subsiste. Il n’appartient pas au compte : il fait partie de l’annuaire des ISE. Il redevient simplement un profil non réclamé, que vous — ou une vérification ultérieure — pourrez réclamer à nouveau. Les preuves de consentement sont conservées, comme la loi l’exige.',
     deleteNotProfileDeletion:
       'Supprimer mon compte n’est donc pas supprimer mon profil référencé. La suppression d’un profil de l’annuaire relève de l’administration ISE et se demande à l’assistance.',
     deleteAction: 'Supprimer mon compte',

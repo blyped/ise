@@ -7,16 +7,17 @@ import { initialFormState } from '@/lib/form-state';
 import { formatDate, type MemberSettings } from '@/lib/messaging-view';
 import { setProfilePausedAction, updateMemberSettingsAction } from '@/app/parametres/actions';
 
-const POLICIES = ['members', 'connections', 'none'] as const;
 const DIGESTS = ['daily', 'weekly', 'off'] as const;
 
 /**
  * ISE-099 — compte et sollicitations.
  *
- * « Qui peut m'écrire » n'est pas un affichage : `direct_message_policy`
- * est lu par `private.can_message_profile()` au moment ou quelqu'un
- * tente d'ouvrir une conversation. Le reglage est donc APPLIQUE par la
- * base, pas seulement respecte par l'interface (CA-SET-01).
+ * C-08 : « Qui peut m'ecrire » et « accuses de lecture » ont ete retires
+ * de cet ecran. Ils n'avaient qu'un seul consommateur en base,
+ * `private.can_message_profile()`, disparu avec la messagerie ISE<->ISE
+ * (migration 0128). Les laisser aurait donne au membre deux reglages sans
+ * effet — exactement ce que le §113 interdit. Les colonnes correspondantes
+ * restent en base, intactes : la decision est reversible.
  *
  * La mise en pause est un formulaire SEPARE : c'est une decision d'un
  * autre ordre que le reglage des sollicitations, et elle ne doit pas
@@ -48,48 +49,7 @@ export function AccountSettingsForm({ settings }: { settings: MemberSettings }) 
           <Alert variant="success" title={state.message} />
         ) : null}
 
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="politique-messages"
-            className="text-body-sm text-text-primary font-medium"
-          >
-            {frSettings.account.directMessagePolicy}
-          </label>
-          <Select
-            id="politique-messages"
-            name="directMessagePolicy"
-            defaultValue={settings.directMessagePolicy}
-            aria-describedby="politique-messages-aide"
-            options={POLICIES.map((policy) => ({
-              value: policy,
-              label: frSettings.account.policy[policy] ?? policy,
-            }))}
-          />
-          <p id="politique-messages-aide" className="text-caption text-text-muted">
-            {frSettings.account.directMessagePolicyHint}
-          </p>
-        </div>
-
         <div className="flex flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <input
-              id="accuses-lecture"
-              name="showReadReceipts"
-              type="checkbox"
-              value="true"
-              defaultChecked={settings.showReadReceipts}
-              className="focus-visible:outline-active-blue mt-1 h-5 w-5 rounded border-[#CBD5E1] focus-visible:outline-2 focus-visible:outline-offset-2"
-            />
-            <label htmlFor="accuses-lecture" className="flex flex-col gap-1">
-              <span className="text-body-sm text-text-primary">
-                {frSettings.account.readReceipts}
-              </span>
-              <span className="text-caption text-text-muted">
-                {frSettings.account.readReceiptsHint}
-              </span>
-            </label>
-          </div>
-
           <div className="flex items-start gap-3">
             <input
               id="matching"

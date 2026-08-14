@@ -89,19 +89,27 @@ export async function setNotificationPreferenceAction(
   return success(frSettings.saved);
 }
 
-/** ISE-099 — compte et sollicitations. */
+/**
+ * ISE-099 — compte et sollicitations.
+ *
+ * C-08 : `p_direct_message_policy` et `p_show_read_receipts` sont
+ * desormais toujours NULL. La RPC les traite en `coalesce(param, colonne)`
+ * — NULL signifie « inchange » — donc les valeurs deja enregistrees sont
+ * CONSERVEES telles quelles, sans etre ni lues ni ecrites par l'interface.
+ * Leur unique consommateur, `private.can_message_profile()`, a disparu
+ * avec la messagerie ISE<->ISE (migration 0128).
+ */
 export async function updateMemberSettingsAction(
   _previous: FormState,
   formData: FormData,
 ): Promise<FormState> {
   const correlationId = newCorrelationId();
-  const policy = formData.get('directMessagePolicy');
   const digest = formData.get('emailDigestFrequency');
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.rpc('update_my_settings', {
-    p_direct_message_policy: typeof policy === 'string' && policy.length > 0 ? policy : null,
-    p_show_read_receipts: formData.get('showReadReceipts') === 'true',
+    p_direct_message_policy: null,
+    p_show_read_receipts: null,
     p_appear_in_matching: formData.get('appearInMatching') === 'true',
     p_appear_in_attendee_lists: formData.get('appearInAttendeeLists') === 'true',
     p_email_digest_frequency: typeof digest === 'string' && digest.length > 0 ? digest : null,
@@ -139,7 +147,7 @@ export async function setProfilePausedAction(
   revalidatePath(SETTINGS_ROUTES.account);
   return success(
     paused
-      ? 'Votre profil est en pause. Vos données et vos échanges sont conservés.'
+      ? 'Votre profil est en pause. Vos données sont conservées.'
       : 'Votre profil est de nouveau visible dans le réseau.',
   );
 }
