@@ -50,6 +50,11 @@ export const PROFILE_ROUTES = {
   completion: '/mon-profil/completion',
   missingItems: '/mon-profil/elements-manquants',
   /**
+   * Depot de CV et de pieces de profil (migration 0127). Le backend
+   * existait depuis 0008 / 0027 / 0041 ; l'ecriture et l'ecran manquaient.
+   */
+  documents: '/mon-profil/documents',
+  /**
    * Vitrine publique : breve description, consentement « ISE du jour » et
    * consentement DISTINCT de publication du portrait (revision D-135,
    * migration 0120).
