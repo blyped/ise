@@ -11,6 +11,7 @@ import {
   ErrorState,
 } from '@ise/ui-web';
 import { frProfile } from '@/i18n/profile';
+import { frDocuments } from '@/i18n/profile-documents';
 import { ROUTES } from '@/lib/routes';
 import { ONBOARDING_ROOT, PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { requireProfile } from '@/lib/profile-guard';
@@ -396,6 +397,22 @@ export default async function MyProfilePage() {
                   {frProfile.overview.sectorsEmpty}
                 </p>
               )}
+            </Card>
+
+            {/* Entree de navigation vers le depot de documents (migration
+                0127). Elle vit ici, dans l'index de /mon-profil, parce que
+                c'est le seul endroit ou les sections du profil sont
+                reellement listees pour le membre. */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-baseline justify-between gap-4">
+                  <CardTitle as="h2">{frDocuments.navLabel}</CardTitle>
+                  <Link href={PROFILE_ROUTES.documents} className={LINK_CLASS}>
+                    {frDocuments.manage}
+                  </Link>
+                </div>
+              </CardHeader>
+              <p className="text-body-sm text-text-secondary">{frDocuments.navHint}</p>
             </Card>
 
             <Card>
