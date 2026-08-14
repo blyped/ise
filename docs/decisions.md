@@ -23,9 +23,9 @@ Statut des décisions : **ADOPTÉE** (appliquée au code) · **PROVISOIRE** (à 
 
 ---
 
-## Table des matières — les huit parties du journal
+## Table des matières — les neuf parties du journal
 
-Les décisions **D-01 → D-180** sont réparties dans huit fichiers thématiques, sous `docs/decisions/`,
+Les décisions **D-01 → D-183** sont réparties dans neuf fichiers thématiques, sous `docs/decisions/`,
 dans l'ordre de lecture du journal (les numéros de section d'origine sont conservés).
 Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 
@@ -41,6 +41,7 @@ Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 | D-169 → D-173 | [`decisions/06-evenements-de-domaine-notifications-et-visuels.md`](decisions/06-evenements-de-domaine-notifications-et-visuels.md) |
 | D-174 → D-178 | [`decisions/07-mises-en-avant-et-ise-du-jour.md`](decisions/07-mises-en-avant-et-ise-du-jour.md) |
 | D-179, D-180, exécution de C-08 | [`decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md`](decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md) |
+| D-181 → D-183 | [`decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md`](decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md) |
 
 ### [Partie 1 — Fondations et modèle de données](decisions/01-fondations-et-modele-de-donnees.md)
 
@@ -121,3 +122,11 @@ Sections 38 à 40.
 - **§38. Dépôt de photo de profil ouvert** — D-179, qui lève D-117
 - **§39. Dépôt de CV et de documents de profil ouvert** — D-180
 - **§40. Retrait de la messagerie ISE↔ISE** — exécution de C-08 (la décision elle-même est en section 0 ci-dessus)
+
+### [Partie 9 — Textes des piliers, modération et remontée d'information](decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md)
+
+Sections 41 à 43.
+
+- **§41. Titre et corps des piliers pilotés par le CMS** — D-181, qui complète D-168 et fait des textes d'i18n un simple jeu de valeurs de repli
+- **§42. Blocage d'un membre et suppression de compte par l'administration** — D-182, qui referme la conséquence non résolue de C-08 et applique D-19
+- **§43. « Remonter une information » (module Communication, premier volet)** — D-183, extension du module support : natures, six statuts, quatre priorités, pièces jointes
