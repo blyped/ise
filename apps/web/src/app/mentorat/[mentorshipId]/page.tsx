@@ -6,7 +6,7 @@ import { frPromotions } from '@/i18n/promotions';
 import { ROUTES } from '@/lib/routes';
 import { PROMOTION_ROUTES } from '@/lib/routes/promotions';
 import { MENTORSHIP_ROUTES, mentorshipReviewRoute } from '@/lib/routes/mentorship';
-import { composeRoute } from '@/lib/routes/messaging';
+import { memberProfileRoute } from '@/lib/routes/search';
 import { newCorrelationId } from '@/lib/correlation';
 import { readFeedback } from '@/lib/collaborate-feedback';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -64,6 +64,12 @@ const STATUS_TONE: Record<string, 'neutral' | 'info' | 'success' | 'warning'> = 
  * (rls.md §10.4) — le binôme ne les lira jamais, et l'aide du champ le
  * dit. Les transitions proposées sont le miroir exact de la machine
  * d'états SQL, et le motif reste TOUJOURS facultatif ([U 102]).
+ *
+ * C-08 : l'action d'en-tête était « Message au mentor » / « Message au
+ * mentoré ». La messagerie ISE<->ISE ayant été retirée, elle conduit au
+ * profil du binôme. Le cadre de la relation (fréquence, format, prochain
+ * échange) reste porté par cet écran, qui n'a jamais dépendu de la
+ * messagerie pour fonctionner.
  */
 export default async function MentorshipDetailPage({
   params,
@@ -142,10 +148,6 @@ export default async function MentorshipDetailPage({
 
   const transitions = mentorshipTransitionOptions(mentorship.status);
   const reviewOpen = canSubmitMentorshipFeedback(mentorship.status, mentorship.myFeedbackGiven);
-  const messageLabel =
-    mentorship.myRole === 'mentee'
-      ? frMentorship.detail.messageAction
-      : frMentorship.detail.messageActionMentee;
 
   return shell(
     <div className="flex flex-col gap-8">
@@ -155,9 +157,10 @@ export default async function MentorshipDetailPage({
         title={frMentorship.detail.title.replace('{name}', mentorship.counterpartName)}
         subtitle={frMentorship.detail.subtitle}
         actions={
+          /* C-08 : plus de bouton « Message au mentor / au mentore ». */
           mentorship.counterpartId === null ? undefined : (
-            <Link href={composeRoute(mentorship.counterpartId)} className={LINK_BUTTON}>
-              {messageLabel}
+            <Link href={memberProfileRoute(mentorship.counterpartId)} className={LINK_BUTTON}>
+              {frMentorship.recommendations.seeProfile}
             </Link>
           )
         }
