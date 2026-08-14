@@ -11,6 +11,8 @@
  *    déclarée.
  *  - CA-COMM-03 : le vocabulaire évite « fil », « publication virale »,
  *    « abonnés ». On publie une question, une ressource, une analyse.
+ *  - C-08 : « Remercier un contributeur » ouvrait une conversation. La
+ *    messagerie ISE<->ISE ayant été retirée, le libellé a disparu.
  */
 export const frCommunities = {
   common: {
@@ -228,8 +230,7 @@ export const frCommunities = {
     unmarkHelpful: 'Retirer le marquage',
     contributorsTitle: 'Contributeurs',
     contributorsBody:
-      'Vous pouvez remercier une personne directement par message. Aucun remerciement automatique n’est envoyé.',
-    thank: 'Envoyer un message',
+      'Les personnes qui ont réellement contribué à cette discussion. Aucun remerciement automatique n’est envoyé.',
     repliesTitle: 'Toutes les réponses',
     replyLabel: 'Votre réponse',
     replyPlaceholder: 'Répondez avec ce que vous avez réellement constaté.',

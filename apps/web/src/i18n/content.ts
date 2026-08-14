@@ -11,6 +11,8 @@
  *  - D-128 : le circuit éditorial (soumission, relecture, publication)
  *    n'est pas piloté depuis l'espace membre ; les libellés le disent.
  *  - CA-EVENT-01 : le fuseau horaire est toujours écrit.
+ *  - C-08 : plus aucun libellé ne renvoie à un message adressé à un autre
+ *    ISE. La messagerie ISE<->ISE a été retirée du produit.
  */
 export const frContent = {
   common: {
@@ -86,8 +88,7 @@ export const frContent = {
       'Elle n’est pas publiée, elle est réservée à une promotion ou à une communauté dont vous ne faites pas partie, ou elle n’existe pas.',
     noReactionsTitle: 'Pas de réactions ici',
     noReactionsBody:
-      'Pour féliciter une personne ou réagir à une information, écrivez-lui : un message vaut mieux qu’un compteur.',
-    sendMessage: 'Envoyer un message',
+      'Aucun compteur de félicitations ici. Pour réagir à une information, ouvrez le profil de la personne concernée.',
   },
 
   events: {
@@ -231,7 +232,6 @@ export const frContent = {
       'Vos suites sont strictement personnelles. Ni l’organisateur ni les autres participants n’y ont accès.',
     remove: 'Retirer',
     removePending: 'Retrait…',
-    contactMessage: 'Envoyer un message',
     organizerImpactTitle: 'Impact mesuré de l’événement',
     organizerImpactBody: 'Dernier relevé enregistré. Aucun chiffre n’est estimé.',
     organizerImpactEmpty: 'Aucun relevé d’impact n’a encore été enregistré pour cet événement.',
