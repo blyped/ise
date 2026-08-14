@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Alert, Badge, ErrorState } from '@ise/ui-web';
 import { frAdmin } from '@/i18n/admin';
+import { frMemberModeration } from '@/i18n/moderation-membre';
 import { ADMIN_ROUTES } from '@/lib/routes/admin';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireAdminPermission } from '@/lib/admin/permissions';
@@ -15,7 +16,13 @@ import { AdminShell } from '../../_components/AdminShell';
 import { KeyValue, PageHeader, SectionCard, StatusBadge } from '../../_components/PageHeader';
 import { ReasonAction } from '../../_components/ReasonAction';
 import { NoteForm } from './NoteForm';
-import { addProfileNoteAction, profileRoleAction, profileStatusAction } from './actions';
+import { DeleteAccountAction } from './DeleteAccountAction';
+import {
+  addProfileNoteAction,
+  deleteMemberAccountAction,
+  profileRoleAction,
+  profileStatusAction,
+} from './actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: frAdmin.members.title };
@@ -33,6 +40,13 @@ const BACK_LINK =
  * (profiles.moderate), attribution de roles (roles.manage, JAMAIS sur
  * soi-meme — la base refuse et l'ecran le dit), notes administratives
  * internes (schema private, jamais visibles d'un membre).
+ *
+ * SUPPRESSION DU COMPTE (migration 0130) : ajoutee comme section
+ * DISTINCTE des actions de statut, parce que c'est une mesure d'une
+ * autre nature. Suspendre ferme l'acces sans detruire le compte et se
+ * leve d'un geste ; supprimer dissocie le compte du profil sans retour
+ * possible. Les melanger dans la meme rangee de boutons inviterait a
+ * confondre les deux.
  */
 export default async function AdminMemberDetailPage({
   params,
@@ -203,6 +217,17 @@ export default async function AdminMemberDetailPage({
         </SectionCard>
       ) : null}
 
+      {canModerate ? (
+        <SectionCard title={frMemberModeration.adminDelete.sectionTitle}>
+          <DeleteAccountAction
+            action={deleteMemberAccountAction}
+            profileId={profile.profileId}
+            displayName={profile.displayName}
+            hasAccount={profile.hasAccount}
+          />
+        </SectionCard>
+      ) : null}
+
       {canManageRoles && roles !== null && profileRoles !== null ? (
         <SectionCard title={frAdmin.roles.title}>
           {!profileRoles.ok || !roles.ok ? (
@@ -342,7 +367,9 @@ export default async function AdminMemberDetailPage({
             {profile.moderationActions.map((entry) => (
               <li key={entry.actionId} className="border-border rounded-lg border p-4">
                 <p className="text-body-sm text-text-primary font-semibold">
-                  {frAdmin.members.actionType[entry.actionType] ?? entry.actionType}
+                  {frAdmin.members.actionType[entry.actionType] ??
+                    frMemberModeration.actionType[entry.actionType] ??
+                    entry.actionType}
                 </p>
                 <p className="text-body-sm text-text-secondary mt-1">{entry.reason}</p>
                 <p className="text-caption text-text-muted mt-2">
