@@ -33,6 +33,8 @@ export const CMS_ROUTES = {
   media: '/cms/mediatheque',
   /** CMS-009 — Programmation globale. */
   schedule: '/cms/programmation',
+  /** CMS-012 (0121) — File de passage des encarts « A la une du reseau ». */
+  landingQueue: '/cms/programmation/a-la-une',
   /** CMS-010 — Apercu de la landing. */
   preview: '/cms/apercu',
 } as const;

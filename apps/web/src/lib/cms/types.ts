@@ -320,7 +320,12 @@ export interface CmsAutomationJob {
 export interface CmsFeaturedRules {
   minDaysBetweenFeatures: number;
   requireClaimedProfile: boolean;
-  requireAvatar: boolean;
+  /**
+   * Exige un portrait PUBLIC couvert par le consentement dédié (0123).
+   * Remplace l'ancien `requireAvatar`, qui visait `avatar_path` — une
+   * colonne du bucket privé, jamais alimentée et non publiable.
+   */
+  requirePublicPhoto: boolean;
   requirePromotion: boolean;
   requireExpertiseOrPosition: boolean;
   balanceDimension: string;
