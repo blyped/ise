@@ -13,7 +13,8 @@
 --   N05-N07  « Action requise » est une PRIORITE, pas une categorie (D-81)
 --   S01-S02  un changement de visibilite est REELLEMENT applique en base
 --   S03-S04  un niveau hors `allowed_levels` est refuse PAR LA BASE (D-73)
---   S05      les 33 types du catalogue sont resolus (D-80)
+--   S05      les 36 types ACTIFS du catalogue sont resolus (D-80 ; C-08 a
+--            desactive `message_received` avec la messagerie)
 --   S06-S07  une preference ecrite bascule le preset en « personnalise »
 --   S08      aucune push sur un type qui l'interdit (D-80)
 --   S09      un type non configurable ne se coupe pas
@@ -92,9 +93,9 @@ begin
 
   ---------------------------------------------------------------- Preferences (D-80)
   select count(*) into v_n from jsonb_array_elements(public.list_my_notification_preferences()); v_cases:=v_cases+1;
-  if v_n<>33 then v_fail:=v_fail||format('S05 catalogue de preferences : %s types au lieu de 33',v_n); end if;
-  perform public.set_notification_preference('message_received',false,'off',false);
-  select in_app_enabled::text into v_txt from public.notification_preferences where profile_id=p_g and notification_type_code='message_received'; v_cases:=v_cases+1;
+  if v_n<>36 then v_fail:=v_fail||format('S05 catalogue de preferences : %s types au lieu de 36',v_n); end if;
+  perform public.set_notification_preference('connection_request_received',false,'off',false);
+  select in_app_enabled::text into v_txt from public.notification_preferences where profile_id=p_g and notification_type_code='connection_request_received'; v_cases:=v_cases+1;
   if v_txt is distinct from 'false' then v_fail:=v_fail||format('S06 preference non enregistree (%s)',coalesce(v_txt,'null')); end if;
   select notification_preset into v_txt from public.user_settings where profile_id=p_g; v_cases:=v_cases+1;
   if v_txt is distinct from 'custom' then v_fail:=v_fail||format('S07 preset non bascule en custom (%s)',coalesce(v_txt,'null')); end if;
