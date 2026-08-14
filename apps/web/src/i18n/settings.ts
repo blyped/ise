@@ -166,7 +166,7 @@ export const frSettings = {
       'Votre compte de connexion, vos coordonnées privées, vos réglages, vos préférences de notification et vos recherches enregistrées.',
     deleteWhatRemains: 'Ce qui n’est pas supprimé',
     deleteWhatRemainsBody:
-      'Votre profil ISE réفérencé subsiste. Il n’appartient pas au compte : il fait partie de l’annuaire des ISE. Il redevient simplement un profil non réclamé, que vous — ou une vérification ultérieure — pourrez réclamer à nouveau. Les preuves de consentement sont conservées, comme la loi l’exige.',
+      'Votre profil ISE référencé subsiste. Il n’appartient pas au compte : il fait partie de l’annuaire des ISE. Il redevient simplement un profil non réclamé, que vous — ou une vérification ultérieure — pourrez réclamer à nouveau. Les preuves de consentement sont conservées, comme la loi l’exige.',
     deleteNotProfileDeletion:
       'Supprimer mon compte n’est donc pas supprimer mon profil référencé. La suppression d’un profil de l’annuaire relève de l’administration ISE et se demande à l’assistance.',
     deleteAction: 'Supprimer mon compte',
