@@ -3,7 +3,13 @@ import { EmptyState } from '@ise/ui-web';
 import { fr, t } from '@/i18n/fr';
 import { frPublic } from '@/i18n/public';
 import { ROUTES } from '@/lib/routes';
-import { entityResourceType, entityRoute } from '@/lib/public/entity-routes';
+import {
+  entityResourceType,
+  entityRoute,
+  type EntityRef,
+  type EntityType,
+} from '@/lib/public/entity-routes';
+import type { ResourceType } from '@/lib/public/protected-route';
 import { formatLongDate, joinMeta } from '@/lib/public/landing-format';
 import {
   LANDING_SECTION_KEYS,
@@ -33,15 +39,49 @@ import { SectionShell } from './SectionShell';
  * projections `get_landing_news / _events / _opportunities /
  * _featured_profile`.
  *
- * ECART ASSUME (ADDENDUM §10, regle 6). Les maquettes portent « Lire
- * l'actualite » et « Voir l'evenement ». Les ecrans membres correspondants
- * (ISE-092 a ISE-096) n'existent pas : `entityRoute()` renvoie donc `null`
- * pour `news` et `event`. La carte s'affiche **sans action**, avec la mention
- * honnete « Consultable depuis l'espace membre », plutot qu'avec un lien qui
- * conduirait a une 404 apres connexion.
+ * CARTE ENTIEREMENT CLIQUABLE (2026-08-14, demande du porteur).
+ *
+ * Les quatre cartes menent desormais a leur page de detail. L'ecart assume
+ * qui figurait ici — « les ecrans ISE-092 a ISE-096 n'existent pas, donc pas
+ * de lien » — n'avait plus lieu d'etre : `app/actualites/[newsId]` et
+ * `app/evenements/[eventId]` existent, et `entityRoute()` a ete corrigee en
+ * consequence.
+ *
+ * Le detail reste reserve aux membres (arbitrage du porteur, 2026-08-14) :
+ * aucune page publique de detail n'est creee. Un visiteur anonyme qui clique
+ * est conduit a ISE-001 par `ProtectedLink`, avec `redirectTo` deja calcule.
+ *
+ * MOTIF D'ACCESSIBILITE RETENU : le « lien etendu » (stretched link), et non
+ * un `<Link>` enveloppant toute la carte. Raisons :
+ *  - un seul lien par carte, jamais imbrique — l'appel a l'action existant
+ *    (« Voir l'opportunite », « Decouvrir le profil ») reste ce lien unique,
+ *    il n'y a donc rien a supprimer ni a dupliquer ;
+ *  - le nom accessible reste court et explicite (« Voir l'opportunite :
+ *    <titre> ») au lieu de reciter le kicker, le titre, l'accroche et tout le
+ *    meta comme le ferait une carte-lien ;
+ *  - le texte de la carte reste selectionnable a la souris.
+ * Mise en oeuvre : l'`<article>` porte `relative`, le lien porte un
+ * `::after` en `absolute inset-0` qui couvre la carte entiere. La cible de
+ * clic est donc la carte, tres au-dela des 44 px exiges.
+ *
+ * Quand `entityRoute()` renvoie `null` (identifiant vide, ou type sans ecran),
+ * rien de tout cela ne s'applique : la carte reste un `<article>` inerte
+ * portant la mention honnete « Consultable depuis l'espace membre ».
  */
 
 const CARD = 'flex h-full flex-col gap-3 rounded-lg border border-border bg-surface p-6 max-md:p-5';
+
+/**
+ * Etat cliquable de la carte. `relative` est le referentiel du `::after` du
+ * lien etendu ; le survol et le focus clavier sont signales sur la carte
+ * entiere, puisque c'est elle qui reagit au clic. `has-[a:focus-visible]`
+ * plutot que `focus-within` : la carte ne doit pas s'entourer d'un anneau
+ * quand le focus vient d'un clic souris.
+ */
+const CARD_INTERACTIVE =
+  'relative cursor-pointer transition-shadow duration-150 hover:border-primary hover:shadow-md ' +
+  'has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 ' +
+  'has-[a:focus-visible]:outline-active-blue';
 
 const KICKER = 'text-overline font-semibold uppercase tracking-[0.08em]';
 
@@ -49,6 +89,24 @@ const CTA =
   'text-body-sm font-semibold text-primary transition-colors duration-150 ' +
   'hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 ' +
   'focus-visible:outline-active-blue';
+
+/** Le `::after` qui etend le lien de l'appel a l'action a toute la carte. */
+const CTA_STRETCHED = `${CTA} after:absolute after:inset-0 after:content-['']`;
+
+/**
+ * Tout ce qu'il faut pour fabriquer l'unique lien de la carte. `null` quand
+ * aucune route n'existe : la carte reste alors non cliquable.
+ */
+interface CardLink {
+  /** Route membre, deja calculee par `entityRoute()`. */
+  readonly target: string;
+  readonly resourceType: ResourceType;
+  /** Texte visible du lien, et debut de son nom accessible. */
+  readonly action: string;
+  readonly entityType: EntityType;
+  readonly entityId: string;
+  readonly sectionKey: string;
+}
 
 function Card({
   kicker,
@@ -58,24 +116,27 @@ function Card({
   highlight,
   meta,
   visual,
-  children,
+  link,
 }: {
   kicker: string;
   kickerClassName?: string;
   title: string;
   /**
    * 0117 — permet de masquer visuellement le titre (`sr-only`) quand la
-   * couverture le porte deja incruste, sans jamais le retirer du DOM.
+   * couverture le porte deja incruste, sans jamais le retirer du DOM. Le lien
+   * etendu ne passe volontairement pas par le titre : un titre `sr-only` est
+   * en `position: absolute` et `overflow: hidden`, ce qui rognerait le
+   * `::after` et rendrait la carte non cliquable dans ce cas precis.
    */
   titleClassName?: string;
   /** Accroche courte, mise en avant entre le titre et le meta (D-165). */
   highlight?: string | null;
   meta?: string | null;
   visual?: ReactNode;
-  children?: ReactNode;
+  link: CardLink | null;
 }) {
   return (
-    <article className={CARD}>
+    <article className={link === null ? CARD : `${CARD} ${CARD_INTERACTIVE}`}>
       {visual}
       <p className={`${KICKER} ${kickerClassName ?? 'text-primary'}`}>{kicker}</p>
       <h3 className={`text-body text-text-primary font-semibold ${titleClassName ?? ''}`}>
@@ -85,9 +146,45 @@ function Card({
         <p className="text-body-sm text-ise-gold font-medium italic">{highlight}</p>
       ) : null}
       {meta ? <p className="text-body-sm text-text-secondary">{meta}</p> : null}
-      <div className="mt-auto pt-4">{children}</div>
+      <div className="mt-auto pt-4">
+        {link === null ? (
+          <NoAction />
+        ) : (
+          <ProtectedLink
+            target={link.target}
+            resourceType={link.resourceType}
+            label={t(frPublic.cards.cardLink, { action: link.action, title })}
+            className={CTA_STRETCHED}
+            event="public_content_click"
+            entityType={link.entityType}
+            entityId={link.entityId}
+            sectionKey={link.sectionKey}
+            contentType={link.entityType}
+          >
+            {link.action} <span aria-hidden="true">→</span>
+          </ProtectedLink>
+        )}
+      </div>
     </article>
   );
+}
+
+/**
+ * Fabrique le lien d'une carte, ou `null` si l'entite n'a pas de route.
+ * Centralisee ici pour que les quatre cartes soient rigoureusement traitees
+ * de la meme facon.
+ */
+function cardLink(target: EntityRef, action: string, sectionKey: string): CardLink | null {
+  const route = entityRoute(target);
+  if (route === null) return null;
+  return {
+    target: route,
+    resourceType: entityResourceType(target.entityType),
+    action,
+    entityType: target.entityType,
+    entityId: target.entityId,
+    sectionKey,
+  };
 }
 
 /**
@@ -147,9 +244,8 @@ function NewsCard({ item }: { item: LandingNews }) {
           </MediaFrame>
         )
       }
-    >
-      <NoAction />
-    </Card>
+      link={cardLink(item.target, frPublic.cards.readNews, LANDING_SECTION_KEYS.news)}
+    />
   );
 }
 
@@ -171,9 +267,8 @@ function EventCard({ item }: { item: LandingEvent }) {
           </MediaFrame>
         )
       }
-    >
-      <NoAction />
-    </Card>
+      link={cardLink(item.target, frPublic.cards.seeEvent, LANDING_SECTION_KEYS.events)}
+    />
   );
 }
 
@@ -183,7 +278,6 @@ function OpportunityCard({ item }: { item: LandingOpportunity }) {
     item.city,
     item.remoteAllowed ? frPublic.cards.remote : null,
   ]);
-  const route = entityRoute(item.target);
 
   return (
     <Card
@@ -201,24 +295,12 @@ function OpportunityCard({ item }: { item: LandingOpportunity }) {
           </MediaFrame>
         )
       }
-    >
-      {route === null ? (
-        <NoAction />
-      ) : (
-        <ProtectedLink
-          target={route}
-          resourceType={entityResourceType('opportunity')}
-          className={CTA}
-          event="public_content_click"
-          entityType="opportunity"
-          entityId={item.id}
-          sectionKey={LANDING_SECTION_KEYS.opportunities}
-          contentType="opportunity"
-        >
-          {frPublic.cards.seeOpportunity} <span aria-hidden="true">→</span>
-        </ProtectedLink>
+      link={cardLink(
+        item.target,
+        frPublic.cards.seeOpportunity,
+        LANDING_SECTION_KEYS.opportunities,
       )}
-    </Card>
+    />
   );
 }
 
@@ -285,7 +367,6 @@ function FeaturedProfileCard({ item }: { item: LandingFeaturedProfile }) {
     item.organization,
     item.expertiseAreas.length > 0 ? item.expertiseAreas.join(', ') : null,
   ]);
-  const route = entityRoute(item.target);
 
   return (
     <Card
@@ -307,24 +388,8 @@ function FeaturedProfileCard({ item }: { item: LandingFeaturedProfile }) {
           </MediaFrame>
         )
       }
-    >
-      {route === null ? (
-        <NoAction />
-      ) : (
-        <ProtectedLink
-          target={route}
-          resourceType={entityResourceType('profile')}
-          className={CTA}
-          event="public_content_click"
-          entityType="profile"
-          entityId={item.profileId}
-          sectionKey={LANDING_SECTION_KEYS.featuredProfile}
-          contentType="profile"
-        >
-          {frPublic.cards.seeProfile} <span aria-hidden="true">→</span>
-        </ProtectedLink>
-      )}
-    </Card>
+      link={cardLink(item.target, frPublic.cards.seeProfile, LANDING_SECTION_KEYS.featuredProfile)}
+    />
   );
 }
 

@@ -31,16 +31,51 @@ export const frPublic = {
   } as Record<string, string>,
 
   cards: {
-    /** Aucune route membre n'existe encore pour cette nature de contenu. */
+    /**
+     * Repli honnête d'une carte sans route : identifiant inexploitable, ou
+     * nature de contenu dont l'écran membre n'existe réellement pas. Depuis
+     * le 2026-08-14, les actualités et les événements n'en relèvent plus —
+     * leurs pages de détail existent et la carte est cliquable.
+     */
     availableAfterSignIn: 'Consultable depuis l’espace membre.',
     readNews: 'Lire l’actualité',
     seeEvent: 'Voir l’événement',
     seeOpportunity: 'Voir l’opportunité',
     seeProfile: 'Découvrir le profil',
+    /**
+     * Nom accessible du lien qui couvre toute la carte de « À la une du
+     * réseau ». Le texte visible du lien ne dit que l'action (« Lire
+     * l'actualité ») : hors contexte, un lecteur d'écran qui liste les liens
+     * de la page en entendrait quatre presque identiques. Le titre du contenu
+     * est donc rappelé dans le nom accessible, qui commence par le texte
+     * visible (WCAG 2.5.3, « Label in Name »).
+     */
+    cardLink: '{action} : {title}',
     /** Promotion, quand la base ne fournit qu'une année de sortie. */
     promotion: 'ISE {year}',
     remote: 'À distance',
     deadline: 'Candidatures jusqu’au {date}',
+  },
+
+  /**
+   * 0122 — libellés des quatre piliers cliquables de « Un réseau conçu pour
+   * être utile ». Le titre et le corps du pilier restent dans
+   * `fr.public.pillars` : ici, uniquement ce que le visiteur ira faire sur
+   * l'écran visé, une clé par cible de la liste blanche `cms_pillars.link_target`.
+   * Le texte est visible dans la carte ET repris au début du nom accessible
+   * du lien, qui rappelle le pilier concerné : quatre liens de suite nommés
+   * « Connecter », « Entraider »… ne diraient pas où ils mènent (WCAG 2.4.4,
+   * et 2.5.3 « Label in Name »).
+   */
+  pillars: {
+    linkLabel: '{action} — pilier {title}',
+    actions: {
+      search: 'Rechercher un ISE',
+      calls: 'Voir les appels au réseau',
+      projects: 'Voir les projets et consortiums',
+      opportunities: 'Voir les opportunités',
+      applications: 'Suivre mes candidatures',
+    } as Record<string, string>,
   },
 
   news: {
