@@ -1,5 +1,6 @@
 import { OPPORTUNITY_ROUTES, opportunityRoute } from '@/lib/routes/opportunities';
 import { CALL_ROUTES, callRoute } from '@/lib/routes/calls';
+import { eventRoute, newsRoute } from '@/lib/routes/content';
 import { SEARCH_ROUTES, memberProfileRoute, searchResultsRoute } from '@/lib/routes/search';
 import { PARAM } from '@/lib/search-criteria';
 import type { ResourceType } from './protected-route';
@@ -35,11 +36,22 @@ export function isEntityType(value: unknown): value is EntityType {
 
 /**
  * Route membre correspondant a une entite, ou `null` si l'ecran n'existe pas
- * encore dans l'application.
+ * dans l'application.
  *
- * `event` et `news` : ISE-092 a ISE-096 ne sont pas developpes (voir
- * `docs/screen-traceability-matrix.md`). Tant qu'ils n'existent pas, aucune
- * route n'est fabriquee — un lien vers une page absente serait un lien mort.
+ * CORRECTION DU 2026-08-14. Le commentaire precedent affirmait que `event` et
+ * `news` n'avaient pas d'ecran membre (ISE-092 a ISE-096 non developpes) et
+ * renvoyait `null` pour ces deux types. Cette affirmation etait devenue
+ * fausse : `app/actualites/[newsId]/page.tsx` (ISE-093) et
+ * `app/evenements/[eventId]/page.tsx` (ISE-095) existent, et `/actualites` et
+ * `/evenements` figurent dans `MEMBER_ROUTE_PREFIXES`. Consequence du bug :
+ * les cartes « Actualite » et « Evenement » de PUB-001 s'affichaient sans
+ * aucune action alors que la page de detail existait. Les deux types
+ * renvoient desormais leur vraie route, calculee par les fabriques de
+ * `lib/routes/content.ts` — jamais par un chemin ecrit en dur.
+ *
+ * La regle de fond ne change pas : un type dont l'ecran n'existe reellement
+ * pas continue de renvoyer `null`, et la carte s'affiche alors sans action
+ * plutot qu'avec un lien mort.
  */
 export function entityRoute(ref: EntityRef): string | null {
   if (ref.entityId.trim().length === 0) return null;
@@ -60,8 +72,11 @@ export function entityRoute(ref: EntityRef): string | null {
       // identifiant seul, aucune route n'est fabriquee.
       return null;
     case 'event':
+      // ISE-095 — `app/evenements/[eventId]/page.tsx`.
+      return eventRoute(ref.entityId);
     case 'news':
-      return null;
+      // ISE-093 — `app/actualites/[newsId]/page.tsx`.
+      return newsRoute(ref.entityId);
     default:
       return null;
   }
