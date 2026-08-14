@@ -10,9 +10,10 @@ import { setLandingPillar } from '@/lib/cms/mutations';
 const PILLAR_KEYS = ['connecter', 'entraider', 'collaborer', 'impacter'] as const;
 
 /**
- * Server Action de CMS-011 (0114) — pose l'image, la légende optionnelle et
- * le lien d'UN pilier a la fois. Le titre et le corps du pilier restent
- * fixes (fr.public.pillars) : cette action n'y touche jamais.
+ * Server Action de CMS-011 (0114, étendue par 0129) — pose le titre, le
+ * texte, l'image, la légende optionnelle et le lien d'UN pilier à la fois.
+ * Un titre ou un texte vide n'est pas une erreur : `text()` le rend `null`,
+ * et la base remet alors le pilier sur sa valeur d'origine (i18n).
  */
 export async function setPillarAction(
   _previous: FormState,
@@ -31,10 +32,13 @@ export async function setPillarAction(
   const mediaId = text(formData, 'mediaId');
   const caption = text(formData, 'caption');
   const linkTarget = text(formData, 'linkTarget');
+  const title = text(formData, 'title');
+  const body = text(formData, 'body');
 
   const state = await runCmsAction(
     'cms.edit',
-    (correlationId) => setLandingPillar(pillarKey, mediaId, caption, linkTarget, correlationId),
+    (correlationId) =>
+      setLandingPillar(pillarKey, mediaId, caption, linkTarget, title, body, correlationId),
     frCms.pillars.done,
   );
   if (state.status === 'success') revalidatePath(CMS_ROUTES.pillars);

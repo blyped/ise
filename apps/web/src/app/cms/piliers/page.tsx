@@ -18,11 +18,14 @@ export const metadata = { title: frCms.pillars.title };
  * CMS-011 (0114) — Piliers « Un reseau concu pour etre utile ».
  *
  * Quatre lignes fixes (Connecter / Entraider / Collaborer / Impacter),
- * jamais creees ni supprimees ici. Le titre et le texte de chaque pilier
- * restent le discours de marque de `fr.public.pillars` — c'est la meme
- * source que la landing publique, pour que l'ecran CMS montre exactement
- * ce que voit un visiteur. Le CMS ne pilote que l'image, une legende
- * optionnelle et le lien.
+ * jamais creees ni supprimees ici. Depuis 0129, TOUT leur contenu se
+ * modifie ici : titre, texte, visuel, legende optionnelle, lien.
+ *
+ * L'en-tete de chaque carte affiche ce que voit reellement un visiteur —
+ * le texte de la base quand il existe, la valeur d'origine
+ * (`fr.public.pillars.defaults`) sinon : exactement la meme regle de repli
+ * que `NetworkSection`, pour que l'ecran CMS ne montre jamais autre chose
+ * que la page d'accueil.
  */
 export default async function CmsPillarsPage() {
   const access = await requireCmsAccess();
@@ -62,14 +65,20 @@ export default async function CmsPillarsPage() {
       </Alert>
 
       <RowList label={frCms.pillars.title}>
-        {fr.public.pillars.items.map((pillar) => {
+        {fr.public.pillars.defaults.map((pillar) => {
           const row = pillars.data.find((item) => item.pillarKey === pillar.key);
           return (
-            <RowCard key={pillar.key} title={pillar.title} meta={pillar.body}>
+            <RowCard
+              key={pillar.key}
+              title={row?.title ?? pillar.title}
+              meta={row?.body ?? pillar.body}
+            >
               <div className="mt-4">
                 <PillarForm
                   action={setPillarAction}
                   pillarKey={pillar.key}
+                  currentTitle={row?.title ?? null}
+                  currentBody={row?.body ?? null}
                   currentMediaId={row?.mediaId ?? null}
                   currentCaption={row?.caption ?? null}
                   currentLinkTarget={row?.linkTarget ?? null}

@@ -64,16 +64,27 @@ const PILLAR_INTERACTIVE =
 /**
  * « Un reseau concu pour etre utile » + « Le reseau en quelques chiffres ».
  *
- * Le titre et le corps des quatre piliers restent du **discours de
- * marque**, pas de la donnee metier : ils vivent dans `fr.public.pillars`
- * au meme titre que la promesse de marque. Depuis 0114 (D-168), l'image, la
- * legende optionnelle et le lien de chaque pilier sont pilotes par le CMS
- * (`cms_pillars` / `/cms/piliers`) : `pillars` porte cette partie
- * editoriale variable, appariee au pilier fixe par `pillarKey`.
+ * 0129 — TOUT le contenu d'un pilier vient desormais du CMS : titre, corps,
+ * image, legende et lien (`cms_pillars` / `/cms/piliers`). 0114 avait laisse
+ * le titre et le corps en dur dans l'i18n en les qualifiant de « discours de
+ * marque » ; a l'usage l'administrateur n'avait aucun moyen de les changer,
+ * ce qui n'etait pas tenable.
  *
- * Un pilier absent de `pillars.items` (projection en panne, ou simplement
- * pas encore configure) reste du texte seul — jamais un lien ou une image
- * inventes.
+ * REPLI, ET POURQUOI CELUI-LA. La boucle parcourt
+ * `fr.public.pillars.defaults` — quatre entrees fixes, dans l'ordre — et
+ * remplace titre et corps par ceux de la base des qu'ils existent. Le repli
+ * sur la valeur d'origine (plutot que le masquage) est retenu parce qu'un
+ * pilier sans titre ni corps serait une carte vide : un contenu casse, pas
+ * un choix editorial. Il couvre les deux memes cas :
+ *   - la projection est en panne ou le pilier n'est pas encore configure
+ *     (`pillars.items` vide) ;
+ *   - l'administrateur a vide le champ, ce que le formulaire CMS annonce
+ *     explicitement comme « revenir au texte d'origine ».
+ * Le masquage reste, lui, la regle pour tout ce qui est optionnel par
+ * nature — image, legende, lien : rien n'est invente a la place.
+ *
+ * Un pilier absent de `pillars.items` reste du texte seul — jamais un lien
+ * ou une image inventes.
  *
  * 0122 — les quatre piliers ont desormais une cible reelle en base ; le
  * pilier cliquable est un lien qui couvre la carte entiere, annonce ou il
@@ -110,8 +121,15 @@ export function NetworkSection({
   return (
     <SectionShell id={LANDING_ANCHORS.network} title={fr.public.pillars.title}>
       <ul className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-md:grid-cols-1 max-md:gap-4">
-        {fr.public.pillars.items.map((pillar, index) => {
+        {fr.public.pillars.defaults.map((pillar, index) => {
           const cmsPillar = pillars.items.find((item) => item.pillarKey === pillar.key);
+          // 0129 — la base d'abord, la valeur d'origine seulement si elle ne
+          // dit rien. `??` suffit : la projection normalise deja la chaine
+          // vide en `null` (`nullableText`, landing-data.ts). Nommes
+          // `pillarTitle`/`pillarBody` pour ne pas masquer la prop `title`
+          // de la section, qui est celle du bloc chiffres.
+          const pillarTitle = cmsPillar?.title ?? pillar.title;
+          const pillarBody = cmsPillar?.body ?? pillar.body;
           const image = cmsPillar?.image ?? null;
           const linkTarget = cmsPillar?.linkTarget ?? null;
           const target = linkTarget === null ? undefined : TARGET_ROUTES[linkTarget];
@@ -131,9 +149,9 @@ export function NetworkSection({
                 </div>
               )}
               <p className="text-overline text-primary font-semibold uppercase tracking-[0.08em]">
-                {pillar.title}
+                {pillarTitle}
               </p>
-              <p className="text-body-sm text-text-secondary mt-4">{pillar.body}</p>
+              <p className="text-body-sm text-text-secondary mt-4">{pillarBody}</p>
               {cmsPillar?.caption === null || cmsPillar?.caption === undefined ? null : (
                 <p className="text-body-sm text-text-secondary mt-2">{cmsPillar.caption}</p>
               )}
@@ -162,7 +180,7 @@ export function NetworkSection({
                   className={`${PILLAR_INTERACTIVE} ${cardClassName}`}
                   {...(action === undefined
                     ? {}
-                    : { label: t(frPublic.pillars.linkLabel, { title: pillar.title, action }) })}
+                    : { label: t(frPublic.pillars.linkLabel, { title: pillarTitle, action }) })}
                   event="public_content_click"
                   sectionKey={LANDING_SECTION_KEYS.pillars}
                   contentType="network_pillar"

@@ -59,9 +59,15 @@ export const frPublic = {
 
   /**
    * 0122 — libellés des quatre piliers cliquables de « Un réseau conçu pour
-   * être utile ». Le titre et le corps du pilier restent dans
-   * `fr.public.pillars` : ici, uniquement ce que le visiteur ira faire sur
-   * l'écran visé, une clé par cible de la liste blanche `cms_pillars.link_target`.
+   * être utile » : ce que le visiteur ira faire sur l'écran visé, une clé par
+   * cible de la liste blanche `cms_pillars.link_target`.
+   *
+   * Ces libellés-ci restent en i18n et n'iront pas dans le CMS : ils nomment
+   * une DESTINATION technique (l'écran /appels, l'écran /projets), pas le
+   * discours du pilier. Le titre et le corps du pilier, eux, sont éditables
+   * depuis /cms/piliers depuis 0129 ; `fr.public.pillars.defaults` n'en
+   * garde plus que les valeurs d'origine.
+   *
    * Le texte est visible dans la carte ET repris au début du nom accessible
    * du lien, qui rappelle le pilier concerné : quatre liens de suite nommés
    * « Connecter », « Entraider »… ne diraient pas où ils mènent (WCAG 2.4.4,
