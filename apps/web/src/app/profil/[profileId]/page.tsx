@@ -12,6 +12,7 @@ import {
 } from '@ise/ui-web';
 import { frSearch } from '@/i18n/search';
 import { frNetwork } from '@/i18n/network';
+import { frMemberModeration } from '@/i18n/moderation-membre';
 import { ROUTES } from '@/lib/routes';
 import { SEARCH_ROUTES } from '@/lib/routes/search';
 import { NETWORK_ROUTES, connectRoute, introductionPathRoute } from '@/lib/routes/network';
@@ -25,6 +26,7 @@ import {
   type MemberProfileView,
 } from '@/lib/queries/member-profile';
 import { AppShell } from '@/components/layout/AppShell';
+import { MemberSafetyCard } from './MemberSafetyCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +96,16 @@ function SkillRow({ name, level, years }: { name: string; level: string; years: 
  * dans les deux sens. Un profil bloque fait renvoyer `null`, donc un 404
  * — indistinguable d'un profil inexistant, ce qui est voulu : la reponse
  * ne doit pas reveler qu'un blocage existe.
+ *
+ * SIGNALER / BLOQUER : le retrait de la messagerie (decision C-08) avait
+ * emporte le SEUL point d'entree de `block_profile()`, laissant la
+ * fonction, la table `profile_blocks` et l'ecran de deblocage
+ * `/parametres/membres-bloques` sans aucun moyen de bloquer. L'encart
+ * `MemberSafetyCard` rouvre ce point d'entree et expose, a cote, le
+ * signalement (`create_report`, 9 motifs, ecran `/aide/signaler`) qui
+ * lui n'avait jamais disparu mais n'etait atteignable depuis aucune
+ * fiche profil. Les deux gestes sont nommes separement : bloquer est une
+ * mesure personnelle, signaler alerte l'administration.
  *
  * ACTIONS : ISE-038 (« Se connecter ») et ISE-044 (« Demander une
  * introduction ») ne sont pas livres. Aucun bouton n'est rendu — un
@@ -485,6 +497,23 @@ export default async function MemberProfilePage({
                   </p>
                 </div>
               )}
+            </Card>
+          ) : null}
+
+          {/*
+            SECURITE — signaler ou bloquer. Rendu uniquement sur la fiche
+            d'AUTRUI : on ne se bloque ni ne se signale soi-meme, et la
+            base refuse les deux (`cannot_target_self`).
+          */}
+          {!profile.isSelf ? (
+            <Card>
+              <CardHeader>
+                <CardTitle as="h2">{frMemberModeration.safety.title}</CardTitle>
+              </CardHeader>
+              <MemberSafetyCard
+                profileId={profile.profileId}
+                displayName={profile.displayName}
+              />
             </Card>
           ) : null}
 
