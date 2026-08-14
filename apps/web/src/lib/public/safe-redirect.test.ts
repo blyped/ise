@@ -217,7 +217,7 @@ describe('safeRedirect — caracteres de controle et injection d’en-tete', () 
 
   it('refuse un octet nul', () => {
     expectRefused('/tableau-de-bord%00.html', 'caractere-interdit');
-    expectRefused('/tableau-de-bord\u0000', 'caractere-interdit');
+    expectRefused('/tableau-de-bord ', 'caractere-interdit');
   });
 
   it('refuse un espace de tete ou de queue plutot que de le rogner', () => {
@@ -227,8 +227,8 @@ describe('safeRedirect — caracteres de controle et injection d’en-tete', () 
   });
 
   it('refuse un caractere de controle C1 et DEL', () => {
-    expectRefused('/tableau-de-bord\u007f', 'caractere-interdit');
-    expectRefused('/tableau-de-bord\u0085', 'caractere-interdit');
+    expectRefused('/tableau-de-bord', 'caractere-interdit');
+    expectRefused('/tableau-de-bord', 'caractere-interdit');
     expectRefused('/tableau-de-bord%7f', 'caractere-interdit');
   });
 });
@@ -292,6 +292,13 @@ describe('safeRedirect — liste blanche de routes', () => {
     expectRefused('/.well-known/x', 'route-non-autorisee');
   });
 
+  it('refuse /messages : la messagerie ISE<->ISE a ete retiree (C-08)', () => {
+    // La route est sortie de MEMBER_ROUTE_PREFIXES avec le module. Une cible
+    // heritee d'un ancien lien retombe sur le tableau de bord.
+    expectRefused('/messages', 'route-non-autorisee');
+    expectRefused('/messages/0f6c8f5a-3c3a-4f21-9b8b-1f3a2d4e5c6d', 'route-non-autorisee');
+  });
+
   it('refuse /https:/evil.example — chemin interne en apparence, hors liste blanche', () => {
     // Cas classique : la valeur passe les controles lexicaux, seule la liste
     // blanche la refuse. C’est la raison d’etre de la troisieme porte.
@@ -323,7 +330,7 @@ describe('safeRedirect — cibles acceptees', () => {
     expectAccepted('/appels');
     expectAccepted('/opportunites');
     expectAccepted('/candidatures');
-    expectAccepted('/messages');
+    expectAccepted('/communautes');
     expectAccepted('/notifications');
     expectAccepted('/parametres/confidentialite');
     expectAccepted('/aide');
@@ -345,7 +352,7 @@ describe('safeRedirect — cibles acceptees', () => {
 
   it('normalise la barre finale', () => {
     expectAccepted('/tableau-de-bord/', '/tableau-de-bord');
-    expectAccepted('/messages///', '/messages');
+    expectAccepted('/notifications///', '/notifications');
   });
 
   it('conserve un identifiant encode dans le chemin', () => {
@@ -445,7 +452,7 @@ describe('safeRedirect — proprietes generales', () => {
   });
 
   it('est idempotente : le resultat d’un appel est une entree valide', () => {
-    for (const vecteur of [...vecteurs, '/mon-profil', '/messages?x=1']) {
+    for (const vecteur of [...vecteurs, '/mon-profil', '/notifications?x=1']) {
       const une = safeRedirect(vecteur, { logger: vi.fn() });
       const deux = safeRedirect(une, { logger: vi.fn() });
       expect(deux, vecteur).toBe(une);
