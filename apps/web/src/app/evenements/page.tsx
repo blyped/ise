@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Alert, Badge, Card, CardHeader, CardTitle, EmptyState, ErrorState } from '@ise/ui-web';
 import { frContent } from '@/i18n/content';
+import { frContentProposals } from '@/i18n/content-proposals';
 import { ROUTES } from '@/lib/routes';
 import { CONTENT_ROUTES, eventRoute } from '@/lib/routes/content';
 import { newCorrelationId } from '@/lib/correlation';
@@ -43,11 +44,11 @@ const one = (value: string | string[] | undefined): string | null =>
  * Le bloc de date est le premier élément de chaque carte, comme dans la
  * maquette, et le fuseau horaire est toujours écrit (CA-EVENT-01).
  *
- * ÉCART ASSUMÉ : le bouton « + Proposer un événement » n'est pas rendu.
- * L'assistant de création (type, informations, programme, intervenants,
- * visibilité) n'est pas livré dans cette tranche ; le rail latéral le
- * dit plutôt que d'afficher un bouton qui ne mène nulle part
- * (MASTER PROMPT §113).
+ * ÉCART LEVÉ (0132) : « Proposer un événement » est désormais rendu. La
+ * tranche d'origine s'en abstenait faute d'assistant de création — un
+ * bouton qui ne mène nulle part est un bouton décoratif (MASTER PROMPT
+ * §113). Le motif a disparu : le membre propose, l'administration
+ * tranche, et rien n'entre dans l'agenda avant sa décision.
  */
 export default async function EventsPage({
   searchParams,
@@ -89,6 +90,17 @@ export default async function EventsPage({
       <p className="text-caption text-primary font-medium">{frContent.events.breadcrumb}</p>
       <h1 className="text-h1 text-text-primary font-bold">{frContent.events.title}</h1>
       <p className="text-body text-text-secondary">{frContent.events.subtitle}</p>
+      {/* 0132 — proposer un evenement au reseau. La proposition part en
+          validation : rien n'entre dans l'agenda avant la decision de
+          l'administration. */}
+      <div className="mt-3 flex flex-wrap gap-3">
+        <Link href={CONTENT_ROUTES.proposeEvent} className={PRIMARY_LINK}>
+          {frContentProposals.member.entryEventTitle}
+        </Link>
+        <Link href={CONTENT_ROUTES.myProposals} className={ACTION_LINK}>
+          {frContentProposals.member.myProposalsLink}
+        </Link>
+      </div>
     </div>
   );
 
@@ -329,6 +341,13 @@ export default async function EventsPage({
               <CardTitle as="h2">{frContent.events.proposeTitle}</CardTitle>
             </CardHeader>
             <p className="text-body-sm text-text-secondary">{frContent.events.proposeBody}</p>
+            {/* 0132 — la carte annonçait une livraison à venir et l'absence
+                de bouton. La voie existe : elle porte donc un lien. */}
+            <p className="mt-5">
+              <Link href={CONTENT_ROUTES.proposeEvent} className={ACTION_LINK}>
+                {frContentProposals.member.entryEventTitle}
+              </Link>
+            </p>
           </Card>
         </aside>
       </div>

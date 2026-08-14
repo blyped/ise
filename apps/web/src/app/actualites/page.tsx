@@ -332,6 +332,17 @@ export default async function NewsFeedPage({
               <CardTitle as="h2">{frContent.news.submitTitle}</CardTitle>
             </CardHeader>
             <p className="text-body-sm text-text-secondary">{frContent.news.submitBody}</p>
+            {/* 0132 — point d'entrée de la proposition membre, au même
+                endroit que la carte qui, jusqu'ici, se contentait
+                d'annoncer que ce n'était pas possible. */}
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href={CONTENT_ROUTES.proposeNews} className={PRIMARY_LINK}>
+                {frContent.news.submitAction}
+              </Link>
+              <Link href={CONTENT_ROUTES.myProposals} className={ACTION_LINK}>
+                {frContent.news.submitTrack}
+              </Link>
+            </div>
           </Card>
         </aside>
       </div>
