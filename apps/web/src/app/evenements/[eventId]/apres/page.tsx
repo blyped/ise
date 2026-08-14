@@ -4,7 +4,6 @@ import { Alert, Avatar, Badge, Card, CardHeader, CardTitle, EmptyState } from '@
 import { frContent } from '@/i18n/content';
 import { ROUTES } from '@/lib/routes';
 import { CONTENT_ROUTES, eventRoute } from '@/lib/routes/content';
-import { composeRoute } from '@/lib/routes/messaging';
 import { memberProfileRoute } from '@/lib/routes/search';
 import { newCorrelationId } from '@/lib/correlation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -37,6 +36,10 @@ export const metadata = { title: frContent.followup.title };
  * porte ; la construire supposerait d'inventer un modèle de données. Ce
  * qui est rendu à la place est la liste réelle des suites déclarées,
  * modifiable, avec la personne concernée quand il y en a une.
+ *
+ * C-08 : la reprise de contact avec cette personne passait par un lien
+ * « Envoyer un message ». La messagerie ISE<->ISE ayant été retirée, il
+ * ne reste que l'accès à son profil.
  */
 export default async function EventFollowupPage({
   params,
@@ -185,6 +188,7 @@ export default async function EventFollowupPage({
                         {formatDay(outcome.declaredAt) ?? ''}
                       </p>
                     </div>
+                    {/* C-08 : plus de lien « Envoyer un message » ici. */}
                     {outcome.targetProfile === null ? null : (
                       <span className="flex flex-wrap gap-2">
                         <Link
@@ -192,12 +196,6 @@ export default async function EventFollowupPage({
                           className="text-caption text-primary hover:underline"
                         >
                           {frContent.common.seeProfile}
-                        </Link>
-                        <Link
-                          href={composeRoute(outcome.targetProfile.profileId)}
-                          className="text-caption text-primary hover:underline"
-                        >
-                          {frContent.followup.contactMessage}
                         </Link>
                       </span>
                     )}
