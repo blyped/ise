@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { Screen } from '../../components/Screen';
 import { frOpportunitiesDetail as t } from '../../i18n/opportunities-detail';
 import { newCorrelationId } from '../../lib/correlation';
+import { publicMediaUrl } from '../../lib/media';
 import {
   declareExternalApplication,
   getOpportunity,
@@ -127,11 +129,27 @@ export function OpportunityDetailScreen({
 
   const alreadyEngaged = opportunity.myApplication !== null;
   const isClosed = opportunity.status !== 'active' && opportunity.status !== 'paused';
+  // Visuel de l'offre : MÊME média que l'encart d'accueil et que le web
+  // (`opportunities.cover_media_id`, D-166). Aucune « version mobile »
+  // téléversée à part — une seule image par contenu (D-172).
+  const coverUrl = publicMediaUrl(opportunity.cover);
 
   return (
     <Screen>
       <Header onBack={onBack} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Sans visuel, rien n'est rendu — jamais un cadre vide en attente. */}
+        {coverUrl === null || opportunity.cover === null ? null : (
+          <Image
+            source={{ uri: coverUrl }}
+            style={styles.cover}
+            resizeMode="cover"
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={opportunity.cover.alt}
+          />
+        )}
+
         <Card>
           <View style={styles.badgeRow}>
             <Badge label={typeLabel} tone="info" />
@@ -409,6 +427,12 @@ const styles = StyleSheet.create({
   scroll: {
     gap: space[5],
     paddingBottom: space[8],
+  },
+  cover: {
+    width: '100%',
+    aspectRatio: 16 / 9,
+    borderRadius: rounded.base,
+    backgroundColor: colors.border,
   },
   badgeRow: {
     flexDirection: 'row',
