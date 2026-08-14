@@ -340,17 +340,21 @@ export async function setNewsCoverMedia(
 }
 
 /**
- * CMS-011 (0114) — image, legende optionnelle et lien d'un pilier de
- * « Un reseau concu pour etre utile ». `linkTarget` est deja une valeur de
- * la liste blanche base ('search' | 'calls' | 'projects' | 'opportunities'
- * | 'applications') ou `null` : la validation finale reste cote base
- * (`set_landing_pillar`), ce wrapper ne fait que transporter l'appel.
+ * CMS-011 (0114, etendu par 0129) — titre, corps, image, legende
+ * optionnelle et lien d'un pilier de « Un reseau concu pour etre utile ».
+ * `linkTarget` est deja une valeur de la liste blanche base ('search' |
+ * 'calls' | 'projects' | 'opportunities' | 'applications') ou `null` : la
+ * validation finale reste cote base (`set_landing_pillar`), ce wrapper ne
+ * fait que transporter l'appel. `title` / `body` a `null` remettent le
+ * pilier sur sa valeur d'origine (i18n).
  */
 export async function setLandingPillar(
   pillarKey: 'connecter' | 'entraider' | 'collaborer' | 'impacter',
   mediaId: string | null,
   caption: string | null,
   linkTarget: string | null,
+  title: string | null,
+  body: string | null,
   correlationId: string,
 ): Promise<MutationResult> {
   const supabase = await createSupabaseServerClient();
@@ -359,6 +363,8 @@ export async function setLandingPillar(
     p_media_id: mediaId,
     p_caption: caption,
     p_link_target: linkTarget,
+    p_title: title,
+    p_body: body,
   });
   if (error) return failure(error, correlationId, 'set_landing_pillar');
   return { ok: true, data: undefined };

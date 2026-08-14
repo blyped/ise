@@ -396,16 +396,24 @@ export interface LandingPartnerCampaign {
 }
 
 /**
- * 0114 — contenu editorial d'un pilier de « Un reseau concu pour etre
- * utile » (Connecter / Entraider / Collaborer / Impacter). Le titre et le
- * corps restent un discours de marque fixe (`fr.public.pillars`, i18n) :
- * cette projection ne porte que ce qui varie dans le temps.
+ * 0114, etendu par 0129 — contenu editorial d'un pilier de « Un reseau
+ * concu pour etre utile » (Connecter / Entraider / Collaborer / Impacter).
+ * Depuis 0129 le titre et le corps viennent eux aussi de la base : la
+ * projection porte tout ce que l'administrateur peut changer.
  */
 export interface LandingPillar {
   /** 'connecter' | 'entraider' | 'collaborer' | 'impacter'. */
   readonly pillarKey: string;
+  /**
+   * 0129 — sur-titre du pilier. `null` = l'administrateur n'a rien saisi (ou
+   * a vide le champ) : le rendu reprend la valeur d'origine i18n plutot que
+   * d'afficher une carte sans titre.
+   */
+  readonly title: string | null;
+  /** 0129 — corps du pilier. Meme regle de repli que `title`. */
+  readonly body: string | null;
   readonly image: LandingMedia | null;
-  /** Texte editorial optionnel, en complement du corps fixe. */
+  /** Texte editorial optionnel, EN PLUS du corps (il ne le remplace pas). */
   readonly caption: string | null;
   /**
    * Cle d'une liste blanche cote base ('search' | 'calls' | 'projects' |
@@ -758,12 +766,19 @@ export const opportunitySchema = z
 export const pillarSchema = z
   .object({
     pillar_key: requiredText,
+    // 0129 — `nullableText` accepte l'absence de la cle : un instantane
+    // « last known good » anterieur a 0129 n'en contient pas, et se rend
+    // alors avec les valeurs d'origine plutot que d'echouer a la validation.
+    title: nullableText,
+    body: nullableText,
     image: z.unknown(),
     caption: nullableText,
     link_target: nullableText,
   })
   .transform<LandingPillar>((row) => ({
     pillarKey: row.pillar_key,
+    title: row.title,
+    body: row.body,
     image: parseMedia(row.image),
     caption: row.caption,
     linkTarget: row.link_target,
