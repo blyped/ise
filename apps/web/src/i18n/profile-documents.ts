@@ -108,7 +108,7 @@ export function fillDocuments(
 /** Taille lisible, en français (espace insécable avant l'unité). */
 export function frenchFileSize(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes <= 0) return '—';
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
-  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} Mo`;
 }
