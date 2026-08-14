@@ -59,6 +59,58 @@ export const profileSkillSchema = z.object({
 });
 export type ProfileSkillInput = z.infer<typeof profileSkillSchema>;
 
+/* ------------------------------------------------------------------ */
+/* Vitrine publique — brève description et consentements (révision D-135) */
+/* ------------------------------------------------------------------ */
+
+/**
+ * SOURCE DE VÉRITÉ UNIQUE des bornes de la brève description publique.
+ *
+ * Ces deux valeurs ne sont pas choisies ici : elles RECOPIENT la contrainte
+ * `ise_profiles_public_summary_length` posée en base par la migration 0057
+ * (`char_length(btrim(public_summary)) between 40 and 400`). Une divergence
+ * produirait un formulaire qui accepte un texte que la base refuse, avec un
+ * message d'erreur incompréhensible. Toute évolution passe donc d'abord par
+ * une migration, puis par ces constantes.
+ */
+export const PUBLIC_SUMMARY_MIN = 40;
+export const PUBLIC_SUMMARY_MAX = 400;
+
+/** Alternative textuelle du portrait public (contrôlée aussi par set_my_public_photo). */
+export const PUBLIC_PHOTO_ALT_MIN = 3;
+export const PUBLIC_PHOTO_ALT_MAX = 200;
+
+/**
+ * Vitrine publique du membre.
+ *
+ * Les deux consentements sont DISTINCTS et le restent :
+ *   · `allowPublicFeature` — paraître comme « ISE du jour », texte seul ;
+ *   · `allowPublicPhoto`   — publier un portrait sur le site public.
+ * Les confondre était précisément le reproche de D-135.
+ *
+ * La brève description est exigée dès qu'un des deux consentements est
+ * donné : sans elle, le profil n'est de toute façon pas éligible côté base
+ * (`private.featured_profile_eligible`, migration 0120). Le dire ici évite
+ * un consentement qui ne produirait jamais rien.
+ */
+export const publicShowcaseSchema = z
+  .object({
+    publicSummary: z
+      .string()
+      .trim()
+      .min(PUBLIC_SUMMARY_MIN, `La brève description doit faire au moins ${PUBLIC_SUMMARY_MIN} caractères.`)
+      .max(PUBLIC_SUMMARY_MAX, `La brève description ne peut pas dépasser ${PUBLIC_SUMMARY_MAX} caractères.`)
+      .optional(),
+    allowPublicFeature: z.boolean().default(false),
+    allowPublicPhoto: z.boolean().default(false),
+  })
+  .refine((d) => !(d.allowPublicFeature || d.allowPublicPhoto) || d.publicSummary !== undefined, {
+    path: ['publicSummary'],
+    message:
+      'Rédigez d’abord votre brève description : sans elle, votre profil ne peut pas paraître.',
+  });
+export type PublicShowcaseInput = z.infer<typeof publicShowcaseSchema>;
+
 /** ISE-033 — Modifier ma disponibilité */
 export const availabilitySchema = z.object({
   availabilityType: z.string().min(2),

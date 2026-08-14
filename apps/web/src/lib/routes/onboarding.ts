@@ -49,6 +49,12 @@ export const PROFILE_ROUTES = {
   /** ISE-030 / ISE-031 — Completion et elements manquants. */
   completion: '/mon-profil/completion',
   missingItems: '/mon-profil/elements-manquants',
+  /**
+   * Vitrine publique : breve description, consentement « ISE du jour » et
+   * consentement DISTINCT de publication du portrait (revision D-135,
+   * migration 0120).
+   */
+  publicShowcase: '/mon-profil/vitrine-publique',
 } as const;
 
 /** ISE-032 / ISE-033 — Ma disponibilite (entree de navigation dediee, D-95). */
