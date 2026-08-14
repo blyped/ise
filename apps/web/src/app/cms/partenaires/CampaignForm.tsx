@@ -117,6 +117,7 @@ export function CampaignForm({
             <CmsField
               name="placement"
               label={frCms.partners.fieldPlacement}
+              hint={frCms.partners.placementFooterHelp}
               error={errors['placement']}
             >
               {(props) => (

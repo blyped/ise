@@ -26,6 +26,12 @@ export const CMS_NAV: readonly CmsNavItem[] = [
   { href: CMS_ROUTES.opportunities, label: frCms.nav.opportunities, requires: 'cms.read' },
   { href: CMS_ROUTES.featuredProfile, label: frCms.nav.featuredProfile, requires: 'cms.read' },
   { href: CMS_ROUTES.partners, label: frCms.nav.partners, requires: 'cms.read' },
+  // CMS-013 (0133) — logos des organisations ou travaillent les ISE.
+  {
+    href: CMS_ROUTES.landingOrganizations,
+    label: frCms.nav.landingOrganizations,
+    requires: 'cms.read',
+  },
   { href: CMS_ROUTES.media, label: frCms.nav.media, requires: 'cms.read' },
   { href: CMS_ROUTES.schedule, label: frCms.nav.schedule, requires: 'cms.read' },
   // CMS-012 (0121) — file de passage des encarts « À la une du réseau ».
