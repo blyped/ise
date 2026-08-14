@@ -9,7 +9,7 @@ import { frDonations } from '@/i18n/donations';
 import { DONATION_ROUTES, donationFailureRoute, donationReturnRoute } from '@/lib/routes/donations';
 import { createStripeCheckoutSession } from '@/lib/donations/stripe';
 import { createCinetpayPayment } from '@/lib/donations/cinetpay';
-import { isDonationProvider, type DonationProvider } from '@/lib/donations/shared';
+import { isDonationProvider } from '@/lib/donations/shared';
 import { loadDonationCurrencyRules } from '@/lib/queries/donations';
 
 /**
@@ -62,12 +62,13 @@ export async function startDonationAction(
 
   const provider = readText(formData.get('provider'));
   if (!isDonationProvider(provider)) {
-    return failure(frDonations.form.errorProvider, correlationId, { provider: frDonations.form.errorProvider });
+    return failure(frDonations.form.errorProvider, correlationId, {
+      provider: frDonations.form.errorProvider,
+    });
   }
 
   const secrets = donationEnv();
-  const providerSecrets: DonationProvider extends never ? never : unknown =
-    provider === 'stripe' ? secrets.stripe : secrets.cinetpay;
+  const providerSecrets = provider === 'stripe' ? secrets.stripe : secrets.cinetpay;
   if (providerSecrets === null) {
     return failure(frDonations.form.errorProviderUnavailable, correlationId);
   }
@@ -134,6 +135,7 @@ export async function startDonationAction(
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    const email = user?.email;
 
     const session = await createStripeCheckoutSession({
       secretKey: secrets.stripe.secretKey,
@@ -144,7 +146,7 @@ export async function startDonationAction(
       // origine : les cookies de session repartent normalement.
       successUrl: `${siteUrl}${donationReturnRoute(reference)}`,
       cancelUrl: `${siteUrl}${donationFailureRoute(reference)}`,
-      customerEmail: typeof user?.email === 'string' && user.email.length > 0 ? user.email : null,
+      customerEmail: typeof email === 'string' && email.length > 0 ? email : null,
       productName: frDonations.title,
     });
 
