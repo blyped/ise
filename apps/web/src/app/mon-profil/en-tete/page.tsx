@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Alert, ErrorState } from '@ise/ui-web';
 import { frProfile } from '@/i18n/profile';
+import { frShowcase } from '@/i18n/profile-showcase';
 import { ROUTES } from '@/lib/routes';
 import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { requireProfile } from '@/lib/profile-guard';
@@ -73,6 +74,23 @@ export default async function EditProfileHeaderPage() {
 
         <Alert variant="info" title={frProfile.header.photoTitle}>
           {frProfile.header.photoUnavailable}
+        </Alert>
+
+        {/* Entrée vers « Ma vitrine publique » : brève description et les deux
+            consentements de parution sur le site public (révision D-135,
+            migration 0120). Elle vit sur un écran séparé parce qu'elle
+            n'engage pas la même chose que les champs ci-dessous : ceux-ci
+            s'adressent aux membres connectés, celle-là au web ouvert. */}
+        <Alert
+          variant="info"
+          title={frShowcase.navLabel}
+          action={
+            <Link href={PROFILE_ROUTES.publicShowcase} className={LINK_CLASS}>
+              {frShowcase.navLabel}
+            </Link>
+          }
+        >
+          {frShowcase.navHint}
         </Alert>
 
         {!countries.ok || !organizations.ok || !rules.ok ? (
