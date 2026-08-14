@@ -419,6 +419,13 @@ export interface LandingPartnerCampaign {
   /** Cible externe, uniquement si elle est en `https:`. */
   readonly externalUrl: string | null;
   readonly media: LandingMedia | null;
+  /**
+   * Variante du visuel pour les petits ecrans, projetee par
+   * `get_landing_partners` depuis 0133. `null` = le partenaire n'en a pas
+   * fourni : le rendu retombe sur `media`. Meme patron que
+   * `LandingSlide.mobileMedia`.
+   */
+  readonly mobileMedia: LandingMedia | null;
   /** Logo du partenaire, resolu dans la mediatheque. `null` s'il n'y est pas. */
   readonly logo: LandingMedia | null;
   /** Mention de transparence imposee par §26. Jamais vide. */
@@ -930,6 +937,7 @@ export const partnerSchema = z
     target_url: z.unknown(),
     sponsored_label: z.unknown(),
     media: z.unknown(),
+    mobile_media: z.unknown(),
     organization_logo: z.unknown(),
   })
   .transform<LandingPartnerCampaign>((row) => ({
@@ -944,6 +952,8 @@ export const partnerSchema = z
     target: toEntityRef(row.target_entity_type, row.target_entity_id),
     externalUrl: safeExternalUrl(row.target_url),
     media: parseMedia(row.media),
+    // 0133 — visuel mobile facultatif ; absent ou invalide => null.
+    mobileMedia: parseMedia(row.mobile_media),
     logo: parseMedia(row.organization_logo),
     // §26 : la mention n'est jamais facultative, ni laissee au CMS.
     sponsoredLabel: normalizeSponsoredLabel(row.sponsored_label),
@@ -998,6 +1008,7 @@ export function parseStats(payload: unknown): LandingStatsSection {
   }
 
   const source = payload as Record<string, unknown>;
+
   const items: LandingStat[] = [];
   for (const id of STAT_IDS) {
     const parsed = statValueSchema.safeParse(source[id]);
