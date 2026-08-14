@@ -275,16 +275,25 @@ export const frCms = {
   pillars: {
     title: 'Piliers du réseau',
     subtitle:
-      'Connecter, Entraider, Collaborer, Impacter — le titre et le texte de chaque pilier restent fixes. Le CMS pilote uniquement leur visuel, une légende optionnelle et le lien vers un écran réel.',
+      'Connecter, Entraider, Collaborer, Impacter — les quatre encarts de « Un réseau conçu pour être utile » sur la page d’accueil. Modifiez ici leur titre, leur texte, leur visuel, une légende optionnelle et le lien vers un écran réel.',
     scopeNote:
-      'Ni le titre ni le texte des quatre piliers ne sont modifiables ici : ils relèvent du discours de marque. Un pilier sans lien choisi reste du texte seul — jamais un écran inventé (D-168).',
+      'Les quatre piliers sont fixes : on n’en ajoute ni n’en supprime. Tout leur contenu se modifie ici (0129). Laisser le titre ou le texte vide remet le pilier sur son libellé d’origine — la page d’accueil n’affiche jamais un encart sans texte. Un pilier sans lien choisi reste du texte seul — jamais un écran inventé (D-168).',
+    fieldTitle: 'Titre du pilier',
+    fieldTitleHint:
+      'Le mot affiché en majuscules en haut de l’encart (2 à 60 caractères). Laissez vide pour revenir au libellé d’origine.',
+    fieldBody: 'Texte du pilier',
+    fieldBodyHint:
+      'La phrase affichée sous le titre (2 à 280 caractères). Laissez vide pour revenir au texte d’origine.',
+    /** Compteur commun aux deux champs libres, même formulation qu’ailleurs. */
+    charactersLeft: '{count} caractère restant',
+    charactersLeftPlural: '{count} caractères restants',
     fieldMedia: 'Visuel du pilier',
     fieldMediaNone: 'Aucun visuel',
     fieldMediaHint:
       'Visuel choisi dans la médiathèque publique — jamais un chemin recopié à la main. Format recommandé : 1600 × 900 px (ratio 16/9), JPEG/WebP/AVIF, 5 Mo maximum. Sans visuel, le pilier s’affiche en texte seul (0114).',
     fieldCaption: 'Légende (optionnelle)',
     fieldCaptionHint:
-      'S’ajoute au texte fixe du pilier, sans le remplacer. Laissez vide pour n’afficher que le texte de marque.',
+      'S’ajoute au texte du pilier, sans le remplacer — une précision de circonstance, par exemple. Laissez vide pour n’afficher que le texte du pilier.',
     fieldLink: 'Lien',
     fieldLinkNone: 'Aucun lien (texte seul)',
     linkOptions: {
