@@ -421,7 +421,7 @@ export const frCms = {
       'Ces règles sont celles appliquées en base par private.featured_profile_eligible(). L’écran les lit, il ne les paraphrase pas.',
     ruleMinDays: 'Délai minimum entre deux mises en avant (jours)',
     ruleRequireClaimed: 'Profil réclamé et actif',
-    ruleRequireAvatar: 'Photo de profil renseignée',
+    ruleRequirePublicPhoto: 'Portrait public consenti',
     ruleRequirePromotion: 'Promotion renseignée',
     ruleRequireExpertise: 'Expertise ou fonction renseignée',
     ruleBalance: 'Dimension d’équilibrage de la rotation',
