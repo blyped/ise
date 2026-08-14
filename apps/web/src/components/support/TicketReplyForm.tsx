@@ -4,6 +4,7 @@ import { useActionState } from 'react';
 import { Alert, Button } from '@ise/ui-web';
 import { frSupport } from '@/i18n/support';
 import { initialFormState } from '@/lib/form-state';
+import { SUPPORT_ATTACHMENT_ACCEPT } from '@/lib/support-attachments';
 import { replyToSupportTicketAction, transitionSupportTicketAction } from '@/app/aide/actions';
 
 /**
@@ -13,6 +14,10 @@ import { replyToSupportTicketAction, transitionSupportTicketAction } from '@/app
  * un `update` direct de `status` est refuse par le trigger de 0049. Le
  * bouton n'est rendu que lorsque la transition est REELLEMENT possible —
  * la base a deja repondu `can_close` / `can_reopen`.
+ *
+ * Une reponse peut porter des pieces jointes depuis 0131 : c'est souvent
+ * dans le fil, apres une premiere question de l'administration, que la
+ * capture d'ecran utile arrive.
  */
 export function TicketReplyForm({
   ticketId,
@@ -73,6 +78,34 @@ export function TicketReplyForm({
               {replyState.fieldErrors['body']}
             </p>
           ) : null}
+
+          <label htmlFor="pieces-reponse" className="text-body-sm text-text-primary font-medium">
+            {frSupport.attachments.label}
+          </label>
+          <input
+            id="pieces-reponse"
+            name="attachments"
+            type="file"
+            multiple
+            accept={SUPPORT_ATTACHMENT_ACCEPT}
+            aria-invalid={replyState.fieldErrors['attachments'] !== undefined}
+            aria-describedby={
+              replyState.fieldErrors['attachments']
+                ? 'pieces-reponse-erreur'
+                : 'pieces-reponse-aide'
+            }
+            className="text-body-sm text-text-primary file:border-border file:bg-surface-muted file:text-body-sm file:mr-4 file:rounded-md file:border file:px-4 file:py-2"
+          />
+          {replyState.fieldErrors['attachments'] ? (
+            <p id="pieces-reponse-erreur" className="text-caption text-error">
+              {replyState.fieldErrors['attachments']}
+            </p>
+          ) : (
+            <p id="pieces-reponse-aide" className="text-caption text-text-muted">
+              {frSupport.attachments.hint} {frSupport.attachments.noScan}
+            </p>
+          )}
+
           <Button
             type="submit"
             loading={replyPending}

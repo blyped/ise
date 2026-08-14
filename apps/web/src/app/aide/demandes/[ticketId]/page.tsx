@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { loadViewerContext } from '@/lib/queries/viewer';
 import { loadTicket } from '@/lib/queries/support';
 import { formatDateTime } from '@/lib/messaging-view';
+import { formatBytes, type SupportAttachment } from '@/lib/support-attachments';
 import { AppShell } from '@/components/layout/AppShell';
 import { TicketReplyForm } from '@/components/support/TicketReplyForm';
 
@@ -18,8 +19,10 @@ export const metadata = { title: frSupport.ticket.listTitle };
 const LINK =
   'inline-flex min-h-[44px] items-center justify-center rounded-base border border-[#CBD5E1] bg-surface px-5 text-body-sm font-medium text-text-primary hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue';
 
+/** Six etats depuis 0131 : `acknowledged` s'ajoute aux cinq precedents. */
 const STATUS_TONE: Record<string, 'info' | 'accent' | 'success' | 'neutral'> = {
   open: 'info',
+  acknowledged: 'info',
   in_progress: 'info',
   waiting_user: 'accent',
   resolved: 'success',
@@ -27,13 +30,17 @@ const STATUS_TONE: Record<string, 'info' | 'accent' | 'success' | 'neutral'> = {
 };
 
 /**
- * ISE-100 — fil d'une demande.
+ * ISE-100 — fil d'une remontee.
  *
- * Les NOTES INTERNES du support ne figurent pas dans ce fil : elles sont
- * filtrees en base (`is_internal_note`, 0049 et 0053). Le membre voit
- * ses messages et les reponses qui lui sont adressees, rien de plus.
+ * Les NOTES INTERNES de l'administration ne figurent pas dans ce fil :
+ * elles sont filtrees en base (`is_internal_note`, 0049 et 0053). Le
+ * CONTEXTE TECHNIQUE non plus : `get_support_ticket()` ne le renvoie pas
+ * (0131). Le membre voit ses messages, les reponses qui lui sont
+ * adressees et les pieces jointes du fil, rien de plus.
  *
  * D-85 : aucun delai cible, aucune date d'echeance, aucune promesse.
+ * La priorite n'est pas affichee non plus : le membre ne la choisit pas,
+ * elle ne lui est pas opposable.
  */
 export default async function TicketDetailPage({
   params,
@@ -86,6 +93,38 @@ export default async function TicketDetailPage({
 
   const detail = ticket.data;
 
+  const attachmentList = (attachments: readonly SupportAttachment[], onDark: boolean) =>
+    attachments.length === 0 ? null : (
+      <ul
+        aria-label={frSupport.attachments.listLabel}
+        className={`mt-3 flex flex-col gap-1 border-t pt-3 ${
+          onDark ? 'border-white/30' : 'border-border'
+        }`}
+      >
+        {attachments.map((attachment) => (
+          <li key={attachment.attachmentId} className="text-caption">
+            {attachment.href !== null ? (
+              <a
+                href={attachment.href}
+                target="_blank"
+                rel="noreferrer"
+                className={`underline ${onDark ? 'text-white' : 'text-primary'}`}
+              >
+                {attachment.fileName}
+              </a>
+            ) : (
+              <span className={onDark ? 'text-white/80' : 'text-text-muted'}>
+                {attachment.fileName}
+              </span>
+            )}{' '}
+            <span className={onDark ? 'text-white/70' : 'text-text-muted'}>
+              ({formatBytes(attachment.byteSize)})
+            </span>
+          </li>
+        ))}
+      </ul>
+    );
+
   return shell(
     <div className="mx-auto flex w-full max-w-[820px] flex-col gap-6">
       <Link href={SUPPORT_ROUTES.tickets} className={`${LINK} self-start`}>
@@ -97,6 +136,10 @@ export default async function TicketDetailPage({
           variant="success"
           title={tsup(frSupport.ticket.created, { reference: detail.referenceCode })}
         />
+      ) : null}
+
+      {query['pj'] === 'partiel' ? (
+        <Alert variant="warning" title={frSupport.attachments.partial} />
       ) : null}
 
       <Card>
@@ -152,6 +195,7 @@ export default async function TicketDetailPage({
                   {formatDateTime(message.createdAt)}
                 </p>
                 <p className="whitespace-pre-wrap break-words">{message.body}</p>
+                {attachmentList(message.attachments, message.fromMe)}
               </div>
             </li>
           ))}

@@ -1,22 +1,35 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { Alert, Button, Select } from '@ise/ui-web';
 import { frSupport } from '@/i18n/support';
 import { initialFormState } from '@/lib/form-state';
 import type { SupportCategory } from '@/lib/messaging-view';
+import { collectSupportContext } from '@/lib/support-context';
+import {
+  SUPPORT_ATTACHMENT_ACCEPT,
+  SUPPORT_ATTACHMENT_MAX_FILES,
+} from '@/lib/support-attachments';
 import { createSupportTicketAction } from '@/app/aide/actions';
 
 /**
- * ISE-100 — creation d'une demande.
+ * ISE-100 — « Remonter une information ».
  *
- * D-85 — aucun champ d'urgence n'est propose et aucun delai n'est
- * annonce : l'urgence est attribuee par l'equipe (la politique
- * d'insertion de 0049 impose `urgency_source = 'system'`), et aucun
- * engagement de traitement n'existe dans les documents.
+ * D-85 — aucun champ de priorite n'est propose et aucun delai n'est
+ * annonce : la priorite initiale est posee en base d'apres la NATURE de
+ * la remontee (`support_categories.default_urgency`, 0131), puis ajustee
+ * par l'administration. Le texte le dit au demandeur plutot que de
+ * laisser croire a un arbitrage silencieux.
  *
- * Aucun bouton de piece jointe n'est rendu : le televersement n'est pas
- * livre. Le texte le dit plutot que de laisser croire le contraire.
+ * CONTEXTE TECHNIQUE — collecte dans un effet, jamais au rendu :
+ * `navigator` et `window` n'existent pas au rendu serveur, et lire un
+ * contexte different entre serveur et client produirait une discordance
+ * d'hydratation. Tant que l'effet n'a pas tourne, seuls la page et la
+ * surface partent — c'est exactement ce qui existait avant 0131.
+ *
+ * PIECES JOINTES — le champ est reellement branche depuis 0131 (bucket
+ * `support-attachments`, RPC `attach_support_file`). Aucune analyse
+ * antivirale n'est faite : le texte le dit, il ne le laisse pas croire.
  */
 export function TicketForm({
   categories,
@@ -31,10 +44,18 @@ export function TicketForm({
     createSupportTicketAction,
     initialFormState,
   );
+  const [context, setContext] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setContext(collectSupportContext(fromPath));
+  }, [fromPath]);
 
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <input type="hidden" name="fromPath" value={fromPath} />
+      {Object.entries(context).map(([key, value]) => (
+        <input key={key} type="hidden" name={`ctx_${key}`} value={value} />
+      ))}
 
       <p aria-live="polite" aria-atomic="true" className="sr-only">
         {isPending ? frSupport.ticket.submitting : (state.message ?? '')}
@@ -126,6 +147,37 @@ export function TicketForm({
         )}
       </div>
 
+      <div className="flex flex-col gap-2">
+        <label htmlFor="pieces-demande" className="text-body-sm text-text-primary font-medium">
+          {frSupport.attachments.label}
+        </label>
+        <input
+          id="pieces-demande"
+          name="attachments"
+          type="file"
+          multiple
+          accept={SUPPORT_ATTACHMENT_ACCEPT}
+          aria-invalid={state.fieldErrors['attachments'] !== undefined}
+          aria-describedby={
+            state.fieldErrors['attachments'] ? 'pieces-erreur' : 'pieces-aide pieces-scan'
+          }
+          className="text-body-sm text-text-primary file:border-border file:bg-surface-muted file:text-body-sm file:mr-4 file:rounded-md file:border file:px-4 file:py-2"
+        />
+        {state.fieldErrors['attachments'] ? (
+          <p id="pieces-erreur" className="text-caption text-error">
+            {state.fieldErrors['attachments']}
+          </p>
+        ) : (
+          <p id="pieces-aide" className="text-caption text-text-muted">
+            {frSupport.attachments.hint}
+          </p>
+        )}
+        <p id="pieces-scan" className="text-caption text-text-muted">
+          {frSupport.attachments.noScan}
+        </p>
+        <p className="sr-only">{SUPPORT_ATTACHMENT_MAX_FILES} fichiers au maximum par message.</p>
+      </div>
+
       <div className="rounded-base border-border bg-surface-muted flex flex-col gap-2 border p-4">
         <p className="text-body-sm text-text-primary font-medium">
           {frSupport.ticket.technicalContextTitle}
@@ -134,7 +186,6 @@ export function TicketForm({
       </div>
 
       <p className="text-caption text-text-muted">{frSupport.ticket.urgencyNotice}</p>
-      <p className="text-caption text-text-muted">{frSupport.ticket.attachmentsUnavailable}</p>
 
       <Button
         type="submit"
