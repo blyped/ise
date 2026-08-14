@@ -3,11 +3,13 @@ import { fr } from '@/i18n/fr';
 import { publicEnv } from '@/lib/env';
 import { ROUTES } from '@/lib/routes';
 import { LANDING_SECTION_KEYS, loadLandingData, sectionTitle } from '@/lib/public/landing-data';
+import { loadCountryPresence } from '@/lib/public/country-presence';
 import { readPublicViewer } from '@/lib/public/protected-route.server';
 import { PublicShell } from './(public)/_components/PublicShell';
 import { CarouselSection } from './(public)/_components/sections/CarouselSection';
 import { HighlightsSection } from './(public)/_components/sections/HighlightsSection';
 import { NetworkSection } from './(public)/_components/sections/NetworkSection';
+import { CountryPresenceSection } from './(public)/_components/sections/CountryPresenceSection';
 import { ExpertisesSection } from './(public)/_components/sections/ExpertisesSection';
 import { PartnersSection } from './(public)/_components/sections/PartnersSection';
 import { OrganizationsSection } from './(public)/_components/sections/OrganizationsSection';
@@ -62,7 +64,11 @@ export const metadata: Metadata = (() => {
 })();
 
 export default async function LandingPage() {
-  const [viewer, landing] = await Promise.all([readPublicViewer(), loadLandingData()]);
+  const [viewer, landing, countryPresence] = await Promise.all([
+    readPublicViewer(),
+    loadLandingData(),
+    loadCountryPresence(),
+  ]);
 
   /*
    * ADDENDUM §8 — les titres de section appartiennent au CMS quand il en
@@ -96,6 +102,18 @@ export default async function LandingPage() {
           pillars={landing.pillars}
           title={sectionTitle(sections, LANDING_SECTION_KEYS.stats) ?? undefined}
         />
+        {/*
+          0133 — « Ou sont les ISE actuellement ? ».
+
+          Immediatement apres les chiffres du reseau, parce que c'est le meme
+          propos : les deux blocs comptent le meme perimetre de profils, et la
+          carte repond a la question que le chiffre « pays » fait naitre. Sa
+          lecture est separee de `loadLandingData()` : ce n'est pas un contenu
+          du CMS mais une agregation, avec son propre seuil de confidentialite
+          (migration 0133). Aucun pays au-dessus du seuil, ou lecture en
+          panne : la section ne rend rien.
+        */}
+        <CountryPresenceSection presence={countryPresence} />
         <ExpertisesSection
           section={landing.expertises}
           title={sectionTitle(sections, LANDING_SECTION_KEYS.expertises) ?? undefined}

@@ -44,6 +44,12 @@ export const LANDING_ANCHORS = {
    */
   organizations: 'organisations',
   sponsorBand: 'partenaires-bandeau',
+  /**
+   * 0133 — « Où sont les ISE actuellement ? ». Section à part entière,
+   * sous les chiffres du réseau, et non une sous-partie de `stats` : elle
+   * répond à une autre question et se cite donc séparément.
+   */
+  countryPresence: 'ou-sont-les-ise',
 } as const;
 
 export interface PublicNavItem {

@@ -185,6 +185,39 @@ export const frPublic = {
     label: 'Les organisations où travaillent les ISE',
   },
 
+  /**
+   * 0133 — « Où sont les ISE actuellement ? ».
+   *
+   * Aucune de ces phrases n'affirme quoi que ce soit d'elle-même : chacune est
+   * un gabarit dont les nombres viennent de `get_landing_country_presence()`.
+   * Les trois mentions du bas disent ce que la carte NE montre pas — la
+   * couverture réelle, ce que le seuil de confidentialité masque, et les pays
+   * que le fond simplifié ne sait pas placer. Une carte muette laisserait
+   * croire à une cartographie complète du réseau.
+   */
+  countryPresence: {
+    title: 'Où sont les ISE actuellement ?',
+    /** Titre du tableau des pays, pour les lecteurs d'écran. */
+    listLabel: 'Nombre d’ISE par pays de présence',
+    /** Infobulle d'un point de la carte, au survol. */
+    dotTitle: '{country} : {count} ISE',
+    coverage: 'Pays d’exercice renseigné pour {located} des {total} profils publiés.',
+    /**
+     * Seuil d'agrégation k = 3 (migration 0133) : un pays comptant un ou deux
+     * ISE n'est ni nommé ni pointé, car il désignerait des personnes sur une
+     * page publique. Les ISE concernés restent comptés, jamais localisés.
+     */
+    threshold:
+      'Un pays n’est nommé qu’à partir de {threshold} ISE : {countries} pays, où exercent {profiles} ISE, ne sont donc ni nommés ni situés sur la carte.',
+    thresholdOne:
+      'Un pays n’est nommé qu’à partir de {threshold} ISE : un pays, où exercent {profiles} ISE, n’est donc ni nommé ni situé sur la carte.',
+    unplotted:
+      '{count} pays de la liste sont trop petits pour ce fond de carte simplifié : leur nombre d’ISE figure ci-dessus.',
+    unplottedOne:
+      'Un pays de la liste est trop petit pour ce fond de carte simplifié : son nombre d’ISE figure ci-dessus.',
+    computedAt: 'Répartition calculée le {date}.',
+  },
+
   /** États dégradés, ADDENDUM §47. Formulés côté visiteur, sans jargon. */
   degraded: {
     sectionUnavailable: 'Cette section est momentanément indisponible.',
