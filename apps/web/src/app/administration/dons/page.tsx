@@ -1,8 +1,11 @@
-import { Alert, Badge, Card, CardHeader, CardTitle, EmptyState } from '@ise/ui-web';
+import { Alert, Badge, Card, CardHeader, CardTitle } from '@ise/ui-web';
 import { frDonations, tdon } from '@/i18n/donations';
 import { requireAdminPermission } from '@/lib/admin/permissions';
-import { loadAdminDonations, loadAdminDonationSummary } from '@/lib/queries/donations';
-import { loadDonationCurrencyRules } from '@/lib/queries/donations';
+import {
+  loadAdminDonationSummary,
+  loadAdminDonations,
+  loadDonationCurrencyRules,
+} from '@/lib/queries/donations';
 import { formatDonationAmount, type DonationStatus } from '@/lib/donations/shared';
 import { AdminPageHeader } from '../_components/AdminPageHeader';
 
@@ -21,6 +24,10 @@ import { AdminPageHeader } from '../_components/AdminPageHeader';
  * LES DEVISES NE SONT JAMAIS ADDITIONNEES entre elles. Aucun taux de change
  * ne fait autorite dans ce projet ; en inventer un fausserait la
  * comptabilite du porteur. Une ligne par devise, et le texte le dit.
+ *
+ * LE NOM DU DONATEUR n'apparait que si le lecteur a par ailleurs le droit
+ * de voir le profil (RLS de `ise_profiles`) et si le don n'est pas anonyme.
+ * L'ecran le dit explicitement plutot que d'afficher une case vide.
  */
 
 export const dynamic = 'force-dynamic';
@@ -105,7 +112,7 @@ export default async function AdminDonationsPage() {
             <div className="flex flex-wrap gap-2">
               {statusEntries.map(([status, count]) => (
                 <Badge key={status} tone="neutral">
-                  {(STATUS_LABELS[status] ?? status) + ' : ' + String(count)}
+                  {`${STATUS_LABELS[status] ?? status} : ${String(count)}`}
                 </Badge>
               ))}
             </div>
@@ -114,24 +121,24 @@ export default async function AdminDonationsPage() {
       </Card>
 
       <Card padding="none">
-        <div className="px-6 pt-6">
+        <div className="px-6 pt-6 pb-4">
           <CardTitle as="h2">{frDonations.admin.listTitle}</CardTitle>
         </div>
 
         {rows === null ? (
-          <div className="p-6">
+          <div className="px-6 pb-6">
             <Alert variant="error" title={frDonations.admin.loadError}>
-              {frDonations.correlationLabel}
+              {frDonations.admin.summaryNote}
             </Alert>
           </div>
         ) : rows.length === 0 ? (
-          <div className="p-6">
-            <EmptyState title={frDonations.admin.listEmpty} />
-          </div>
+          <p className="text-body-sm text-text-secondary px-6 pb-6">
+            {frDonations.admin.listEmpty}
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] border-collapse">
-              <thead className="border-border border-b">
+              <thead className="border-border border-y">
                 <tr>
                   <th scope="col" className={HEAD}>
                     {frDonations.admin.columnDate}
@@ -163,11 +170,7 @@ export default async function AdminDonationsPage() {
                         : (row.donorName ?? frDonations.admin.donorUnavailable)}
                     </td>
                     <td className={CELL}>
-                      {formatDonationAmount(
-                        row.amountMinor,
-                        row.currency,
-                        exponentOf(row.currency),
-                      )}
+                      {formatDonationAmount(row.amountMinor, row.currency, exponentOf(row.currency))}
                     </td>
                     <td className={CELL}>{providerLabel(row.provider)}</td>
                     <td className={CELL}>
