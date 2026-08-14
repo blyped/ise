@@ -1,3 +1,4 @@
+import { parsePublicMedia, type PublicMedia } from '../media';
 import { getSupabaseClient } from '../supabase/client';
 
 /**
@@ -144,6 +145,14 @@ export interface OpportunitySummary {
   readonly canApplyInternally: boolean;
   readonly isManager: boolean;
   readonly isSaved: boolean;
+  /**
+   * 0113 / D-166 — visuel editorial de l'offre, resolu dans la mediatheque
+   * PUBLIQUE par `opportunities.cover_media_id`. MEME fichier que l'encart
+   * d'accueil et que le web : une seule image televersee dans
+   * /cms/opportunites, jamais de « version mobile » distincte (D-172).
+   * `null` si aucun visuel n'est choisi ou s'il n'est plus publiable.
+   */
+  readonly cover: PublicMedia | null;
   readonly skills: readonly WeightedTag[];
   readonly relevance: Relevance | null;
   readonly myApplication: MyApplicationSummary | null;
@@ -249,6 +258,7 @@ function toOpportunitySummary(value: unknown): OpportunitySummary | null {
     canApplyInternally: bool(raw['can_apply_internally']),
     isManager: bool(raw['is_manager']),
     isSaved: bool(raw['is_saved']),
+    cover: parsePublicMedia(raw['cover']),
     skills: toWeightedTags(raw['skills']),
     relevance: toRelevance(raw['relevance']),
     myApplication: toMyApplicationSummary(raw['my_application']),
