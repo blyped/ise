@@ -34,6 +34,7 @@ export const frCms = {
     landingQueue: 'File « À la une »',
     preview: 'Aperçu',
     backToAdmin: "Retour à l'administration",
+    backToMember: "Retour à l'espace membre",
   },
 
   /** Vocabulaire d'etat commun (docs/cms.md §3). */
