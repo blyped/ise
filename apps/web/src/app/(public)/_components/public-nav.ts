@@ -37,6 +37,13 @@ export const LANDING_ANCHORS = {
   stats: 'chiffres',
   expertises: 'expertises',
   partners: 'partenaires',
+  /**
+   * 0133 — deux sections sans titre visible, mais qui gardent une ancre :
+   * une section anonyme est introuvable pour qui veut y renvoyer, et la
+   * region conserve un nom accessible meme sans texte a l'ecran.
+   */
+  organizations: 'organisations',
+  sponsorBand: 'partenaires-bandeau',
 } as const;
 
 export interface PublicNavItem {

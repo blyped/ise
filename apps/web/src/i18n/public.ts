@@ -147,6 +147,44 @@ export const frPublic = {
     externalHint: 'Ouvre le site du partenaire dans un nouvel onglet',
   },
 
+  /**
+   * 0133 — bandeau sponsorisé du bas de page.
+   *
+   * Aucune de ces chaînes n'est visible à l'écran : le porteur a demandé
+   * « pas de bavardages, je ne veux pas de texte ». Elles servent toutes de
+   * nom accessible — la région, chaque diapositive, et l'alternative
+   * textuelle composée à partir de la mention de transparence, du nom du
+   * partenaire et de la description que l'administrateur a saisie dans la
+   * médiathèque. Une image sans texte reste une image : elle doit pouvoir
+   * être annoncée à qui ne la voit pas.
+   */
+  sponsorBand: {
+    label: 'Nos partenaires et sponsors',
+    roleDescription: 'carrousel',
+    slideRoleDescription: 'diapositive',
+    position: 'Bandeau {index} sur {total}',
+    /** ADDENDUM §26 : la mention de transparence voyage dans l'alternative. */
+    imageAlt: '{label} — {partner} : {description}',
+    externalHint: 'Ouvre le site du partenaire dans un nouvel onglet',
+    /**
+     * Défilement figé (`prefers-reduced-motion`) : les bandeaux sont alors
+     * tous empilés. Personne n'est privé d'un partenaire parce qu'il a
+     * demandé moins d'animation.
+     */
+    staticLabel: 'Nos partenaires et sponsors (liste complète, sans défilement)',
+  },
+
+  /**
+   * 0133 — « les organisations où travaillent les ISE ».
+   *
+   * Section de logos, sans une ligne de texte visible : le titre existe
+   * uniquement pour les lecteurs d'écran et pour la structure du document.
+   * Chaque logo porte l'alternative textuelle saisie dans la médiathèque.
+   */
+  organizations: {
+    label: 'Les organisations où travaillent les ISE',
+  },
+
   /** États dégradés, ADDENDUM §47. Formulés côté visiteur, sans jargon. */
   degraded: {
     sectionUnavailable: 'Cette section est momentanément indisponible.',

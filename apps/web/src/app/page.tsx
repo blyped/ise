@@ -10,7 +10,9 @@ import { HighlightsSection } from './(public)/_components/sections/HighlightsSec
 import { NetworkSection } from './(public)/_components/sections/NetworkSection';
 import { ExpertisesSection } from './(public)/_components/sections/ExpertisesSection';
 import { PartnersSection } from './(public)/_components/sections/PartnersSection';
+import { OrganizationsSection } from './(public)/_components/sections/OrganizationsSection';
 import { FinalCtaSection } from './(public)/_components/sections/FinalCtaSection';
+import { SponsorBandSection } from './(public)/_components/sections/SponsorBandSection';
 
 /**
  * PUB-001 — Landing publique (ADDENDUM §2).
@@ -98,11 +100,29 @@ export default async function LandingPage() {
           section={landing.expertises}
           title={sectionTitle(sections, LANDING_SECTION_KEYS.expertises) ?? undefined}
         />
+        {/*
+          0133 — « les organisations ou travaillent les ISE ».
+
+          Placee juste avant « Entreprises & partenaires », parce que les deux
+          parlent d'organisations et qu'il serait deroutant de les separer.
+          Elle ne recoit AUCUN titre : la section n'affiche que des logos, sur
+          demande explicite du porteur. Elle ne rend rien du tout tant qu'aucun
+          logo publie n'est affichable — pas de cadre vide, pas d'etat vide
+          bavard : la section n'existe simplement pas ce jour-la.
+        */}
+        <OrganizationsSection section={landing.organizations} />
         <PartnersSection
           section={landing.partners}
           title={sectionTitle(sections, LANDING_SECTION_KEYS.partners) ?? undefined}
         />
         <FinalCtaSection />
+        {/*
+          0133 — bandeau sponsorise, dernier element de la page, juste
+          au-dessus du pied de page. Images seules, en defilement automatique,
+          sans commande visible. Comme la section precedente : rien n'est rendu
+          quand aucune campagne 'footer' n'est en cours de diffusion.
+        */}
+        <SponsorBandSection section={landing.sponsorBand} />
       </div>
     </PublicShell>
   );
