@@ -34,6 +34,34 @@ const TARGET_ROUTES: Partial<Record<string, string>> = {
 };
 
 /**
+ * Boite a rapport d'aspect du visuel d'un pilier (D-138).
+ *
+ * `StorageImage` rend une image `fill` : elle se positionne par rapport au
+ * premier ancetre positionne et n'occupe, seule, aucune place. Sans ce
+ * conteneur `relative` a rapport d'aspect fige, l'image sortait de la carte
+ * et la hauteur du bloc n'etait connue qu'une fois le fichier charge. La
+ * place est donc reservee par le conteneur, jamais par les dimensions
+ * intrinseques du fichier — meme boite que « A la une du reseau », meme
+ * rapport 16/9 que le format recommande a l'administrateur CMS
+ * (1600 x 900 px). Le conteneur n'existe que s'il y a un visuel : un pilier
+ * sans image n'affiche aucun cadre vide.
+ */
+const PILLAR_MEDIA_FRAME =
+  'bg-surface-muted rounded-base relative mb-4 aspect-[16/9] w-full overflow-hidden';
+
+/**
+ * Etat cliquable d'un pilier. Ici le lien EST la carte (contrairement aux
+ * cartes de « A la une », ou un `::after` etend un lien interne) : le survol
+ * et le focus clavier se posent donc directement sur lui. `focus-visible`
+ * plutot que `focus` : pas d'anneau apres un clic souris. La cible de clic
+ * est la carte entiere, tres au-dela des 44 px exiges.
+ */
+const PILLAR_INTERACTIVE =
+  'block h-full min-h-[44px] cursor-pointer transition-shadow duration-150 ' +
+  'hover:border-primary hover:shadow-md focus-visible:outline-2 ' +
+  'focus-visible:outline-offset-2 focus-visible:outline-active-blue';
+
+/**
  * « Un reseau concu pour etre utile » + « Le reseau en quelques chiffres ».
  *
  * Le titre et le corps des quatre piliers restent du **discours de
@@ -46,6 +74,13 @@ const TARGET_ROUTES: Partial<Record<string, string>> = {
  * Un pilier absent de `pillars.items` (projection en panne, ou simplement
  * pas encore configure) reste du texte seul — jamais un lien ou une image
  * inventes.
+ *
+ * 0122 — les quatre piliers ont desormais une cible reelle en base ; le
+ * pilier cliquable est un lien qui couvre la carte entiere, annonce ou il
+ * mene (texte visible + nom accessible), se signale au survol comme au
+ * focus clavier, et reserve la place de son visuel avant meme que l'image
+ * arrive. Un pilier dont l'administrateur retire le lien redevient du texte
+ * seul, sans rien de tout cela.
  *
  * ADDENDUM §23 — les chiffres, eux, viennent exclusivement de
  * `get_landing_stats()`. Cette fonction renvoie aujourd'hui **zero partout**,
@@ -77,18 +112,23 @@ export function NetworkSection({
       <ul className="grid grid-cols-4 gap-6 max-lg:grid-cols-2 max-md:grid-cols-1 max-md:gap-4">
         {fr.public.pillars.items.map((pillar, index) => {
           const cmsPillar = pillars.items.find((item) => item.pillarKey === pillar.key);
-          const target =
-            cmsPillar?.linkTarget === null || cmsPillar?.linkTarget === undefined
-              ? undefined
-              : TARGET_ROUTES[cmsPillar.linkTarget];
+          const image = cmsPillar?.image ?? null;
+          const linkTarget = cmsPillar?.linkTarget ?? null;
+          const target = linkTarget === null ? undefined : TARGET_ROUTES[linkTarget];
+          // Ce que le visiteur ira faire sur l'ecran vise. Sert deux fois :
+          // en texte visible (le pilier ne ressemblerait sinon a rien de
+          // cliquable) et au debut du nom accessible du lien.
+          const action = linkTarget === null ? undefined : frPublic.pillars.actions[linkTarget];
           const content = (
             <>
-              {cmsPillar?.image === null || cmsPillar?.image === undefined ? null : (
-                <LandingMediaImage
-                  media={cmsPillar.image}
-                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                  className="mb-4 aspect-video w-full rounded-md object-cover"
-                />
+              {image === null ? null : (
+                <div className={PILLAR_MEDIA_FRAME}>
+                  <LandingMediaImage
+                    media={image}
+                    sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                    className="object-cover"
+                  />
+                </div>
               )}
               <p className="text-overline text-primary font-semibold uppercase tracking-[0.08em]">
                 {pillar.title}
@@ -97,14 +137,19 @@ export function NetworkSection({
               {cmsPillar?.caption === null || cmsPillar?.caption === undefined ? null : (
                 <p className="text-body-sm text-text-secondary mt-2">{cmsPillar.caption}</p>
               )}
+              {target === undefined || action === undefined ? null : (
+                <p className="text-body-sm text-primary mt-4 font-semibold">
+                  {action} <span aria-hidden="true">→</span>
+                </p>
+              )}
             </>
           );
           const cardClassName =
             // La maquette alterne fond bleute et fond blanc. L'alternance est
             // decorative : elle ne porte aucune information (D-90).
             index % 2 === 0
-              ? 'rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] p-6 max-md:p-5'
-              : 'border-border bg-surface rounded-lg border p-6 max-md:p-5';
+              ? 'h-full rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] p-6 max-md:p-5'
+              : 'border-border bg-surface h-full rounded-lg border p-6 max-md:p-5';
 
           return (
             <li key={pillar.key}>
@@ -114,7 +159,10 @@ export function NetworkSection({
                 <ProtectedLink
                   target={target}
                   resourceType="espace-membre"
-                  className={`block transition-shadow duration-150 hover:shadow-md ${cardClassName}`}
+                  className={`${PILLAR_INTERACTIVE} ${cardClassName}`}
+                  {...(action === undefined
+                    ? {}
+                    : { label: t(frPublic.pillars.linkLabel, { title: pillar.title, action }) })}
                   event="public_content_click"
                   sectionKey={LANDING_SECTION_KEYS.pillars}
                   contentType="network_pillar"
