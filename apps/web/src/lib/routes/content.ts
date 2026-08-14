@@ -10,6 +10,21 @@ export const CONTENT_ROUTES = {
   news: '/actualites',
   /** ISE-094 — Espace Evenements. */
   events: '/evenements',
+  /**
+   * Proposition de contenu par un membre (0132). Sous-route de chaque
+   * espace, comme `/opportunites/publier` l'est de `/opportunites` : on
+   * propose la ou l'on lit.
+   */
+  proposeNews: '/actualites/proposer',
+  proposeEvent: '/evenements/proposer',
+  /**
+   * Suivi de MES propositions — en attente, publiee, refusee avec motif.
+   * Route commune aux deux natures : c'est le meme geste, et l'auteur ne
+   * pense pas « actualite » ou « evenement » quand il demande « ou en est
+   * ce que j'ai envoye ? ». C'est aussi la cible du lien porte par la
+   * notification de decision (`moderate_content_proposal`, 0132).
+   */
+  myProposals: '/mes-propositions',
 } as const;
 
 /** ISE-093 — Detail d'une actualite. */
