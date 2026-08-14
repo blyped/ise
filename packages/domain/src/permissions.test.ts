@@ -41,9 +41,9 @@ const EXPECTED: Readonly<Record<Role, readonly Permission[]>> = {
 };
 
 describe('référentiel des permissions', () => {
-  it('compte exactement 21 permissions, sans doublon', () => {
-    expect(PERMISSIONS).toHaveLength(21);
-    expect(new Set(PERMISSIONS).size).toBe(21);
+  it('compte exactement 22 permissions, sans doublon', () => {
+    expect(PERMISSIONS).toHaveLength(22);
+    expect(new Set(PERMISSIONS).size).toBe(22);
   });
 
   it('compte 10 rôles, sans doublon', () => {
@@ -79,8 +79,8 @@ describe('référentiel des permissions', () => {
 });
 
 describe('rôles et permissions — matrice exacte (D-30 à D-32)', () => {
-  it('superadmin possède les 21 permissions', () => {
-    expect(ROLE_PERMISSIONS.superadmin).toHaveLength(21);
+  it('superadmin possède les 22 permissions', () => {
+    expect(ROLE_PERMISSIONS.superadmin).toHaveLength(22);
     for (const permission of PERMISSIONS) {
       expect(hasPermission(['superadmin'], permission), permission).toBe(true);
     }
@@ -102,7 +102,7 @@ describe('rôles et permissions — matrice exacte (D-30 à D-32)', () => {
     }
   });
 
-  it('hasPermission est exact sur les 210 combinaisons rôle × permission', () => {
+  it('hasPermission est exact sur les 220 combinaisons rôle × permission', () => {
     let checked = 0;
     for (const role of ROLES) {
       const granted = new Set<string>(EXPECTED[role]);
@@ -122,6 +122,8 @@ describe('rôles et permissions — matrice exacte (D-30 à D-32)', () => {
       'settings.manage',
       'audit.read',
       'profiles.verify',
+      // 0134 — le registre des dons nomme des personnes et des sommes.
+      'donations.read',
     ];
     for (const role of ROLES.filter((r) => r !== 'superadmin')) {
       for (const permission of sensitive) {
@@ -133,6 +135,8 @@ describe('rôles et permissions — matrice exacte (D-30 à D-32)', () => {
     expect(hasPermission(['analyst'], 'audit.read')).toBe(false);
     expect(hasPermission(['support_agent'], 'settings.manage')).toBe(false);
     expect(hasPermission(['ops'], 'roles.manage')).toBe(false);
+    expect(hasPermission(['analyst'], 'donations.read')).toBe(false);
+    expect(hasPermission(['ops'], 'donations.read')).toBe(false);
   });
 
   it('un cumul de rôles est une union, jamais davantage', () => {

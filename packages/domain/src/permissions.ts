@@ -28,6 +28,15 @@ export const PERMISSIONS = [
   'roles.manage',
   'ops.read',
   'ops.manage',
+  /**
+   * 0134 — registre des dons. Permission NOUVELLE, et non un rattachement a
+   * une permission existante : aucune des vingt et une precedentes ne couvre
+   * l'argent. `analytics.read` donne des agregats anonymes, pas l'identite
+   * des donateurs ; `settings.manage` regle la plateforme ; `ops.read`
+   * surveille la technique. Un registre qui nomme des personnes et des
+   * sommes merite sa propre clef. Accordee au seul superadmin.
+   */
+  'donations.read',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
