@@ -234,8 +234,8 @@ export const fr = {
       methodEmailUnavailable:
         'Aucune adresse historique n’est enregistrée pour ce profil : cette méthode n’est pas proposée.',
       methodDocument: 'Je fournirai une pièce justificative',
-      // Honnetete : le depot de fichier n'est pas encore ouvert (bucket
-      // `verification-documents` cree, aucun ecran de depot livre).
+      // Honnêteté : le dépôt de fichier n'est pas encore ouvert (bucket
+      // `verification-documents` créé, aucun écran de dépôt livré).
       methodDocumentHint:
         'Diplôme, attestation ou pièce d’identité. Votre demande part en revue ; le dépôt du fichier en ligne n’est pas encore ouvert.',
       methodPromotionManager: 'Le délégué de ma promotion peut confirmer mon identité',
@@ -510,7 +510,7 @@ export const fr = {
        * ce que voit un visiteur vient de la base, pas d'ici.
        *
        * Pourquoi les garder alors ? Pour deux cas où la base ne dit rien,
-       * et où une carte vide serait un contenu casse :
+       * et où une carte vide serait un contenu cassé :
        *   1. l'administrateur vide le champ — l'aide du formulaire annonce
        *      justement « laisser vide = revenir au texte d'origine » ;
        *   2. `get_landing_pillars()` est en panne — la section doit encore
