@@ -101,6 +101,7 @@ const {
   opportunitySchema,
   pillarSchema,
 } = await import('./landing-data');
+const { entityRoute } = await import('./entity-routes');
 
 /** Texte reellement lisible a l'ecran, balises et attributs retires. */
 function visibleText(element: ReactElement): string {
@@ -364,31 +365,73 @@ describe('ADDENDUM §26 — transparence des contenus commerciaux', () => {
 });
 
 describe('ADDENDUM §10 — jamais de lien mort', () => {
-  it('une actualité s’affiche sans action, faute d’écran membre', () => {
-    const markup = renderToStaticMarkup(
-      h(HighlightsSection, {
-        news: OK([NEWS]),
-        featuredProfile: OK<LandingFeaturedProfile>([]),
-        events: OK<LandingEvent>([]),
-        opportunities: OK<LandingOpportunity>([]),
-      }),
-    );
-    expect(markup).toContain('Transformation économique africaine');
-    expect(markup).not.toContain('href="/actualites');
-    expect(markup).toContain('Consultable depuis l');
+  /**
+   * 2026-08-14 — chaque encart de « À la une du réseau » mène a sa page de
+   * détail, et la carte entière est la zone de clic.
+   *
+   * Le commentaire d'origine de `entityRoute()` affirmait que les écrans
+   * ISE-092 a ISE-096 n'existaient pas, et renvoyait `null` pour `news` et
+   * `event` : les deux cartes s'affichaient donc sans action alors que
+   * `app/actualites/[newsId]` et `app/evenements/[eventId]` existent bel et
+   * bien. Ces tests verrouillent la correction.
+   *
+   * Le détail reste réservé aux membres (arbitrage du porteur) : aucune page
+   * publique de détail n'est créée, le visiteur passe par ISE-001 avec son
+   * `redirectTo` déjà calculé.
+   */
+  const HIGHLIGHTS = renderToStaticMarkup(
+    h(HighlightsSection, {
+      news: OK([NEWS]),
+      featuredProfile: OK([PROFILE]),
+      events: OK([EVENT]),
+      opportunities: OK([OPPORTUNITY]),
+    }),
+  );
+
+  it.each([
+    ['une actualité', '%2Factualites%2F', NEWS.id, 'resourceType=actualite'],
+    ['un événement', '%2Fevenements%2F', EVENT.id, 'resourceType=evenement'],
+    ['une opportunité', '%2Fopportunites%2F', OPPORTUNITY.id, 'resourceType=opportunite'],
+    ['l’ISE du jour', '%2Fprofil%2F', PROFILE.profileId, 'resourceType=profil'],
+  ])('%s mène à sa page de détail, via la connexion', (_label, path, id, resource) => {
+    expect(HIGHLIGHTS).toContain(`redirectTo=${path}${id}`);
+    expect(HIGHLIGHTS).toContain(resource);
   });
 
-  it('une opportunité mène à son écran membre, via la connexion pour un visiteur', () => {
-    const markup = renderToStaticMarkup(
-      h(HighlightsSection, {
-        news: OK<LandingNews>([]),
-        featuredProfile: OK<LandingFeaturedProfile>([]),
-        events: OK<LandingEvent>([]),
-        opportunities: OK([OPPORTUNITY]),
-      }),
+  it('la carte entière est cliquable — motif « lien étendu », un seul lien par carte', () => {
+    // Le `::after` du lien couvre l'article, qui sert de référentiel.
+    expect(HIGHLIGHTS).toContain('after:inset-0');
+    expect(HIGHLIGHTS).toMatch(/<article class="[^"]*\brelative\b/);
+    // Quatre cartes, quatre liens : aucun lien imbriqué dans un autre.
+    expect(HIGHLIGHTS.match(/<a\s/g) ?? []).toHaveLength(4);
+    expect(HIGHLIGHTS).not.toMatch(/<a\s[^>]*>(?:(?!<\/a>)[\s\S])*<a\s/);
+  });
+
+  it('le nom accessible du lien reste explicite : action puis titre du contenu', () => {
+    expect(HIGHLIGHTS).toContain(
+      'aria-label="Lire l’actualité : Transformation économique africaine"',
     );
-    expect(markup).toContain('redirectTo=%2Fopportunites%2F');
-    expect(markup).toContain('resourceType=opportunite');
+    expect(HIGHLIGHTS).toContain(
+      'aria-label="Voir l’événement : Webinaire Data &amp; politiques publiques"',
+    );
+    expect(HIGHLIGHTS).toContain(
+      'aria-label="Voir l’opportunité : Expert senior suivi-évaluation"',
+    );
+    expect(HIGHLIGHTS).toContain('aria-label="Découvrir le profil : Aminata Mbaye"');
+  });
+
+  it('`entityRoute` rend les vraies routes de détail des actualités et des événements', () => {
+    expect(entityRoute({ entityType: 'news', entityId: NEWS.id })).toBe(`/actualites/${NEWS.id}`);
+    expect(entityRoute({ entityType: 'event', entityId: EVENT.id })).toBe(
+      `/evenements/${EVENT.id}`,
+    );
+  });
+
+  it('sans identifiant exploitable, aucune route n’est fabriquée : la carte reste sans action', () => {
+    expect(entityRoute({ entityType: 'news', entityId: '   ' })).toBeNull();
+    expect(entityRoute({ entityType: 'event', entityId: '' })).toBeNull();
+    // Une expertise n'a toujours pas de route par identifiant seul.
+    expect(entityRoute({ entityType: 'expertise', entityId: '12' })).toBeNull();
   });
 
   it('une pastille d’expertise mène à un critère de recherche réel', () => {
@@ -408,7 +451,7 @@ describe('ADDENDUM §47 — dégradation propre', () => {
         opportunities: OK([OPPORTUNITY]),
       }),
     );
-    expect(text).toContain('momenténement indisponible');
+    expect(text).toContain('momentanément indisponible');
     expect(text).toContain('Aminata Mbaye');
     expect(text).toContain('Webinaire Data');
   });
@@ -436,7 +479,7 @@ describe('ADDENDUM §47 — dégradation propre', () => {
         opportunities: OK<LandingOpportunity>([]),
       }),
     );
-    expect(text).toContain('La mise en avant du jour est momenténement indisponible.');
+    expect(text).toContain('La mise en avant du jour est momentanément indisponible.');
   });
 
   it('aucune campagne : un état vide honnête, pas un bloc fantôme', () => {
