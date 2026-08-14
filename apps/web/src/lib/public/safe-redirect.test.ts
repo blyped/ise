@@ -217,7 +217,7 @@ describe('safeRedirect — caracteres de controle et injection d’en-tete', () 
 
   it('refuse un octet nul', () => {
     expectRefused('/tableau-de-bord%00.html', 'caractere-interdit');
-    expectRefused('/tableau-de-bord\\u0000', 'caractere-interdit');
+    expectRefused('/tableau-de-bord\u0000', 'caractere-interdit');
   });
 
   it('refuse un espace de tete ou de queue plutot que de le rogner', () => {
@@ -227,8 +227,8 @@ describe('safeRedirect — caracteres de controle et injection d’en-tete', () 
   });
 
   it('refuse un caractere de controle C1 et DEL', () => {
-    expectRefused('/tableau-de-bord\\u007f', 'caractere-interdit');
-    expectRefused('/tableau-de-bord\\u0085', 'caractere-interdit');
+    expectRefused('/tableau-de-bord\u007f', 'caractere-interdit');
+    expectRefused('/tableau-de-bord\u0085', 'caractere-interdit');
     expectRefused('/tableau-de-bord%7f', 'caractere-interdit');
   });
 });
@@ -468,7 +468,7 @@ describe('safeRedirect — proprietes generales', () => {
       () => '/tableau-de-bord',
       new Date(),
       { redirectTo: '/tableau-de-bord' },
-      '\\uD800',
+      '\uD800',
       '/%ED%A0%80',
     ];
     for (const entree of entrees) {
