@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Screen } from '../../components/Screen';
 import { TextField } from '../../components/TextField';
 import { profileManagement as pm } from '../../i18n/profile-management';
 import { useAuth } from '../../lib/auth/AuthProvider';
+import { getSupabaseClient } from '../../lib/supabase/client';
 import {
   loadCountries,
   loadProfileHeader,
@@ -24,6 +25,7 @@ import {
   Hint,
   LoadingView,
   SearchPickerModal,
+  SecondaryButton,
   SelectField,
   VisibilityPicker,
   useModalState,
@@ -31,8 +33,14 @@ import {
 
 type Props = NativeStackScreenProps<ProfileManagementStackParamList, 'HeaderEdit'>;
 
-/** Champs dont la visibilité suit ce même sélecteur unique (portage réduit du multi-champ web, D-73). */
+/**
+ * Champs dont la visibilité suit ce même sélecteur unique (portage réduit du
+ * multi-champ web, D-73). `photo` s'y ajoute avec la révision de D-117 : la
+ * photo de profil peut désormais exister, son niveau de visibilité doit donc
+ * être réglable ici comme sur le web.
+ */
 const VISIBILITY_FIELDS = [
+  'photo',
   'headline',
   'bio',
   'current_position',
@@ -48,12 +56,46 @@ type LoadState =
   | { status: 'error'; correlationId: string }
   | { status: 'ready'; header: ProfileHeader | null };
 
+/** Bucket PRIVÉ de la photo de profil (0027). Jamais servi au web ouvert. */
+const AVATAR_BUCKET = 'avatars';
+
+/**
+ * Libellés du bloc photo. Ils vivent ici, et non dans
+ * `src/i18n/profile-management.ts`, parce que ce fichier appartient à un
+ * autre lot en cours d'écriture : les mêmes formulations qu'à l'écran web
+ * sont reprises (MASTER PROMPT §66).
+ */
+const PHOTO_TEXT = {
+  title: 'Photo de profil',
+  current: 'Cette photo n’est visible que des membres autorisés.',
+  none: 'Vos initiales sont utilisées tant qu’aucune photo n’est déposée.',
+  webOnly:
+    'Le dépôt d’une nouvelle photo se fait depuis le site web, dans « Modifier l’en-tête & À propos ». L’application mobile ne propose pas encore de sélecteur d’image.',
+  removeAction: 'Retirer ma photo',
+  removePending: 'Retrait en cours…',
+  removeConfirm: 'Votre photo sera effacée. Vos initiales reprendront sa place.',
+  removeFailed: 'Le retrait de la photo a échoué. Réessayez dans un instant.',
+} as const;
+
 /**
  * ISE-017 — En-tête & À propos.
  *
- * D-117 : le dépôt de photo n'est PAS ouvert — l'écran l'annonce (bandeau
- * d'attente) plutôt que d'afficher un bouton actif « Changer la photo »
- * comme sur la maquette. Toutes les autres informations restent modifiables.
+ * PHOTO DE PROFIL — révision de D-117 (14/08/2026), partiellement portée ici.
+ *
+ * CE QUI EST FAIT SUR CET ÉCRAN : la photo existante est AFFICHÉE (URL signée
+ * du bucket privé `avatars`, comme sur le web) et peut être RETIRÉE. Ces deux
+ * gestes ne demandent aucune dépendance supplémentaire.
+ *
+ * CE QUI N'EST PAS FAIT, ET POURQUOI : le DÉPÔT d'une nouvelle photo suppose
+ * un sélecteur d'image natif (galerie ou appareil photo). Le projet Expo ne
+ * contient à ce jour ni `expo-image-picker` ni `expo-file-system`
+ * (`apps/mobile/package.json`), et ajouter une dépendance native de force
+ * — hors validation du porteur et sans build vérifié — serait plus risqué
+ * qu'utile. Plutôt qu'un bouton « Changer la photo » qui n'ouvrirait rien
+ * (bouton décoratif, MASTER PROMPT §113), l'écran DIT où le dépôt se fait :
+ * sur le web. Le jour où la dépendance est ajoutée, seul le bloc ci-dessous
+ * change ; la garde reste en base (politique `ise_avatars_write`, contrainte
+ * `ise_profiles_avatar_path_scope` de 0126).
  */
 export function HeaderEditScreen({ navigation }: Props) {
   const { user } = useAuth();
@@ -77,6 +119,67 @@ export function HeaderEditScreen({ navigation }: Props) {
   const [countries, setCountries] = useState<CountryOption[]>([]);
 
   const countryModal = useModalState();
+
+  /**
+   * Photo de profil : le bucket `avatars` est PRIVÉ (0027), il n'existe donc
+   * aucune URL publique. On lit le chemin puis on demande une URL signée de
+   * courte durée — même mécanique que `signedAvatarUrl` côté web.
+   */
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [removingPhoto, setRemovingPhoto] = useState(false);
+
+  const loadAvatar = useCallback(async () => {
+    const supabase = getSupabaseClient();
+    const { data } = await supabase
+      .from('ise_profiles')
+      .select('avatar_path')
+      .eq('id', profileId)
+      .maybeSingle();
+
+    const row = (data ?? null) as { avatar_path?: unknown } | null;
+    const path =
+      typeof row?.avatar_path === 'string' && row.avatar_path.length > 0 ? row.avatar_path : null;
+    setAvatarPath(path);
+
+    if (path === null) {
+      setAvatarUrl(null);
+      return;
+    }
+    const signed = await supabase.storage.from(AVATAR_BUCKET).createSignedUrl(path, 300);
+    setAvatarUrl(signed.data?.signedUrl ?? null);
+  }, [profileId]);
+
+  async function removePhoto() {
+    if (avatarPath === null) return;
+    setRemovingPhoto(true);
+    setError(null);
+
+    const supabase = getSupabaseClient();
+    // Les octets d'abord, la colonne ensuite : une fois `avatar_path` remis à
+    // NULL, plus personne ne saurait quel fichier effacer. PostgreSQL n'a
+    // aucun accès aux octets de Storage — seule l'API les efface.
+    await supabase.storage.from(AVATAR_BUCKET).remove([avatarPath]);
+    const { error: updateError } = await supabase
+      .from('ise_profiles')
+      .update({ avatar_path: null })
+      .eq('id', profileId);
+
+    setRemovingPhoto(false);
+    if (updateError) {
+      setError(PHOTO_TEXT.removeFailed);
+      return;
+    }
+    setAvatarPath(null);
+    setAvatarUrl(null);
+  }
+
+  function confirmRemovePhoto() {
+    Alert.alert(PHOTO_TEXT.removeAction, PHOTO_TEXT.removeConfirm, [
+      { text: pm.common.cancel, style: 'cancel' },
+      { text: PHOTO_TEXT.removeAction, style: 'destructive', onPress: () => void removePhoto() },
+    ]);
+  }
 
   const load = useCallback(() => {
     if (!user) return;
@@ -118,7 +221,8 @@ export function HeaderEditScreen({ navigation }: Props) {
 
   useEffect(() => {
     load();
-  }, [load]);
+    void loadAvatar();
+  }, [load, loadAvatar]);
 
   async function submit() {
     setSaving(true);
@@ -161,13 +265,34 @@ export function HeaderEditScreen({ navigation }: Props) {
         <Text style={styles.subtitle}>{pm.header.subtitle}</Text>
 
         <View style={styles.photoCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarLabel}>
-              {(firstName[0] ?? '').toUpperCase()}
-              {(lastName[0] ?? '').toUpperCase()}
-            </Text>
+          <View style={styles.photoRow}>
+            {avatarUrl !== null ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} resizeMode="cover" />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarLabel}>
+                  {(firstName[0] ?? '').toUpperCase()}
+                  {(lastName[0] ?? '').toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View style={styles.photoTexts}>
+              <Text style={styles.photoTitle}>{PHOTO_TEXT.title}</Text>
+              <Text style={styles.photoNotice}>
+                {avatarUrl !== null ? PHOTO_TEXT.current : PHOTO_TEXT.none}
+              </Text>
+            </View>
           </View>
-          <Text style={styles.photoNotice}>Le dépôt de photo n’est pas encore ouvert.</Text>
+
+          <Text style={styles.photoNotice}>{PHOTO_TEXT.webOnly}</Text>
+
+          {avatarPath !== null ? (
+            <SecondaryButton
+              label={removingPhoto ? PHOTO_TEXT.removePending : PHOTO_TEXT.removeAction}
+              onPress={confirmRemovePhoto}
+              disabled={removingPhoto}
+            />
+          ) : null}
         </View>
 
         <TextField label={pm.header.firstNameLabel} value={firstName} onChangeText={setFirstName} />
@@ -242,14 +367,32 @@ const styles = StyleSheet.create({
     marginTop: -space[3],
   },
   photoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: space[4],
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: rounded.lg,
     padding: space[5],
+  },
+  photoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[4],
+  },
+  photoTexts: {
+    flex: 1,
+    gap: space[2],
+  },
+  photoTitle: {
+    ...textStyle.bodySm,
+    fontWeight: '600',
+    color: colors.textPrimary,
+  },
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: rounded.full,
+    backgroundColor: colors.surfaceMuted,
   },
   avatar: {
     width: 56,
@@ -267,7 +410,6 @@ const styles = StyleSheet.create({
   photoNotice: {
     ...textStyle.caption,
     color: colors.textMuted,
-    flex: 1,
   },
   error: {
     ...textStyle.bodySm,
