@@ -40,6 +40,7 @@ export const frAdmin = {
     settings: 'Paramètres plateforme',
     audit: "Journal d'audit",
     openCms: 'Aller au CMS',
+    backToMember: "Retour à l'espace membre",
   },
 
   common: {
