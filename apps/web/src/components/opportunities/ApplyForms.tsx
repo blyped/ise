@@ -1,15 +1,20 @@
 'use client';
 
 import { useActionState } from 'react';
+import Link from 'next/link';
 import { Alert, Button, ErrorState, Field, Input, Select, Textarea } from '@ise/ui-web';
 import { frOpportunities } from '@/i18n/opportunities';
 import { initialFormState } from '@/lib/form-state';
+import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import type { ProfileDocument } from '@/lib/opportunities-view';
 import {
   declareApplicationAction,
   openExternalOfferAction,
   submitApplicationAction,
 } from '@/app/opportunites/actions';
+
+const DOCUMENTS_LINK_CLASS =
+  'text-body-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue';
 
 /**
  * CANDIDATURE INTERNE (mode `internal` uniquement).
@@ -53,8 +58,20 @@ export function InternalApplyForm({
         )}
       </Field>
 
+      {/* Le dépôt de documents est OUVERT (migration 0127, écran
+          /mon-profil/documents). L'absence de CV n'est donc plus une
+          limite de la plateforme : c'est un choix laissé au membre, le
+          profil ISE tenant lieu de dossier. Les deux branches renvoient
+          vers l'écran de dépôt plutôt que d'annoncer une impossibilité. */}
       {documents.length > 0 ? (
-        <Field label={frOpportunities.apply.cvLabel}>
+        <Field
+          label={frOpportunities.apply.cvLabel}
+          labelAction={
+            <Link href={PROFILE_ROUTES.documents} className={DOCUMENTS_LINK_CLASS}>
+              {frOpportunities.apply.cvManage}
+            </Link>
+          }
+        >
           {({ id }) => (
             <Select
               id={id}
@@ -69,7 +86,15 @@ export function InternalApplyForm({
           )}
         </Field>
       ) : (
-        <Alert variant="info" title={frOpportunities.apply.cvEmptyTitle}>
+        <Alert
+          variant="info"
+          title={frOpportunities.apply.cvEmptyTitle}
+          action={
+            <Link href={PROFILE_ROUTES.documents} className={DOCUMENTS_LINK_CLASS}>
+              {frOpportunities.apply.cvEmptyAction}
+            </Link>
+          }
+        >
           {frOpportunities.apply.cvEmptyBody}
         </Alert>
       )}

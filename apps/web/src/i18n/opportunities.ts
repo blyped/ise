@@ -296,8 +296,14 @@ export const frOpportunities = {
     cvLabel: 'CV à joindre',
     cvNone: 'Aucun CV',
     cvEmptyTitle: 'Vous n’avez aucun document enregistré.',
+    // Le dépôt de documents est ouvert depuis la migration 0127 : la phrase
+    // « le dépôt n'est pas encore ouvert » était devenue fausse. Ce qui
+    // reste vrai, et qui est une RÈGLE PRODUIT et non une limite technique :
+    // on peut candidater sans CV, le profil ISE faisant office de dossier.
     cvEmptyBody:
-      'Vous pouvez candidater sans CV : votre profil est joint. Le dépôt de document n’est pas encore ouvert.',
+      'Vous pouvez candidater sans CV : votre profil ISE est joint à votre candidature. Si vous préférez joindre un CV, déposez-le d’abord dans « Mes documents », puis revenez sur cette offre.',
+    cvEmptyAction: 'Déposer un document',
+    cvManage: 'Gérer mes documents',
     cvPrivacyTitle: 'Votre CV reste privé',
     cvPrivacyBody:
       'Il devient accessible au responsable de l’offre uniquement dans le contexte de cette candidature.',
