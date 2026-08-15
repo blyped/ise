@@ -40,10 +40,21 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *   get_landing_events(p_limit)        -> tableau { id, entity_type:'event', title, slug,
  *                                         event_type_code, starts_at, ends_at, timezone,
  *                                         format, city, country_code, is_pinned }
+ *                                       (0137 : la projection ne retient qu'un evenement
+ *                                        A VENIR OU EN COURS — `coalesce(ends_at,
+ *                                        starts_at) > now()`. Un evenement passe ne parait
+ *                                        pas, meme epingle ; /cms/evenements l'annonce
+ *                                        desormais explicitement.)
  *   get_landing_opportunities(p_limit) -> tableau { id, entity_type:'opportunity', title,
- *                                         opportunity_type, contract_type, sector,
+ *                                         summary, opportunity_type, contract_type, sector,
  *                                         country_code, city, remote_allowed, deadline,
  *                                         organization, is_pinned }
+ *                                       (0137 : "summary" AJOUTE. Il existait dans
+ *                                        `opportunities` depuis l'origine mais n'etait
+ *                                        pas projete, alors que `get_landing_news()`
+ *                                        projette le sien : la carte Opportunite etait
+ *                                        la seule a ne pas pouvoir dire de quoi il
+ *                                        s'agissait.)
  *   get_landing_featured_profile()     -> objet **ou `null`** { entity_type:'profile',
  *                                         profile_id, display_name,
  *                                         promotion{id,name,graduation_year},
@@ -316,7 +327,14 @@ export interface LandingNews {
   readonly coverHasText: boolean;
 }
 
-/** ADDENDUM §13 — un evenement a venir. */
+/**
+ * ADDENDUM §13 — un evenement a venir.
+ *
+ * 0137 — « a venir » se lit `coalesce(ends_at, starts_at) > now()` : un
+ * evenement DEJA COMMENCE mais pas encore termine reste affiche, un
+ * evenement termine sort de la vitrine tout seul, meme epingle. C'est la
+ * projection qui tranche, jamais ce fichier.
+ */
 export interface LandingEvent {
   readonly id: string;
   readonly title: string;
@@ -349,6 +367,13 @@ export interface LandingEvent {
 export interface LandingOpportunity {
   readonly id: string;
   readonly title: string;
+  /**
+   * 0137 — resume public de l'offre, tel que saisi dans le module
+   * Opportunites. Exactement le meme role que `LandingNews.summary`, et
+   * rendu de la meme facon par la carte. La description longue, la
+   * remuneration et le contact restent hors de la projection (§14).
+   */
+  readonly summary: string | null;
   readonly opportunityType: string | null;
   readonly contractType: string | null;
   readonly sector: string | null;
@@ -797,6 +822,10 @@ export const opportunitySchema = z
   .object({
     id: identifier,
     title: requiredText,
+    // 0137 — `nullableText` accepte l'absence de la cle : un instantane
+    // « last known good » anterieur a 0137 n'en contient pas, et se rend
+    // alors sans resume plutot que d'echouer a la validation.
+    summary: nullableText,
     opportunity_type: nullableText,
     contract_type: nullableText,
     sector: nullableText,
@@ -811,6 +840,7 @@ export const opportunitySchema = z
   .transform<LandingOpportunity>((row) => ({
     id: row.id,
     title: row.title,
+    summary: row.summary,
     opportunityType: row.opportunity_type,
     contractType: row.contract_type,
     sector: row.sector,
