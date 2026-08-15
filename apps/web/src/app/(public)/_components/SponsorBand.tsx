@@ -34,7 +34,10 @@ import { LANDING_ANCHORS } from './public-nav';
  *    devient donc LE mecanisme d'arret, et il est respecte a la lettre.
  *
  *    Et quand il est actif, on ne se contente pas de figer la premiere image :
- *    **tous les bandeaux sont affiches, empiles**. Sinon un partenaire serait
+ *    **tous les bandeaux sont affiches, empiles** — les uns SOUS les autres,
+ *    dans le flux normal. Le fondu (0137) ne s'applique pas dans ce mode :
+ *    ce serait une animation, et il n'y a de toute facon plus de transition
+ *    a habiller puisque plus rien ne defile. Sinon un partenaire serait
  *    invisible pour ces visiteurs-la, ce qui serait a la fois injuste pour lui
  *    et malhonnete vis-a-vis d'eux ;
  *
@@ -57,6 +60,25 @@ import { LANDING_ANCHORS } from './public-nav';
 
 /** Duree d'affichage d'un bandeau. Sept secondes, comme le carrousel haut. */
 const BANNER_MS = 7000;
+
+/**
+ * 0137 — FONDU, exactement le meme reglage que le carrousel haut (demande du
+ * porteur : « la forme des transitions des slides des carrousels de la page
+ * d'accueil : tu peux utiliser le style Fade ? » — les deux carrousels, donc
+ * le meme fondu, sinon la page bafouille).
+ *
+ *  - `col-start-1 row-start-1` : en mode defilement, la section est une
+ *    grille d'une seule cellule et tous les bandeaux s'y superposent. Tous
+ *    ont le meme ratio 4:1 (voir `FRAME`), la hauteur de la cellule est donc
+ *    constante — aucun saut de mise en page pendant le fondu ;
+ *  - 500 ms, soit un quatorzieme du temps d'affichage d'un bandeau : lisible
+ *    comme un fondu, jamais comme une attente ;
+ *  - `motion-reduce:transition-none` : filet de securite CSS, actif meme
+ *    avant l'hydratation. Au-dela, le mode « mouvement refuse » n'empile plus
+ *    rien du tout, il deroule les bandeaux (voir `showAll`).
+ */
+const FADE =
+  'col-start-1 row-start-1 transition-opacity duration-500 motion-reduce:transition-none';
 
 /**
  * Boite du bandeau. Ratio FIXE 4:1 — exactement le format annonce
@@ -187,10 +209,12 @@ export function SponsorBand({ campaigns }: { campaigns: readonly LandingPartnerC
     <section
       id={LANDING_ANCHORS.sponsorBand}
       aria-label={showAll ? frPublic.sponsorBand.staticLabel : frPublic.sponsorBand.label}
-      {...(isCarousel
-        ? { 'aria-roledescription': frPublic.sponsorBand.roleDescription }
-        : {})}
-      className="bg-surface w-full"
+      {...(isCarousel ? { 'aria-roledescription': frPublic.sponsorBand.roleDescription } : {})}
+      // `grid` uniquement en mode defilement : une seule cellule, tous les
+      // bandeaux dedans, pour le fondu. Quand le mouvement est refuse, la
+      // section redevient un bloc ordinaire et les bandeaux se suivent
+      // verticalement — c'est tout l'interet de ce mode.
+      className={`bg-surface w-full ${showAll ? '' : 'grid'}`}
       onFocusCapture={() => setSuspended(true)}
       onBlurCapture={() => setSuspended(false)}
     >
@@ -202,6 +226,12 @@ export function SponsorBand({ campaigns }: { campaigns: readonly LandingPartnerC
       <h2 className="sr-only">{frPublic.sponsorBand.label}</h2>
 
       {campaigns.map((campaign, index) => {
+        /**
+         * « Visible » au sens propre : le bandeau du moment, ou n'importe
+         * lequel quand ils sont tous deroules. Les autres restent dans le
+         * DOM, transparents — il faut donc les neutraliser a la main.
+         */
+        const visible = showAll || index === current;
         const route = campaign.target === null ? null : entityRoute(campaign.target);
         const resourceType =
           campaign.target === null ? undefined : entityResourceType(campaign.target.entityType);
@@ -209,7 +239,10 @@ export function SponsorBand({ campaigns }: { campaigns: readonly LandingPartnerC
         return (
           <div
             key={campaign.id}
-            hidden={!showAll && index !== current}
+            className={
+              showAll ? '' : `${FADE} ${visible ? 'opacity-100' : 'pointer-events-none opacity-0'}`
+            }
+            {...(visible ? {} : { inert: true, 'aria-hidden': true })}
             {...(isCarousel
               ? {
                   // `as const` : le type JSX de `role` est une union de
@@ -230,6 +263,11 @@ export function SponsorBand({ campaigns }: { campaigns: readonly LandingPartnerC
               placement={campaign.placement ?? undefined}
               sectionKey={LANDING_SECTION_KEYS.sponsorBand}
               position={index + 1}
+              // Un bandeau transparent reste « intersectant » pour
+              // IntersectionObserver : sans ce garde-fou, chaque partenaire
+              // serait credite d'une impression des l'arrivee en bas de page,
+              // qu'il ait ete montre ou non (ADDENDUM §51).
+              active={visible}
             >
               {route !== null ? (
                 <ProtectedLink
@@ -268,8 +306,7 @@ export function SponsorBand({ campaigns }: { campaigns: readonly LandingPartnerC
       */}
       {showAll || active === undefined ? null : (
         <p className="sr-only" aria-live={scrolling ? 'off' : 'polite'} aria-atomic="true">
-          {t(frPublic.sponsorBand.position, { index: current + 1, total })} :{' '}
-          {active.partnerName}
+          {t(frPublic.sponsorBand.position, { index: current + 1, total })} : {active.partnerName}
         </p>
       )}
     </section>

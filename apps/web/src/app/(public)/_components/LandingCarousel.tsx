@@ -17,6 +17,36 @@ const CONTROL =
   'hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 ' +
   'focus-visible:outline-white';
 
+/**
+ * 0137 — TRANSITION EN FONDU. Demande du porteur, mot pour mot : « la forme
+ * des transitions des slides des carrousels de la page d'accueil : tu peux
+ * utiliser le style Fade ? »
+ *
+ * Trois consequences, toutes portees par ces quelques classes :
+ *
+ *  - **empilement en grille.** Un fondu suppose que la diapositive sortante
+ *    et l'entrante occupent le meme espace. Les diapositives ne sont donc
+ *    plus retirees du flux (`hidden`) : la section est une grille d'une seule
+ *    cellule et toutes se placent en `col-start-1 row-start-1`. La hauteur de
+ *    la cellule est celle de la plus haute diapositive — comme elles suivent
+ *    toutes le meme ratio (D-170) et le meme plancher mobile, elle ne varie
+ *    pas d'une diapositive a l'autre : aucun saut de mise en page, ni pendant
+ *    la transition, ni apres ;
+ *
+ *  - **500 ms.** Assez pour qu'un fondu se lise comme tel sur une image plein
+ *    ecran (en deca de ~300 ms l'oeil percoit une coupe, pas un fondu), et
+ *    moins d'un dixieme du temps d'affichage d'une diapositive (7 s par
+ *    defaut, D-163) : la page ne donne jamais l'impression d'attendre. La
+ *    courbe est celle par defaut de Tailwind, la meme que le reste du site ;
+ *
+ *  - **`motion-reduce:transition-none`.** Un fondu est une animation. Qui a
+ *    desactive les animations passe d'une diapositive a l'autre d'un coup —
+ *    et sans dependre de JavaScript pour cela, la variante etant une simple
+ *    requete media.
+ */
+const FADE =
+  'col-start-1 row-start-1 transition-opacity duration-500 motion-reduce:transition-none';
+
 function Arrow({ direction }: { direction: 'previous' | 'next' }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -48,9 +78,20 @@ function PlayPauseIcon({ playing }: { playing: boolean }) {
  * Choix d'accessibilite :
  *  - `aria-roledescription="carousel"` sur la region, `"diapositive"` sur
  *    chaque groupe, comme le demande le motif APG ;
- *  - les diapositives non affichees portent `hidden` : elles sortent de
- *    l'ordre de tabulation, leurs liens ne sont donc jamais atteignables au
- *    clavier « dans le vide » ;
+ *  - les diapositives non affichees portent `inert` et `aria-hidden` (elles
+ *    ne peuvent plus porter `hidden` depuis le passage au fondu, voir la
+ *    constante `FADE` : elles restent dans le flux, empilees sous l'active).
+ *    C'est le piege classique du fondu — une diapositive transparente reste
+ *    parfaitement tabulable et parfaitement lisible par un lecteur d'ecran si
+ *    on ne dit rien. `inert` la sort de l'ordre de tabulation ET de l'arbre
+ *    d'accessibilite ; `aria-hidden` le redit aux technologies qui ne
+ *    connaitraient pas encore l'attribut ; `pointer-events-none` empeche la
+ *    derniere diapositive du DOM, invisible mais posee par-dessus les
+ *    autres, d'intercepter les clics ;
+ *  - les compteurs d'impression des diapositives masquees sont eteints
+ *    (`active={...}`) : `IntersectionObserver` ignore l'opacite, il aurait
+ *    compte une impression partenaire pour toutes les diapositives a la fois
+ *    (ADDENDUM §51) ;
  *  - **sans JavaScript, la premiere diapositive s'affiche** : l'etat initial
  *    du rendu serveur est deja l'etat « diapositive 1 visible ». Le defilement
  *    automatique, lui, n'existe qu'apres hydratation ;
@@ -139,12 +180,17 @@ export function LandingCarousel({
       // mobile la diapositive vise encore le viewport moins la barre
       // superieure collante ; sur desktop/tablette elle suit desormais un
       // ratio fixe plutot que la hauteur d'ecran (D-170, 2026-08-13).
-      className="bg-deep-navy relative w-full overflow-hidden"
+      //
+      // `grid` : une seule cellule, toutes les diapositives dedans, pour le
+      // fondu (voir `FADE`). Les commandes et l'annonce sont en position
+      // absolue, elles ne prennent donc aucune place dans la grille.
+      className="bg-deep-navy relative grid w-full overflow-hidden"
       onKeyDown={onKeyDown}
       onFocusCapture={() => setSuspended(true)}
       onBlurCapture={() => setSuspended(false)}
     >
       {slides.map((slide, index) => {
+        const isActive = index === current;
         const route = slide.target === null ? null : entityRoute(slide.target);
         const resourceType =
           slide.target === null ? undefined : entityResourceType(slide.target.entityType);
@@ -195,6 +241,10 @@ export function LandingCarousel({
                 entityId={slide.target?.entityId ?? null}
                 sectionKey={LANDING_SECTION_KEYS.carousel}
                 position={index + 1}
+                // La diapositive masquee est dans le DOM, donc « visible »
+                // pour IntersectionObserver. Sans ce garde-fou, toutes les
+                // mentions sponsorisees seraient comptees d'un coup (§51).
+                active={isActive}
               >
                 <p className="text-caption text-ise-gold font-semibold">{slide.sponsoredLabel}</p>
               </ImpressionTracker>
@@ -224,10 +274,12 @@ export function LandingCarousel({
             role="group"
             aria-roledescription={fr.public.carousel.slideRoleDescription}
             aria-label={t(fr.public.carousel.position, { index: index + 1, total })}
-            hidden={index !== current}
-            className={`bg-deep-navy relative flex flex-col max-md:min-h-[calc(100dvh-var(--layout-topbar))] md:aspect-[1920/720] ${
-              overlayTexts ? 'justify-center' : 'justify-end'
-            }`}
+            // Fondu : plus de `hidden`, donc la diapositive masquee doit etre
+            // neutralisee explicitement — clavier, lecteur d'ecran et souris.
+            {...(isActive ? {} : { inert: true, 'aria-hidden': true })}
+            className={`bg-deep-navy relative flex flex-col max-md:min-h-[calc(100dvh-var(--layout-topbar))] md:aspect-[1920/720] ${FADE} ${
+              isActive ? 'opacity-100' : 'pointer-events-none opacity-0'
+            } ${overlayTexts ? 'justify-center' : 'justify-end'}`}
           >
             {/*
               ADDENDUM §52 — image de fond.
@@ -241,7 +293,13 @@ export function LandingCarousel({
                  chargement, aucun decalage n'est possible (§58) ;
                - la premiere diapositive est en `priority` (elle est
                  au-dessus de la ligne de flottaison, c'est l'element LCP) ;
-                 les suivantes sont en `loading="lazy"` ;
+                 les suivantes sont en `loading="lazy"`. Le passage au fondu
+                 ne change rien a cette repartition : les diapositives sont
+                 desormais empilees et donc toutes dans la fenetre, mais
+                 `lazy` laisse le navigateur les chercher APRES ce qui compte
+                 pour le LCP. Les declarer toutes `priority` sous pretexte
+                 qu'elles sont visibles ferait exactement l'inverse de ce que
+                 l'attribut promet : plus rien ne serait prioritaire ;
                - direction artistique : quand le CMS publie un visuel mobile
                  distinct, les deux images sont rendues et l'affichage est
                  arbitre par les points de rupture, comme le recommande la
@@ -289,12 +347,14 @@ export function LandingCarousel({
               ) : null}
             </div>
 
-            {showTexts || (slide.sponsored && slide.sponsoredLabel !== null)
-              ? overlayTexts
-                ? textBlock
-                : // « Sous l'image » : bande bleu nuit opaque, ancree en bas du hero.
-                  <div className="bg-deep-navy/95 relative w-full">{textBlock}</div>
-              : null}
+            {showTexts || (slide.sponsored && slide.sponsoredLabel !== null) ? (
+              overlayTexts ? (
+                textBlock
+              ) : (
+                // « Sous l'image » : bande bleu nuit opaque, ancree en bas du hero.
+                <div className="bg-deep-navy/95 relative w-full">{textBlock}</div>
+              )
+            ) : null}
           </div>
         );
       })}
