@@ -36,6 +36,20 @@ export const frCms = {
     preview: 'Aperçu',
     backToAdmin: "Retour à l'administration",
     backToMember: "Retour à l'espace membre",
+    /**
+     * Pastille d'écart d'exposition d'une entrée de menu (0139). Le nombre
+     * seul ne dit pas de quoi il s'agit : ce complément est lu à la suite du
+     * libellé (« Événements, 1 à traiter »), et la couleur de la pastille ne
+     * porte donc jamais seule l'information (D-90).
+     *
+     * « À traiter » plutôt qu'« en attente » comme en administration : rien
+     * n'attend ici une décision reçue d'un tiers, c'est la vitrine qui
+     * s'écarte de ce que le CMS a demandé.
+     */
+    pendingCount: (count: number) => `, ${count} à traiter`,
+    /** Même comptage, cumulé, sur le bouton du menu replié (mobile). */
+    pendingTotal: (count: number) =>
+      count > 1 ? `${count} éléments à traiter` : `${count} élément à traiter`,
   },
 
   /** Vocabulaire d'etat commun (docs/cms.md §3). */
