@@ -657,7 +657,7 @@ export const frCms = {
     uploadTitle: 'Importer un média',
     fieldFile: 'Fichier image',
     fieldFileHelp:
-      'PNG, JPEG, WebP ou AVIF. 5 Mo maximum. Le SVG est refusé : il peut contenir du script et le bucket est public. Taille recommandée selon l’emplacement : environ 1920 × 1080 px pour un visuel plein cadre (carrousel, couverture d’événement ou d’opportunité, « ISE du jour »), 1080 × 1350 px pour un visuel Mobile en portrait. Un fichier plus petit reste accepté mais s’affichera flou en grand format.',
+      'PNG, JPEG, WebP ou AVIF. 5 Mo maximum. Le SVG est refusé : il peut contenir du script et le bucket est public. Taille recommandée selon l’emplacement : environ 1920 × 1080 px pour un visuel plein cadre (carrousel, couverture d’événement ou d’opportunité, « ISE du jour »), 1080 × 1350 px pour un visuel Mobile en portrait. Pour un logo d’organisation, préférez un visuel proche du carré ou légèrement rectangulaire (environ 400 × 200 px), fond transparent si possible. Un fichier plus petit reste accepté mais s’affichera flou en grand format.',
     fieldUsage: 'Emplacement sur la vitrine',
     fieldUsageHelp:
       'Détermine le dossier de rangement dans le bucket public. Le serveur refuse tout autre emplacement.',
@@ -666,6 +666,7 @@ export const frCms = {
       partners: 'Partenaires',
       news: 'Actualités',
       sections: 'Sections',
+      organizations: 'Organisations (logos)',
     } as Record<string, string>,
     thumbnailAlt: 'Aperçu du média',
     publicBucketTitle: 'Bucket public',
@@ -687,6 +688,7 @@ export const frCms = {
     usageNone: 'Ce média n’est utilisé nulle part.',
     usageCarousel: 'slide(s) de carrousel',
     usageCampaign: 'campagne(s) partenaire',
+    usageOrganization: 'logo(s) d’organisation',
     uploaded: 'Média importé.',
     deleteTitle: 'Supprimer ce média ?',
     deleteBody:

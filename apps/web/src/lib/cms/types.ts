@@ -95,8 +95,13 @@ export interface CmsMediaAsset {
   createdAt: string;
   /** Variantes rattachees a cet original. Vide tant qu'aucune n'est generee. */
   variants: readonly CmsMediaVariant[];
-  /** Nombre de contenus qui referencent ce media (§38). */
-  usage: { carousel: number; campaigns: number };
+  /**
+   * Nombre de contenus qui referencent ce media (§38). `organizations`
+   * (0146) compte les logos de la section « Ils nous font confiance »
+   * (`cms_landing_organizations.media_id`, 0133) : sans ce compteur, un
+   * logo activement affiche pouvait etre supprime sans avertissement.
+   */
+  usage: { carousel: number; campaigns: number; organizations: number };
 }
 
 export interface CmsMediaVariant {
@@ -332,9 +337,9 @@ export interface CmsFeaturedRules {
   minDaysBetweenFeatures: number;
   requireClaimedProfile: boolean;
   /**
-   * Exige un portrait PUBLIC couvert par le consentement dédié (0123).
+   * Exige un portrait PUBLIC couvert par le consentement dedie (0123).
    * Remplace l'ancien `requireAvatar`, qui visait `avatar_path` — une
-   * colonne du bucket privé, jamais alimentée et non publiable.
+   * colonne du bucket prive, jamais alimentee et non publiable.
    */
   requirePublicPhoto: boolean;
   requirePromotion: boolean;
