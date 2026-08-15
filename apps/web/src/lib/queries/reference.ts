@@ -178,6 +178,10 @@ export interface OrganizationOption {
  * renseignés plutôt que devinés depuis du texte libre. Le texte libre reste
  * un repli pour une organisation absente de la liste (D-164, D-166) : cet
  * écran ne crée jamais d'organisation lui-même.
+ *
+ * D-194 (0143) — une organisation FUSIONNÉE (`merged_into_id` renseigné) est
+ * un doublon connu conservé pour la traçabilité, jamais une option valide :
+ * `.is('merged_into_id', null)` l'exclut de la liste proposée au membre.
  */
 export async function loadOrganizations(
   correlationId: string,
@@ -186,6 +190,7 @@ export async function loadOrganizations(
   const { data, error } = await supabase
     .from('organizations')
     .select('id, canonical_name, is_verified')
+    .is('merged_into_id', null)
     .order('canonical_name')
     .limit(500);
 
