@@ -113,6 +113,7 @@ function Card({
   kickerClassName,
   title,
   titleClassName,
+  subtitle,
   highlight,
   meta,
   visual,
@@ -129,6 +130,12 @@ function Card({
    * `::after` et rendrait la carte non cliquable dans ce cas precis.
    */
   titleClassName?: string;
+  /**
+   * 0201 — ligne d'identite courte (promotion, poste, organisation), collee
+   * au nom comme une fonction sous un nom : gras leger, marge resserree,
+   * volontairement distincte du descriptif libre (`meta`) qui suit plus bas.
+   */
+  subtitle?: string | null;
   /** Accroche courte, mise en avant entre le titre et le meta (D-165). */
   highlight?: string | null;
   meta?: string | null;
@@ -142,6 +149,9 @@ function Card({
       <h3 className={`text-body text-text-primary font-semibold ${titleClassName ?? ''}`}>
         {title}
       </h3>
+      {subtitle ? (
+        <p className="text-body-sm text-text-primary -mt-1 font-semibold">{subtitle}</p>
+      ) : null}
       {highlight ? (
         <p className="text-body-sm text-ise-gold font-medium italic">{highlight}</p>
       ) : null}
@@ -392,13 +402,15 @@ function FeaturedProfileCard({ item }: { item: LandingFeaturedProfile }) {
       kicker={frPublic.kickers.featuredProfile}
       kickerClassName="text-ise-gold"
       title={item.displayName}
+      // 0201 — promotion/poste/organisation devient une ligne d'identite a
+      // part (gras leger, collee au nom), plutot que la premiere moitie du
+      // meta gris fondu avec le descriptif libre. Le descriptif (`item.summary`)
+      // redevient le seul contenu de `meta`, qui garde whitespace-pre-line
+      // (ci-dessus, dans Card) au cas ou il contiendrait lui-meme un retour a
+      // la ligne — sans effet s'il n'en contient pas.
+      subtitle={meta}
       highlight={item.tagline}
-      // 0184 — le descriptif public repart sur sa propre ligne plutot que de se
-      // souder aux faits (promotion/poste/organisation) derriere un tiret :
-      // whitespace-pre-line (ci-dessus, dans Card) transforme ce \n en retour
-      // a la ligne reel, sans toucher aux autres cartes qui n'utilisent
-      // jamais qu'un separateur simple.
-      meta={joinMeta([meta, item.summary], '\n')}
+      meta={item.summary}
       visual={
         item.photo === null ? (
           <ProfileMonogram displayName={item.displayName} />

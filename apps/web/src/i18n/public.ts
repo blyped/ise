@@ -197,10 +197,14 @@ export const frPublic = {
    *
    * Aucune de ces phrases n'affirme quoi que ce soit d'elle-même : chacune est
    * un gabarit dont les nombres viennent de `get_landing_country_presence()`.
-   * Les trois mentions du bas disent ce que la carte NE montre pas — la
-   * couverture réelle, ce que le seuil de confidentialité masque, et les pays
-   * que le fond simplifié ne sait pas placer. Une carte muette laisserait
-   * croire à une cartographie complète du réseau.
+   * Les deux mentions du bas disent ce que la carte NE montre pas — la
+   * couverture réelle, et ce que le seuil de confidentialité masque. Une
+   * carte muette laisserait croire à une cartographie complète du réseau.
+   *
+   * 0200 — la troisième mention (pays trop petits pour le fond de carte
+   * simplifié) a été retirée à la demande du porteur : c'est un détail
+   * cartographique qui n'apporte rien au visiteur, les ISE concernés restant
+   * de toute façon comptés dans `coverage` ci-dessus.
    */
   countryPresence: {
     title: 'Où sont les ISE actuellement ?',
@@ -218,10 +222,6 @@ export const frPublic = {
       'Un pays n’est nommé qu’à partir de {threshold} ISE : {countries} pays, où exercent {profiles} ISE, ne sont donc ni nommés ni situés sur la carte.',
     thresholdOne:
       'Un pays n’est nommé qu’à partir de {threshold} ISE : un pays, où exercent {profiles} ISE, n’est donc ni nommé ni situé sur la carte.',
-    unplotted:
-      '{count} pays de la liste sont trop petits pour ce fond de carte simplifié : leur nombre d’ISE figure ci-dessus.',
-    unplottedOne:
-      'Un pays de la liste est trop petit pour ce fond de carte simplifié : son nombre d’ISE figure ci-dessus.',
     computedAt: 'Répartition calculée le {date}.',
   },
 
