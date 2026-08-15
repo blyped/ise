@@ -3,6 +3,7 @@ import { frCms } from '@/i18n/cms';
 import { ROUTES } from '@/lib/routes';
 import { ADMIN_ROUTES } from '@/lib/routes/admin';
 import { readAdminAccess } from '@/lib/admin/permissions';
+import { loadCmsNavCounters } from '@/lib/cms/queries-nav-counters';
 import { CMS_NAV } from './nav';
 import { CmsNav } from './CmsNav';
 
@@ -33,9 +34,15 @@ export interface CmsShellProps {
  * fois dans le CMS, aucun chemin de retour vers le tableau de bord membre.
  * Aucune condition de permission : toute personne qui atteint le CMS a par
  * construction une session membre.
+ *
+ * Pastilles d'ecart d'exposition (0139) : la lecture est SERVEUR et descend
+ * en props — `CmsNav` est un composant client, il ne parle pas a la base. Un
+ * seul aller-retour par rendu, mene en parallele de la lecture des
+ * permissions d'administration. Le filtrage par permission est fait EN BASE :
+ * un ecart hors permission n'est pas renvoye, donc jamais affichable.
  */
 export async function CmsShell({ currentPath, screenTitle, children }: CmsShellProps) {
-  const adminAccess = await readAdminAccess();
+  const [adminAccess, navCounters] = await Promise.all([readAdminAccess(), loadCmsNavCounters()]);
   const adminLink =
     adminAccess !== null && adminAccess.permissions.size > 0
       ? { href: ADMIN_ROUTES.root, label: frCms.nav.backToAdmin }
@@ -52,6 +59,7 @@ export async function CmsShell({ currentPath, screenTitle, children }: CmsShellP
         currentPath={currentPath}
         screenTitle={screenTitle}
         items={CMS_NAV}
+        counters={navCounters}
         {...(adminLink ? { adminLink } : {})}
         {...(memberLink ? { memberLink } : {})}
       />
