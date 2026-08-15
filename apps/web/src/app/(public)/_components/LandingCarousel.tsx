@@ -9,6 +9,7 @@ import { LANDING_SECTION_KEYS, type LandingSlide } from '@/lib/public/landing-da
 import { LandingMediaImage } from './LandingMediaImage';
 import { ProtectedLink } from './ProtectedLink';
 import { ImpressionTracker } from './analytics/ImpressionTracker';
+import { useLandingTracker } from './analytics/LandingTracker';
 import { LANDING_ANCHORS } from './public-nav';
 
 const CONTROL =
@@ -162,6 +163,8 @@ export function LandingCarousel({
     [current, goTo],
   );
 
+  const track = useLandingTracker();
+
   const activeSlide = slides[current];
   const announcement = useMemo(() => {
     if (!activeSlide) return '';
@@ -194,6 +197,19 @@ export function LandingCarousel({
         const route = slide.target === null ? null : entityRoute(slide.target);
         const resourceType =
           slide.target === null ? undefined : entityResourceType(slide.target.entityType);
+        /**
+         * D-202 — BUG CORRIGE (porteur, 2026-08-15) : le bouton restait
+         * invisible des que `route` valait `null`, meme quand `ctaLabel`
+         * etait rempli en CMS. `route` couvre uniquement la ressource
+         * INTERNE (`entity_type` + `entity_id`) ; `slide.externalUrl` couvre
+         * desormais l'alternative EXTERNE (0148, `target_url`). `href`
+         * agrege les deux, `route` restant prioritaire s'il existe (meme
+         * ordre de priorite que `SponsorBand.tsx` pour les bandeaux
+         * partenaires).
+         */
+        const href = route ?? slide.externalUrl;
+        const ctaClassName =
+          'rounded-base bg-ise-gold text-body-sm text-deep-navy mt-4 inline-flex min-h-[44px] w-fit items-center justify-center px-7 font-semibold transition-colors duration-150 hover:bg-[#C79232] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
         // Le sur-titre est un libelle, pas une donnee : la base descend un code
         // (`event`, `news`...), l'i18n en donne la forme affichable.
         const kicker =
@@ -250,20 +266,49 @@ export function LandingCarousel({
               </ImpressionTracker>
             ) : null}
 
-            {showTexts && route !== null && slide.ctaLabel !== null ? (
-              <ProtectedLink
-                target={route}
-                resourceType={resourceType}
-                className="rounded-base bg-ise-gold text-body-sm text-deep-navy mt-4 inline-flex min-h-[44px] w-fit items-center justify-center px-7 font-semibold transition-colors duration-150 hover:bg-[#C79232] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                event={slide.sponsored ? 'public_partner_click' : 'public_content_click'}
-                entityType={slide.target?.entityType ?? null}
-                entityId={slide.target?.entityId ?? null}
-                sectionKey={LANDING_SECTION_KEYS.carousel}
-                contentType={slide.contentType ?? undefined}
-                position={index + 1}
-              >
-                {slide.ctaLabel}
-              </ProtectedLink>
+            {showTexts && href !== null && slide.ctaLabel !== null ? (
+              route !== null ? (
+                <ProtectedLink
+                  target={route}
+                  resourceType={resourceType}
+                  className={ctaClassName}
+                  event={slide.sponsored ? 'public_partner_click' : 'public_content_click'}
+                  entityType={slide.target?.entityType ?? null}
+                  entityId={slide.target?.entityId ?? null}
+                  sectionKey={LANDING_SECTION_KEYS.carousel}
+                  contentType={slide.contentType ?? undefined}
+                  position={index + 1}
+                >
+                  {slide.ctaLabel}
+                </ProtectedLink>
+              ) : (
+                // 0148 — pas de ressource interne : le bouton ouvre l'adresse
+                // externe declaree en CMS, dans un nouvel onglet (comme
+                // `ExternalBanner` du bandeau sponsors, meme motif §26/§50).
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={ctaClassName}
+                  onClick={() => {
+                    const context = {
+                      immediate: true as const,
+                      entityType: null,
+                      entityId: null,
+                      section_key: LANDING_SECTION_KEYS.carousel,
+                      ...(slide.contentType === null ? {} : { content_type: slide.contentType }),
+                      position: index + 1,
+                    };
+                    track(
+                      slide.sponsored ? 'public_partner_click' : 'public_content_click',
+                      context,
+                    );
+                  }}
+                >
+                  {slide.ctaLabel}
+                  <span className="sr-only"> {fr.public.carousel.externalHint}</span>
+                </a>
+              )
             ) : null}
           </div>
         );
