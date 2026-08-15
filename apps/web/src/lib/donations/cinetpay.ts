@@ -106,8 +106,7 @@ export interface CinetpayCredentials {
 }
 
 type TokenResult =
-  | { readonly ok: true; readonly token: string }
-  | { readonly ok: false; readonly reason: string };
+  { readonly ok: true; readonly token: string } | { readonly ok: false; readonly reason: string };
 
 /**
  * `POST {base}/v1/oauth/login`.
