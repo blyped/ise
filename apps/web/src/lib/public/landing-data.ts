@@ -38,8 +38,10 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                        image_path ; "cover_has_text" indique si le titre
  *                                        est deja incruste dans l'image.)
  *   get_landing_events(p_limit)        -> tableau { id, entity_type:'event', title, slug,
- *                                         event_type_code, starts_at, ends_at, timezone,
- *                                         format, city, country_code, is_pinned }
+ *                                         event_type_code, description, starts_at, ends_at,
+ *                                         timezone, format, city, country_code, is_pinned }
+ *                                       (0144 : "description" AJOUTE, meme motif que le
+ *                                        "summary" d'Opportunite en 0137.)
  *                                       (0137 : la projection ne retient qu'un evenement
  *                                        A VENIR OU EN COURS — `coalesce(ends_at,
  *                                        starts_at) > now()`. Un evenement passe ne parait
@@ -351,6 +353,13 @@ export interface LandingEvent {
   readonly title: string;
   readonly slug: string | null;
   readonly eventTypeCode: string | null;
+  /**
+   * 0144 — descriptif public de l'evenement, tel que redige dans le module
+   * Evenements (`events.description`, colonne existante depuis 0013, jamais
+   * projetee jusqu'ici). Meme role que `LandingNews.summary` et
+   * `LandingOpportunity.summary`, rendu de la meme facon par la carte.
+   */
+  readonly description: string | null;
   readonly startsAt: string | null;
   readonly endsAt: string | null;
   readonly timezone: string | null;
@@ -824,6 +833,7 @@ export const eventSchema = z
     title: requiredText,
     slug: nullableText,
     event_type_code: nullableText,
+    description: nullableText,
     starts_at: nullableTimestamp,
     ends_at: nullableTimestamp,
     timezone: nullableText,
@@ -838,6 +848,7 @@ export const eventSchema = z
     title: row.title,
     slug: row.slug,
     eventTypeCode: row.event_type_code,
+    description: row.description,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     timezone: row.timezone,

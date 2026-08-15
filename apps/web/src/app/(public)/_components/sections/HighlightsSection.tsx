@@ -249,8 +249,14 @@ function NewsCard({ item }: { item: LandingNews }) {
   );
 }
 
+/**
+ * 0144 — le descriptif redige dans le module Evenements s'affiche enfin ici,
+ * exactement comme le resume de NewsCard/OpportunityCard : la colonne
+ * existait depuis toujours (`events.description`), seule la projection ne
+ * la remontait pas.
+ */
 function EventCard({ item }: { item: LandingEvent }) {
-  const meta = joinMeta([item.city, formatLongDate(item.startsAt, item.timezone)]);
+  const meta = joinMeta([item.description, item.city, formatLongDate(item.startsAt, item.timezone)]);
   return (
     <Card
       kicker={frPublic.kickers.event}
