@@ -90,7 +90,7 @@ export async function AppShell({ currentPath, displayName, contextLine, children
         Aller au contenu principal
       </a>
 
-      <div className="border-border bg-surface shrink-0 border-b lg:h-dvh lg:w-[var(--layout-sidebar)] lg:overflow-y-auto lg:border-b-0 lg:border-r">
+      <div className="border-border bg-surface shrink-0 border-b lg:min-h-dvh lg:w-[var(--layout-sidebar)] lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex h-[var(--layout-topbar)] items-center px-6">
           {/* Le logo ramene a la landing publique (racine), pas au tableau de bord. */}
           <Link

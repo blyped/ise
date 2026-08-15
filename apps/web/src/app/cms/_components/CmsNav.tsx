@@ -164,7 +164,7 @@ export function CmsNav({
 
       <div
         id={panelId}
-        className={`border-border bg-surface shrink-0 border-b lg:h-dvh lg:w-[248px] lg:overflow-y-auto lg:border-b-0 lg:border-r ${
+        className={`border-border bg-surface shrink-0 border-b lg:min-h-dvh lg:w-[248px] lg:overflow-y-auto lg:border-b-0 lg:border-r ${
           open ? 'block' : 'hidden lg:block'
         }`}
       >
