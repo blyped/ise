@@ -9,7 +9,7 @@
 --     public (`LandingCarousel.tsx`) masquait le bouton des que la ressource
 --     interne (`entity_type`/`entity_id`) etait absente ou ne resolvait
 --     aucune route — meme quand `cta_label` etait rempli. Corrige cote
---     frontend (voir D-202) ; documente ici parce que le vrai correctif
+--     frontend (voir D-204) ; documente ici parce que le vrai correctif
 --     exigeait aussi une destination externe possible (volet 2).
 --
 --  2. « On ne peut pas choisir la destination du bouton (interne/externe). »

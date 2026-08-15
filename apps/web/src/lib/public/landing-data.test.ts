@@ -201,6 +201,29 @@ describe('carrousel — get_landing_carousel()', () => {
   it('refuse une diapositive sans titre plutôt que d’afficher un vide', () => {
     expect(slideSchema.safeParse({ ...CAROUSEL_ROW, title: '   ' }).success).toBe(false);
   });
+
+  it('0148 — accepte une adresse externe https en alternative à la ressource interne', () => {
+    const slide = slideSchema.parse({
+      ...CAROUSEL_ROW,
+      entity_type: null,
+      entity_id: null,
+      target_url: 'https://partenaire.example/offre',
+    });
+    expect(slide.target).toBeNull();
+    expect(slide.externalUrl).toBe('https://partenaire.example/offre');
+  });
+
+  it('0148 — rejette une adresse externe qui ne commence pas par https (même garde que les campagnes partenaires)', () => {
+    expect(slideSchema.parse({ ...CAROUSEL_ROW, target_url: 'javascript:alert(1)' }).externalUrl).toBeNull();
+    expect(
+      slideSchema.parse({ ...CAROUSEL_ROW, target_url: 'http://partenaire.example' }).externalUrl,
+    ).toBeNull();
+  });
+
+  it('0148 — absente d’un instantané publié avant la migration, target_url ne casse rien', () => {
+    const slide = slideSchema.parse(CAROUSEL_ROW);
+    expect(slide.externalUrl).toBeNull();
+  });
 });
 
 describe('actualités, événements, opportunités', () => {
