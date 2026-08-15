@@ -19,7 +19,7 @@ export const frDonations = {
 
   title: 'Faire un don',
   subtitle:
-    'Votre contribution soutient le réseau des Ingénieurs Statisticiens Économistes : les rencontres, les outils et l’accompagnement des promotions.',
+    'Compétences ISE n’a pas été conçue pour collecter des fonds : votre contribution sert uniquement à couvrir les frais liés à la plateforme (hébergement des serveurs, développement, maintenance).',
 
   correlationLabel: 'Référence à communiquer à l’assistance',
   back: 'Retour',
