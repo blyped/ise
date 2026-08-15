@@ -6,9 +6,18 @@ import { failure, type FormState } from '@/lib/form-state';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { donationEnv, serverEnv } from '@/lib/env';
 import { frDonations } from '@/i18n/donations';
-import { DONATION_ROUTES, donationFailureRoute, donationReturnRoute } from '@/lib/routes/donations';
+import {
+  DONATION_REFERENCE_PARAM,
+  DONATION_ROUTES,
+  donationFailureRoute,
+  donationReturnRoute,
+} from '@/lib/routes/donations';
 import { createStripeCheckoutSession } from '@/lib/donations/stripe';
-import { createCinetpayPayment } from '@/lib/donations/cinetpay';
+import {
+  cinetpayNotifyTokenDigest,
+  createCinetpayPayment,
+  isCinetpayUrlAcceptable,
+} from '@/lib/donations/cinetpay';
 import { isDonationProvider } from '@/lib/donations/shared';
 import { loadDonationCurrencyRules } from '@/lib/queries/donations';
 
@@ -162,18 +171,42 @@ export async function startDonationAction(
   }
 
   if (provider === 'cinetpay' && secrets.cinetpay !== null) {
+    // CinetPay renvoie le donateur par un POST INTER-SITES : on passe par
+    // la passerelle publique, qui redirige ensuite en GET (cf.
+    // `lib/routes/donations.ts`). Elle sert de `success_url` COMME de
+    // `failed_url` : la page d'arrivee relit l'etat REEL en base et dit
+    // aussi bien un echec qu'une attente. Aucune des deux URL n'affirme
+    // quoi que ce soit par elle-meme.
+    //
+    // La v2 borne ces URL a 120 caracteres. Si la reference ne tient pas,
+    // on la retire plutot que de laisser CinetPay tronquer : la passerelle
+    // sait rediriger sans reference, et le membre retrouve son don dans
+    // « Mes dons ».
+    const bridge = `${siteUrl}${DONATION_ROUTES.returnBridge}`;
+    const bridgeWithReference = `${bridge}?${DONATION_REFERENCE_PARAM}=${encodeURIComponent(reference)}`;
+    const returnUrl = isCinetpayUrlAcceptable(bridgeWithReference) ? bridgeWithReference : bridge;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const donorEmail = user?.email;
+
     const payment = await createCinetpayPayment({
-      apiKey: secrets.cinetpay.apiKey,
-      siteId: secrets.cinetpay.siteId,
+      credentials: {
+        baseUrl: secrets.cinetpay.baseUrl,
+        apiKey: secrets.cinetpay.apiKey,
+        apiPassword: secrets.cinetpay.apiPassword,
+      },
       reference,
       amount: authoritativeAmount,
       currency: authoritativeCurrency,
       description: frDonations.title,
-      notifyUrl: `${siteUrl}${DONATION_ROUTES.cinetpayWebhook}`,
-      // CinetPay renvoie le donateur par un POST INTER-SITES : on passe par
-      // la passerelle publique, qui redirige ensuite en GET (cf.
-      // `lib/routes/donations.ts`).
-      returnUrl: `${siteUrl}${DONATION_ROUTES.returnBridge}`,
+      // `CINETPAY_NOTIFY_URL` permet de pointer une autre origine (recette,
+      // tunnel local) ; a defaut, c'est notre propre route machine.
+      notifyUrl: secrets.cinetpay.notifyUrl ?? `${siteUrl}${DONATION_ROUTES.cinetpayWebhook}`,
+      successUrl: returnUrl,
+      failedUrl: returnUrl,
+      customerEmail: typeof donorEmail === 'string' && donorEmail.length > 0 ? donorEmail : null,
     });
 
     if (!payment.ok) {
@@ -183,8 +216,28 @@ export async function startDonationAction(
       });
       return failure(frDonations.form.errorGateway, correlationId);
     }
-    gatewayUrl = payment.url;
-    providerReference = payment.token;
+
+    // Le `notify_token` est le PREMIER controle d'authenticite de la
+    // notification a venir. On n'en conserve que l'empreinte, et dans le
+    // schema prive : le donateur ne doit pas pouvoir le relire, sans quoi
+    // le controle ne vaudrait rien. Un echec ici n'annule pas le paiement
+    // — la reverification aupres de CinetPay, elle, reste obligatoire et
+    // suffit a etablir l'issue.
+    if (payment.session.notifyToken !== null) {
+      const { error: tokenError } = await supabase.rpc('record_donation_notify_token', {
+        p_donation_id: donationId,
+        p_digest: cinetpayNotifyTokenDigest(payment.session.notifyToken),
+      });
+      if (tokenError) {
+        console.warn('[ISE] don : empreinte du notify_token non conservee', {
+          correlationId,
+          code: tokenError.code,
+        });
+      }
+    }
+
+    gatewayUrl = payment.session.url;
+    providerReference = payment.session.transactionId ?? payment.session.merchantTransactionId;
   }
 
   if (gatewayUrl === null) {
