@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
+import { NotificationBellButton } from '../../components/NotificationBellButton';
 import { Screen } from '../../components/Screen';
 import { fr } from '../../i18n/fr';
 import { profileManagement as pm } from '../../i18n/profile-management';
@@ -90,7 +91,10 @@ function ProfileHomeScreen() {
 
   return (
     <Screen>
-      <Text style={styles.heading}>{fr.nav.profile}</Text>
+      <View style={styles.headingRow}>
+        <Text style={styles.heading}>{fr.nav.profile}</Text>
+        <NotificationBellButton />
+      </View>
 
       {state.status === 'loading' ? (
         <View style={styles.centered}>
@@ -158,11 +162,16 @@ function ProfileCard({
 }
 
 const styles = StyleSheet.create({
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[6],
+  },
   heading: {
     ...textStyle.h2,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: space[6],
   },
   centered: {
     flex: 1,

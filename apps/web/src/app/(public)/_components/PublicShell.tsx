@@ -20,6 +20,7 @@ export function PublicShell({ viewer, children }: { viewer: PublicViewer; childr
       authenticated={viewer.authenticated}
       displayName={viewer.displayName}
       avatarUrl={viewer.avatarUrl}
+      unreadNotifications={viewer.unreadNotifications}
     >
       <LandingTrackerProvider>
         <div className="bg-background flex min-h-dvh flex-col">

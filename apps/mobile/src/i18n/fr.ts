@@ -30,6 +30,19 @@ export const fr = {
     profile: 'Moi',
   },
 
+  /** D-194 — icone de notifications, meme centre que le web (ISE-098), perimetre mobile reduit. */
+  notifications: {
+    title: 'Notifications',
+    unreadHint: 'non lues',
+    emptyTitle: 'Aucune notification',
+    emptyBody: 'Vous serez prévenu ici des demandes, échéances et informations utiles.',
+    errorTitle: 'Impossible de charger vos notifications.',
+    close: 'Fermer',
+    markRead: 'Marquer comme lue',
+    markUnread: 'Marquer comme non lue',
+    unreadDot: 'Non lue',
+  },
+
   auth: {
     signIn: {
       title: 'Connexion',

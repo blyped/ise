@@ -7,6 +7,7 @@ import { fr } from '@/i18n/fr';
 import { ROUTES } from '@/lib/routes';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { AccountMenu } from '@/components/layout/AccountMenu';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 import { PUBLIC_NAV_ITEMS } from './public-nav';
 import { TrackedLink } from './analytics/TrackedLink';
 import { usePublicViewer } from './PublicViewerProvider';
@@ -75,19 +76,25 @@ export function PublicHeader() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open, close]);
 
+  // D-194 — meme discipline que l'avatar juste au-dessus (branche recemment
+  // sur `PublicViewerProvider`) : la cloche n'apparait que pour un membre
+  // connecte, a cote d'`AccountMenu`, jamais dedans.
   const memberEntry = viewer.authenticated ? (
-    <AccountMenu
-      displayName={viewer.displayName ?? fr.public.nav.memberSpace}
-      avatarUrl={viewer.avatarUrl}
-      avatarSize={24}
-      label={fr.public.nav.memberSpace}
-      profileLabel={fr.public.nav.memberSpace}
-      profileHref={ROUTES.dashboard}
-      triggerClassName={cx(
-        CTA_BASE,
-        'border-border bg-surface text-text-primary hover:bg-surface-muted border',
-      )}
-    />
+    <div className="flex items-center gap-3">
+      <NotificationBell unreadCount={viewer.unreadNotifications} />
+      <AccountMenu
+        displayName={viewer.displayName ?? fr.public.nav.memberSpace}
+        avatarUrl={viewer.avatarUrl}
+        avatarSize={24}
+        label={fr.public.nav.memberSpace}
+        profileLabel={fr.public.nav.memberSpace}
+        profileHref={ROUTES.dashboard}
+        triggerClassName={cx(
+          CTA_BASE,
+          'border-border bg-surface text-text-primary hover:bg-surface-muted border',
+        )}
+      />
+    </div>
   ) : (
     // ADDENDUM §50 — `public_login_click`. Le clic est mesure la ou il a lieu,
     // pas deduit d'une arrivee sur ISE-001.

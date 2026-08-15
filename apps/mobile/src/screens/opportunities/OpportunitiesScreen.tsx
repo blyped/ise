@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from '
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
+import { NotificationBellButton } from '../../components/NotificationBellButton';
 import { Screen } from '../../components/Screen';
 import { fr } from '../../i18n/fr';
 import { newCorrelationId } from '../../lib/correlation';
@@ -107,7 +108,10 @@ export function OpportunitiesScreen({
 
   return (
     <Screen>
-      <Text style={styles.heading}>{fr.opportunities.title}</Text>
+      <View style={styles.headingRow}>
+        <Text style={styles.heading}>{fr.opportunities.title}</Text>
+        <NotificationBellButton />
+      </View>
 
       {hasEntryPoints ? (
         <View style={styles.entryPointsRow}>
@@ -230,11 +234,16 @@ function Badge({ label }: { label: string }) {
 }
 
 const styles = StyleSheet.create({
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[6],
+  },
   heading: {
     ...textStyle.h2,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: space[6],
   },
   entryPointsRow: {
     flexDirection: 'row',

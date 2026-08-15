@@ -5,6 +5,7 @@ import { readAdminAccess } from '@/lib/admin/permissions';
 import { isDonationModuleAvailable } from '@/lib/donations/config';
 import { loadMaintenanceState, scopeMatchesPath } from '@/lib/queries/maintenance';
 import { loadViewerAvatarUrl } from '@/lib/queries/viewer';
+import { loadNotificationSummary } from '@/lib/queries/notifications';
 import { ROUTES } from '@/lib/routes';
 import {
   MaintenanceScreen,
@@ -54,8 +55,17 @@ export async function AppShell({ currentPath, displayName, contextLine, children
   // exactement comme `readAdminAccess()` — un affichage d'en-tete ne doit
   // pas dependre du calendrier d'une autre tranche, et un echec retombe
   // silencieusement sur les initiales (jamais de page cassee pour une photo).
-  const [adminAccess, avatarUrl] = await Promise.all([readAdminAccess(), loadViewerAvatarUrl()]);
+  // D-194 — meme discipline que l'avatar juste au-dessus : lecture
+  // INDEPENDANTE (`my_notification_summary()`), qui degrade en silence
+  // (`unreadNotifications === undefined`) si la RPC echoue. `NotificationBell`
+  // n'affiche alors aucune pastille — jamais de page cassee pour ce confort.
+  const [adminAccess, avatarUrl, notificationSummary] = await Promise.all([
+    readAdminAccess(),
+    loadViewerAvatarUrl(),
+    loadNotificationSummary(newCorrelationId()),
+  ]);
   const showAdminLink = adminAccess !== null && adminAccess.permissions.size > 0;
+  const unreadNotifications = notificationSummary.ok ? notificationSummary.data.unread : undefined;
 
   // 0134 — l'entree « Faire un don » n'existe que si une voie de paiement
   // est reellement configuree. Le calcul reste ICI, dans un composant
@@ -109,6 +119,7 @@ export async function AppShell({ currentPath, displayName, contextLine, children
           contextLine={contextLine}
           avatarUrl={avatarUrl}
           showAdminLink={showAdminLink}
+          unreadNotifications={unreadNotifications}
         />
         <main id="contenu-principal" className="flex-1 px-7 py-8 max-md:px-5 max-md:py-6">
           <div className="mx-auto flex w-full max-w-[var(--layout-content-max)] flex-col gap-6">

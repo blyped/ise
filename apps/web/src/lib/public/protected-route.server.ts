@@ -21,9 +21,21 @@ export interface PublicViewer {
    * la signature a echoue. `PublicHeader` retombe alors sur les initiales.
    */
   readonly avatarUrl: string | undefined;
+  /**
+   * D-194 — nombre de notifications non lues (meme RPC
+   * `my_notification_summary()` que le centre de notifications membre,
+   * ISE-098). `undefined` si non authentifie ou si la lecture a echoue :
+   * `PublicHeader` n'affiche alors aucune pastille (§47).
+   */
+  readonly unreadNotifications: number | undefined;
 }
 
-const ANONYMOUS: PublicViewer = { authenticated: false, displayName: null, avatarUrl: undefined };
+const ANONYMOUS: PublicViewer = {
+  authenticated: false,
+  displayName: null,
+  avatarUrl: undefined,
+  unreadNotifications: undefined,
+};
 
 /**
  * Next.js signale ses bascules internes (rendu dynamique, `redirect()`,
@@ -65,6 +77,28 @@ async function readAvatarUrl(
 }
 
 /**
+ * D-194 — pendant non lu de `readAvatarUrl()` ci-dessus : meme discipline
+ * TOLERANTE A L'ECHEC, isolee dans son propre `try/catch`. Reutilise
+ * directement `my_notification_summary()` (deja utilisee par
+ * `loadNotificationSummary()` cote centre de notifications, ISE-098) sans
+ * passer par `lib/queries/notifications.ts` — ce module-la depend de
+ * `lib/queries/rpc.ts` et de son `BusinessError`, superflu ici puisque le
+ * seul besoin est un compteur qui degrade en silence.
+ */
+async function readUnreadNotificationCount(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+): Promise<number | undefined> {
+  try {
+    const { data, error } = await supabase.rpc('my_notification_summary', {});
+    if (error || !data) return undefined;
+    const unread = (data as unknown as { unread?: unknown }).unread;
+    return typeof unread === 'number' ? unread : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Etat de session vu depuis le site public.
  *
  * Ne lit **que** ce dont l'en-tete a besoin (ADDENDUM §7 : avatar et
@@ -87,9 +121,12 @@ export async function readPublicViewer(): Promise<PublicViewer> {
         ? rawName.trim()
         : (data.user.email ?? null);
 
-    const avatarUrl = await readAvatarUrl(supabase, data.user.id);
+    const [avatarUrl, unreadNotifications] = await Promise.all([
+      readAvatarUrl(supabase, data.user.id),
+      readUnreadNotificationCount(supabase),
+    ]);
 
-    return { authenticated: true, displayName, avatarUrl };
+    return { authenticated: true, displayName, avatarUrl, unreadNotifications };
   } catch (cause) {
     rethrowFrameworkError(cause);
     // Une panne d'authentification ne doit pas casser PUB-001 (ADDENDUM §47).

@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
+import { NotificationBellButton } from '../../components/NotificationBellButton';
 import { Screen } from '../../components/Screen';
 import { fr } from '../../i18n/fr';
 import { useAuth } from '../../lib/auth/AuthProvider';
@@ -46,7 +47,10 @@ export function HomeScreen() {
 
   return (
     <Screen>
-      <Text style={styles.heading}>{fr.nav.home}</Text>
+      <View style={styles.headingRow}>
+        <Text style={styles.heading}>{fr.nav.home}</Text>
+        <NotificationBellButton />
+      </View>
 
       {state.status === 'loading' ? (
         <View style={styles.centered}>
@@ -108,11 +112,16 @@ function Badge({ label }: { label: string }) {
 }
 
 const styles = StyleSheet.create({
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[6],
+  },
   heading: {
     ...textStyle.h2,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: space[6],
   },
   centered: {
     flex: 1,

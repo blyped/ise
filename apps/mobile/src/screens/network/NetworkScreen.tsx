@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
+import { NotificationBellButton } from '../../components/NotificationBellButton';
 import { Screen } from '../../components/Screen';
 import { fr } from '../../i18n/fr';
 import { frNetworkCalls } from '../../i18n/network-calls';
@@ -95,7 +96,10 @@ export function NetworkScreen() {
 
   return (
     <Screen>
-      <Text style={styles.heading}>{fr.network.title}</Text>
+      <View style={styles.headingRow}>
+        <Text style={styles.heading}>{fr.network.title}</Text>
+        <NotificationBellButton />
+      </View>
 
       {/*
        * ISE-047 -> ISE-054 — point d'entree vers « Appels au reseau »
@@ -258,11 +262,16 @@ const styles = StyleSheet.create({
     ...textStyle.caption,
     color: colors.textMuted,
   },
+  headingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: space[5],
+  },
   heading: {
     ...textStyle.h2,
     fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: space[5],
   },
   summaryRow: {
     flexDirection: 'row',

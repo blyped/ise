@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { fr } from '@/i18n/fr';
 import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { AccountMenu } from './AccountMenu';
+import { NotificationBell } from './NotificationBell';
 
 export interface TopbarProps {
   /** Nom reellement lu depuis `ise_profiles`, ou l'adresse e-mail du compte. */
@@ -22,10 +23,22 @@ export interface TopbarProps {
    * rien, le montrer n'ouvre rien).
    */
   showAdminLink?: boolean;
+  /**
+   * Nombre de notifications non lues (D-194). `undefined` si la lecture
+   * a echoue : `NotificationBell` n'affiche alors aucune pastille, comme
+   * `avatarUrl` retombe silencieusement sur les initiales.
+   */
+  unreadNotifications?: number | undefined;
 }
 
 /** Barre superieure, hauteur 68 px (D-91). */
-export function Topbar({ displayName, contextLine, avatarUrl, showAdminLink = false }: TopbarProps) {
+export function Topbar({
+  displayName,
+  contextLine,
+  avatarUrl,
+  showAdminLink = false,
+  unreadNotifications,
+}: TopbarProps) {
   return (
     <header className="border-border bg-surface sticky top-0 z-20 flex h-[var(--layout-topbar)] shrink-0 items-center justify-between gap-5 border-b px-7 max-md:px-5">
       <p className="text-body-sm text-text-secondary truncate">{fr.brand.name}</p>
@@ -39,6 +52,7 @@ export function Topbar({ displayName, contextLine, avatarUrl, showAdminLink = fa
             {fr.nav.adminArea}
           </Link>
         ) : null}
+        <NotificationBell unreadCount={unreadNotifications} />
         <AccountMenu
           displayName={displayName}
           avatarUrl={avatarUrl}
