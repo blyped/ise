@@ -1,7 +1,22 @@
 'use client';
 
 import { useActionState, useState } from 'react';
-import { Alert, Button, Card, CardHeader, CardTitle, ErrorState, Field, Input } from '@ise/ui-web';
+import {
+  Alert,
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  ErrorState,
+  Field,
+  Input,
+  PHOTO_CROP_FOCAL_MAX,
+  PHOTO_CROP_FOCAL_MIN,
+  PHOTO_CROP_FRAME_STYLE,
+  PHOTO_CROP_ZOOM_MAX,
+  PHOTO_CROP_ZOOM_MIN,
+  photoCropWrapperStyle,
+} from '@ise/ui-web';
 import { PUBLIC_PHOTO_ALT_MAX } from '@ise/validation';
 import { frProfile } from '@/i18n/profile';
 import { frShowcase } from '@/i18n/profile-showcase';
@@ -15,11 +30,15 @@ import {
 
 const ACCEPTED = 'image/png,image/jpeg,image/webp,image/avif';
 
-/** 0141 — bornes des curseurs de cadrage, alignées sur les CHECK de la migration. */
-const FOCAL_MIN = 0;
-const FOCAL_MAX = 100;
-const ZOOM_MIN = 1;
-const ZOOM_MAX = 3;
+/**
+ * 0141, bornes revisees D-204 — alignees sur les CHECK de la migration
+ * (`@ise/ui-web` porte les memes constantes, reexportees ici pour ne pas
+ * dupliquer les nombres).
+ */
+const FOCAL_MIN = PHOTO_CROP_FOCAL_MIN;
+const FOCAL_MAX = PHOTO_CROP_FOCAL_MAX;
+const ZOOM_MIN = PHOTO_CROP_ZOOM_MIN;
+const ZOOM_MAX = PHOTO_CROP_ZOOM_MAX;
 const ZOOM_STEP = 0.1;
 const CROP_DEFAULT = { focalX: 50, focalY: 50, zoom: 1 } as const;
 
@@ -35,12 +54,26 @@ const RANGE_CLASS = 'accent-primary h-2 w-full cursor-pointer';
  * Afficher un champ qui échouerait serait un bouton décoratif
  * (MASTER PROMPT §113) — l'écran explique donc l'ordre des gestes.
  *
- * CADRAGE (0141) — trois curseurs, aucun recadrage serveur. Le membre choisit
- * une position (horizontale, verticale) et un zoom, appliqués en CSS
- * `object-position` / `transform: scale()` exactement comme le fera la
- * vignette « ISE du jour » (`LandingMediaImage`). L'aperçu ci-dessous utilise
- * la même formule que la landing : ce que le membre voit ici est ce qui
- * paraît sur le site public. Le fichier déposé n'est jamais modifié.
+ * CADRAGE (0141, corrige et etendu D-204) — trois curseurs, aucun recadrage
+ * serveur. Le membre choisit une position (horizontale, verticale) et un
+ * zoom, traduits par `photoCropWrapperStyle` (`@ise/ui-web`) en un
+ * conteneur interne qui porte le deplacement et le zoom — exactement comme
+ * le fera la vignette « ISE du jour » (`LandingMediaImage`). L'aperçu
+ * ci-dessous utilise la même formule que la landing : ce que le membre voit
+ * ici est ce qui paraît sur le site public. Le fichier déposé n'est jamais
+ * modifié.
+ *
+ * D-204 — DEUX CORRECTIFS SUR CE QUI EXISTAIT :
+ *   1. l'ancienne formule (`object-position` + `transform: scale()`
+ *      directement sur l'image) ne laissait de marge de déplacement que sur
+ *      l'axe où la photo débordait déjà du cercle en `object-fit: cover` —
+ *      jamais sur l'autre, quel que soit le zoom choisi. Le nouveau
+ *      conteneur porte le zoom lui-même : la marge existe désormais
+ *      toujours sur les deux axes dès que le zoom s'écarte de 1 ;
+ *   2. le zoom peut désormais descendre à 0,5 (au lieu de 1,0 plancher) :
+ *      une valeur inférieure à 1 réduit la photo à l'intérieur du cercle,
+ *      ce qui n'avait aucun sens tant que `object-fit: cover` imposait un
+ *      remplissage intégral.
  */
 export function PublicPhotoForm({
   showcase,
@@ -107,22 +140,28 @@ export function PublicPhotoForm({
             {frShowcase.photoCurrentTitle}
           </h3>
 
-          {/* Aperçu du cadrage : ce cercle applique exactement les mêmes
-              propriétés CSS que la vignette « ISE du jour » sur la landing
-              (`LandingMediaImage`). Image publique servie par le bucket
+          {/* Aperçu du cadrage : ce cercle applique exactement le même
+              mécanisme que la vignette « ISE du jour » sur la landing
+              (`LandingMediaImage`, `photoCropWrapperStyle` de `@ise/ui-web`)
+              — un conteneur interne porte le zoom et la position, l'image
+              elle-même reste en `object-fit: cover` centré (D-204 : c'est
+              cette formule, et non `object-position` + `transform` sur
+              l'image directement, qui garantit une marge de déplacement
+              réelle sur les DEUX axes). Image publique servie par le bucket
               `landing-media` : pas de composant next/image, le domaine
               Supabase n'est pas configuré comme source distante ici. */}
-          <div className="border-border h-[128px] w-[128px] overflow-hidden rounded-full border">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={photoUrl}
-              alt={showcase.photoAlt ?? ''}
-              className="h-full w-full object-cover"
-              style={{
-                objectPosition: `${focalX}% ${focalY}%`,
-                transform: `scale(${zoom})`,
-              }}
-            />
+          <div
+            className="border-border h-[128px] w-[128px] rounded-full border"
+            style={PHOTO_CROP_FRAME_STYLE}
+          >
+            <div style={photoCropWrapperStyle({ focalX, focalY, zoom })}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photoUrl}
+                alt={showcase.photoAlt ?? ''}
+                className="h-full w-full object-cover"
+              />
+            </div>
           </div>
 
           {showcase.allowPublicPhoto ? (

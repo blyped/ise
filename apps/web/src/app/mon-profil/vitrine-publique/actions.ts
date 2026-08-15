@@ -47,10 +47,10 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   'image/avif': 'avif',
 };
 
-/** 0141 — bornes du cadrage, alignées sur les CHECK de la migration. */
+/** 0141, bornes revisees D-204 — alignées sur les CHECK de la migration. */
 const CROP_FOCAL_MIN = 0;
 const CROP_FOCAL_MAX = 100;
-const CROP_ZOOM_MIN = 1;
+const CROP_ZOOM_MIN = 0.5;
 const CROP_ZOOM_MAX = 3;
 
 function refreshShowcase() {
