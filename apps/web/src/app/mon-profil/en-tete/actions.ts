@@ -10,7 +10,8 @@ import { frProfile } from '@/i18n/profile';
 import { inspectImage } from '@/lib/cms/image-metadata';
 
 /**
- * Dépôt et retrait de la PHOTO DE PROFIL — révision de D-117 (14/08/2026).
+ * Dépôt, retrait et cadrage de la PHOTO DE PROFIL — révision de D-117
+ * (14/08/2026), cadrage étendu par D-205 (0147).
  *
  * D-117 ne disait pas « impossible » : elle constatait qu'aucun écran de
  * téléversement n'était livré et refusait d'afficher un bouton décoratif
@@ -18,9 +19,11 @@ import { inspectImage } from '@/lib/cms/image-metadata';
  * le portrait public (0120) — et il est ici transposé au bucket PRIVÉ
  * `avatars`. Le motif du refus a disparu, l'écart est donc levé.
  *
- * DEUX ACTES DISTINCTS, comme pour la vitrine publique :
- *   1. `uploadAvatarAction` — dépôt (ou remplacement) de la photo ;
- *   2. `removeAvatarAction` — retrait de la photo.
+ * TROIS ACTES DISTINCTS, comme pour la vitrine publique :
+ *   1. `uploadAvatarAction`      — dépôt (ou remplacement) de la photo ;
+ *   2. `removeAvatarAction`      — retrait de la photo ;
+ *   3. `updateAvatarCropAction`  — cadrage d'affichage (position/zoom, D-205)
+ *      de la photo déjà déposée, sans toucher au fichier.
  * Ils sont séparés de `saveProfileHeaderAction` : enregistrer du texte ne
  * doit jamais emporter silencieusement une image, et réciproquement.
  *
@@ -31,9 +34,14 @@ import { inspectImage } from '@/lib/cms/image-metadata';
  *     propre ligne, et le privilège colonne n'est accordé que sur les
  *     colonnes que le membre a le droit d'écrire ;
  *   · la contrainte `ise_profiles_avatar_path_scope` (0126) refuse
- *     d'enregistrer le chemin d'un AUTRE membre.
- * AUCUNE RPC dédiée n'a donc été écrite : un UPDATE direct est déjà
- * exactement encadré, une RPC n'ajouterait qu'une couche sans pouvoir.
+ *     d'enregistrer le chemin d'un AUTRE membre ;
+ *   · les contraintes `ise_profiles_avatar_focal_*_range` /
+ *     `ise_profiles_avatar_zoom_range` (0147) bornent le cadrage, et un
+ *     déclencheur (`trg_ise_profiles_avatar_crop_reset`) le remet au centre
+ *     dès que `avatar_path` change.
+ * AUCUNE RPC dédiée n'a donc été écrite, ni pour le dépôt ni pour le
+ * cadrage : un UPDATE direct est déjà exactement encadré, une RPC
+ * n'ajouterait qu'une couche sans pouvoir.
  *
  * LE BUCKET RESTE PRIVÉ. Cette photo n'est jamais servie au web ouvert :
  * elle est lue par URL signée réservée aux membres actifs
@@ -219,4 +227,77 @@ export async function removeAvatarAction(
 
   refreshProfileViews();
   return success(frProfile.header.photoRemoved);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Cadrage de la photo de profil (position + zoom) — D-205, 0147     */
+/* ------------------------------------------------------------------ */
+
+/** 0147/D-205 — bornes du cadrage, alignées sur les CHECK de la migration. */
+const AVATAR_CROP_FOCAL_MIN = 0;
+const AVATAR_CROP_FOCAL_MAX = 100;
+const AVATAR_CROP_ZOOM_MIN = 0.5;
+const AVATAR_CROP_ZOOM_MAX = 3;
+
+/**
+ * Enregistre le cadrage de la photo de profil DÉJÀ déposée — position
+ * focale et zoom, appliqués en CSS (`photoCropWrapperStyle`, @ise/ui-web)
+ * partout où l'avatar cadré est affiché. AUCUN recadrage serveur : le
+ * fichier déposé par `uploadAvatarAction` n'est jamais modifié, seules
+ * trois coordonnées changent. Pas de RPC dédiée (voir le commentaire de
+ * tête de ce fichier) : un UPDATE direct sur les trois colonnes est déjà
+ * exactement encadré par `ise_profiles_update_own` et le privilège de
+ * colonne (0147). Refuse l'appel s'il n'existe aucune photo à cadrer,
+ * même garde-fou que `set_my_public_photo_crop()` pour le portrait public.
+ */
+export async function updateAvatarCropAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const context = await requireProfile();
+  if (!context.ok) return failure(context.message, context.correlationId);
+
+  const { correlationId } = context;
+  const profileId = context.profile.id;
+
+  const focalX = Number(formData.get('focalX'));
+  const focalY = Number(formData.get('focalY'));
+  const zoom = Number(formData.get('zoom'));
+
+  const valid =
+    Number.isFinite(focalX) &&
+    focalX >= AVATAR_CROP_FOCAL_MIN &&
+    focalX <= AVATAR_CROP_FOCAL_MAX &&
+    Number.isFinite(focalY) &&
+    focalY >= AVATAR_CROP_FOCAL_MIN &&
+    focalY <= AVATAR_CROP_FOCAL_MAX &&
+    Number.isFinite(zoom) &&
+    zoom >= AVATAR_CROP_ZOOM_MIN &&
+    zoom <= AVATAR_CROP_ZOOM_MAX;
+
+  if (!valid) {
+    return failure(frProfile.header.photoCropInvalid, correlationId);
+  }
+
+  const currentPath = await readAvatarPath(profileId);
+  if (currentPath === null) {
+    return failure(frProfile.header.photoCropInvalid, correlationId);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('ise_profiles')
+    .update({
+      avatar_focal_x: Math.round(focalX * 100) / 100,
+      avatar_focal_y: Math.round(focalY * 100) / 100,
+      avatar_zoom: Math.round(zoom * 100) / 100,
+    })
+    .eq('id', profileId);
+
+  if (error) {
+    return failure(toBusinessError(error, correlationId).userMessage, correlationId);
+  }
+
+  refreshProfileViews();
+  return success(frProfile.header.photoCropSaved);
 }

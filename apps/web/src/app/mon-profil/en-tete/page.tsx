@@ -93,7 +93,13 @@ export default async function EditProfileHeaderPage() {
           <p className="text-body text-text-secondary">{frProfile.header.subtitle}</p>
         </header>
 
-        <AvatarForm avatarUrl={avatarUrl} initials={initials} />
+        <AvatarForm
+          avatarUrl={avatarUrl}
+          initials={initials}
+          focalX={profile.avatarFocalX}
+          focalY={profile.avatarFocalY}
+          zoom={profile.avatarZoom}
+        />
 
         {/* Entrée vers « Ma vitrine publique » : brève description et les deux
             consentements de parution sur le site public (révision D-135,
