@@ -64,6 +64,42 @@ async function runAdminBootstrap(
 }
 
 /**
+ * D-201 — a la toute premiere connexion Google reussie, rattache
+ * automatiquement le compte a un profil ISE `unclaimed` dont l'e-mail
+ * correspond EXACTEMENT (apres normalisation) a l'adresse Google, si
+ * et seulement si cette adresse est marquee verifiee par Google.
+ *
+ * Toute la logique de decision et de garde vit cote SQL
+ * (`public.match_google_account_to_profile()`, SECURITY DEFINER,
+ * n'accepte aucun parametre du client — uniquement `auth.uid()` et
+ * `auth.identities` de la session en cours) : ce point d'entree ne
+ * fait qu'appeler la RPC et avaler toute exception, exactement comme
+ * `runAdminBootstrap`/`logAuthLinkEvent`. No-op silencieux si le
+ * compte est deja rattache, si l'utilisateur ne vient pas de Google,
+ * si l'e-mail n'est pas verifie, ou si aucun profil ne correspond —
+ * dans tous ces cas, l'utilisateur atterrit simplement sur le tableau
+ * de bord sans profil rattache (comportement inchange).
+ */
+async function matchGoogleAccountToProfile(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+): Promise<void> {
+  try {
+    const { error } = await supabase.rpc('match_google_account_to_profile');
+    if (error) {
+      console.error('[ISE] rattachement automatique du compte Google', {
+        correlationId: newCorrelationId(),
+        code: error.code,
+      });
+    }
+  } catch (unexpected) {
+    console.error('[ISE] rattachement automatique du compte Google — exception avalee', {
+      correlationId: newCorrelationId(),
+      unexpected,
+    });
+  }
+}
+
+/**
  * Journalise CHAQUE atterrissage sur ce point d'entree (0119, D-173) :
  * `/auth/callback` est le SEUL endroit ou aboutit un clic sur un lien
  * d'e-mail Supabase (confirmation ISE-002, reinitialisation ISE-003,
@@ -130,6 +166,7 @@ export async function GET(request: NextRequest) {
       } = await supabase.auth.getUser();
       await logAuthLinkEvent(supabase, 'code', 'success', user?.id ?? null, null);
       await runAdminBootstrap(supabase);
+      await matchGoogleAccountToProfile(supabase);
       return NextResponse.redirect(new URL(next, origin));
     }
     await logAuthLinkEvent(supabase, 'code', 'error', null, error.code);
@@ -148,6 +185,7 @@ export async function GET(request: NextRequest) {
       } = await supabase.auth.getUser();
       await logAuthLinkEvent(supabase, rawType, 'success', user?.id ?? null, null);
       await runAdminBootstrap(supabase);
+      await matchGoogleAccountToProfile(supabase);
       return NextResponse.redirect(new URL(next, origin));
     }
     await logAuthLinkEvent(supabase, rawType, 'error', null, error.code);
