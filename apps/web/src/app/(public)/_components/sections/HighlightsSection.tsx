@@ -145,7 +145,9 @@ function Card({
       {highlight ? (
         <p className="text-body-sm text-ise-gold font-medium italic">{highlight}</p>
       ) : null}
-      {meta ? <p className="text-body-sm text-text-secondary">{meta}</p> : null}
+      {meta ? (
+        <p className="text-body-sm text-text-secondary whitespace-pre-line">{meta}</p>
+      ) : null}
       <div className="mt-auto pt-4">
         {link === null ? (
           <NoAction />
@@ -391,7 +393,12 @@ function FeaturedProfileCard({ item }: { item: LandingFeaturedProfile }) {
       kickerClassName="text-ise-gold"
       title={item.displayName}
       highlight={item.tagline}
-      meta={joinMeta([meta, item.summary], ' — ')}
+      // 0184 — le descriptif public repart sur sa propre ligne plutot que de se
+      // souder aux faits (promotion/poste/organisation) derriere un tiret :
+      // whitespace-pre-line (ci-dessus, dans Card) transforme ce \n en retour
+      // a la ligne reel, sans toucher aux autres cartes qui n'utilisent
+      // jamais qu'un separateur simple.
+      meta={joinMeta([meta, item.summary], '\n')}
       visual={
         item.photo === null ? (
           <ProfileMonogram displayName={item.displayName} />
