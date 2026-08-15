@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Avatar, cx } from '@ise/ui-web';
+import { cx } from '@ise/ui-web';
 import { fr } from '@/i18n/fr';
 import { ROUTES } from '@/lib/routes';
 import { BrandLogo } from '@/components/layout/BrandLogo';
+import { AccountMenu } from '@/components/layout/AccountMenu';
 import { PUBLIC_NAV_ITEMS } from './public-nav';
 import { TrackedLink } from './analytics/TrackedLink';
 import { usePublicViewer } from './PublicViewerProvider';
@@ -37,7 +38,9 @@ function MenuIcon({ open }: { open: boolean }) {
  * ADDENDUM §7 — En-tete public.
  *
  * Visiteur : logo + navigation + « Connexion ».
- * Membre connecte : « Connexion » devient avatar + « Mon espace ».
+ * Membre connecte : « Connexion » devient un menu de compte (avatar +
+ * « Mon espace »), avec une entree de deconnexion — meme composant
+ * `AccountMenu` que la Topbar de l'espace membre.
  *
  * Accessibilite : navigation au clavier de bout en bout, focus visible fourni
  * par les tokens, `aria-expanded` / `aria-controls` sur le declencheur mobile,
@@ -73,16 +76,18 @@ export function PublicHeader() {
   }, [open, close]);
 
   const memberEntry = viewer.authenticated ? (
-    <Link
-      href={ROUTES.dashboard}
-      className={cx(
+    <AccountMenu
+      displayName={viewer.displayName ?? fr.public.nav.memberSpace}
+      avatarUrl={viewer.avatarUrl}
+      avatarSize={24}
+      label={fr.public.nav.memberSpace}
+      profileLabel={fr.public.nav.memberSpace}
+      profileHref={ROUTES.dashboard}
+      triggerClassName={cx(
         CTA_BASE,
         'border-border bg-surface text-text-primary hover:bg-surface-muted border',
       )}
-    >
-      <Avatar name={viewer.displayName ?? fr.public.nav.memberSpace} size={24} decorative />
-      <span>{fr.public.nav.memberSpace}</span>
-    </Link>
+    />
   ) : (
     // ADDENDUM §50 — `public_login_click`. Le clic est mesure la ou il a lieu,
     // pas deduit d'une arrivee sur ISE-001.

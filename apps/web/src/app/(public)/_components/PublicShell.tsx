@@ -16,7 +16,11 @@ import { LandingTrackerProvider, LandingViewTracker } from './analytics/LandingT
  */
 export function PublicShell({ viewer, children }: { viewer: PublicViewer; children: ReactNode }) {
   return (
-    <PublicViewerProvider authenticated={viewer.authenticated} displayName={viewer.displayName}>
+    <PublicViewerProvider
+      authenticated={viewer.authenticated}
+      displayName={viewer.displayName}
+      avatarUrl={viewer.avatarUrl}
+    >
       <LandingTrackerProvider>
         <div className="bg-background flex min-h-dvh flex-col">
           <a className="skip-link" href="#contenu-principal">

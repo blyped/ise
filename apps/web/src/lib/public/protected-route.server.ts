@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { signedAvatarUrl } from '@/lib/queries/member-profile';
 import { protectedHref, type ResourceType } from './protected-route';
 
 /**
@@ -14,9 +15,15 @@ export interface PublicViewer {
   readonly authenticated: boolean;
   /** Nom affichable dans l'en-tete public, ou `null` si inconnu. */
   readonly displayName: string | null;
+  /**
+   * URL signee (courte duree de vie) de la photo de profil du membre
+   * connecte, ou `undefined` s'il n'en a pas depose une, si la lecture ou
+   * la signature a echoue. `PublicHeader` retombe alors sur les initiales.
+   */
+  readonly avatarUrl: string | undefined;
 }
 
-const ANONYMOUS: PublicViewer = { authenticated: false, displayName: null };
+const ANONYMOUS: PublicViewer = { authenticated: false, displayName: null, avatarUrl: undefined };
 
 /**
  * Next.js signale ses bascules internes (rendu dynamique, `redirect()`,
@@ -29,12 +36,43 @@ function rethrowFrameworkError(cause: unknown): void {
 }
 
 /**
+ * Lit `avatar_path` du profil rattache au compte connecte et le signe.
+ *
+ * Lecture ADDITIONNELLE et TOLERANTE A L'ECHEC, isolee dans son propre
+ * `try/catch` : un membre connecte voit sa photo dans l'en-tete public
+ * exactement comme dans l'espace membre, mais aucune panne de cette lecture
+ * (base indisponible, Storage indisponible, profil absent) ne doit
+ * empecher `readPublicViewer()` de repondre ni la page publique de
+ * s'afficher — meme discipline que le reste de ce module (ADDENDUM §47).
+ */
+async function readAvatarUrl(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  userId: string,
+): Promise<string | undefined> {
+  try {
+    const { data, error } = await supabase
+      .from('ise_profiles')
+      .select('avatar_path')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .maybeSingle();
+    if (error || !data) return undefined;
+    const avatarPath = (data as unknown as { avatar_path: string | null }).avatar_path;
+    return await signedAvatarUrl(avatarPath);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Etat de session vu depuis le site public.
  *
  * Ne lit **que** ce dont l'en-tete a besoin (ADDENDUM §7 : avatar et
- * « Mon espace »). Aucune requete sur `ise_profiles` : la landing n'a pas a
- * declencher une lecture de profil pour afficher un nom, et une panne de la
- * base ne doit pas empecher la page publique de s'afficher.
+ * « Mon espace »). La lecture du nom reste purement issue de la session
+ * (`user_metadata`), sans requete sur `ise_profiles` : une panne
+ * d'authentification ne doit pas casser PUB-001. La photo, elle, necessite
+ * une lecture de profil — elle est donc isolee dans `readAvatarUrl()` et ne
+ * peut, par construction, jamais faire echouer cette fonction.
  */
 export async function readPublicViewer(): Promise<PublicViewer> {
   try {
@@ -49,7 +87,9 @@ export async function readPublicViewer(): Promise<PublicViewer> {
         ? rawName.trim()
         : (data.user.email ?? null);
 
-    return { authenticated: true, displayName };
+    const avatarUrl = await readAvatarUrl(supabase, data.user.id);
+
+    return { authenticated: true, displayName, avatarUrl };
   } catch (cause) {
     rethrowFrameworkError(cause);
     // Une panne d'authentification ne doit pas casser PUB-001 (ADDENDUM §47).

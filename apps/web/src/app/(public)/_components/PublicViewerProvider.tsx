@@ -12,24 +12,28 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 export interface PublicViewerState {
   readonly authenticated: boolean;
   readonly displayName: string | null;
+  /** URL signee de la photo de profil du membre connecte, ou `undefined`. */
+  readonly avatarUrl: string | undefined;
 }
 
-const ANONYMOUS: PublicViewerState = { authenticated: false, displayName: null };
+const ANONYMOUS: PublicViewerState = { authenticated: false, displayName: null, avatarUrl: undefined };
 
 const PublicViewerContext = createContext<PublicViewerState>(ANONYMOUS);
 
 export function PublicViewerProvider({
   authenticated,
   displayName,
+  avatarUrl,
   children,
 }: {
   authenticated: boolean;
   displayName: string | null;
+  avatarUrl: string | undefined;
   children: ReactNode;
 }) {
   const value = useMemo<PublicViewerState>(
-    () => ({ authenticated, displayName }),
-    [authenticated, displayName],
+    () => ({ authenticated, displayName, avatarUrl }),
+    [authenticated, displayName, avatarUrl],
   );
   return <PublicViewerContext.Provider value={value}>{children}</PublicViewerContext.Provider>;
 }
