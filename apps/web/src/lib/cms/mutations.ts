@@ -116,6 +116,8 @@ export interface CarouselDraft {
   entityType: string | null;
   entityId: string | null;
   ctaLabel: string | null;
+  /** 0148 — destination externe (https) du bouton, alternative a entityType/entityId. */
+  targetUrl: string | null;
   startAt: string | null;
   endAt: string | null;
   priority: number;
@@ -137,6 +139,7 @@ function carouselPayload(draft: CarouselDraft): Record<string, unknown> {
     entity_type: draft.entityType,
     entity_id: draft.entityId,
     cta_label: draft.ctaLabel,
+    target_url: draft.targetUrl,
     start_at: draft.startAt,
     end_at: draft.endAt,
     priority: draft.priority,

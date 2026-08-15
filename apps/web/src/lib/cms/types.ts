@@ -125,6 +125,8 @@ export interface CmsCarouselItem {
   entityType: CmsEntityType | null;
   entityId: string | null;
   ctaLabel: string | null;
+  /** 0148 — destination externe (https) du bouton, alternative a entityType/entityId. */
+  targetUrl: string | null;
   startAt: string | null;
   endAt: string | null;
   priority: number;
