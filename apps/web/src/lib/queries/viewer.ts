@@ -77,7 +77,7 @@ export async function loadViewerContext(
 
 export interface ViewerAvatar {
   url: string;
-  /** Cadrage (position + zoom) — D-205, 0147. Toujours present (defaut centre). */
+  /** Cadrage (position + zoom) — D-206, 0147. Toujours present (defaut centre). */
   crop: PhotoCrop;
 }
 
@@ -94,7 +94,7 @@ export interface ViewerAvatar {
  * de session/photo, retombe silencieusement sur `undefined` — `AccountMenu`
  * affiche alors les initiales : aucune page ne doit casser pour une photo.
  *
- * D-205 — le cadrage voyage avec l'URL : c'est le SEUL endroit, hors
+ * D-206 — le cadrage voyage avec l'URL : c'est le SEUL endroit, hors
  * `/mon-profil/en-tete` lui-meme, ou l'avatar cadre du membre CONNECTE est
  * affiche (voir 0147 pour la portee assumee de cette extension).
  */

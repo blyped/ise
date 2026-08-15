@@ -23,7 +23,7 @@ export interface PublicViewer {
    */
   readonly avatarUrl: string | undefined;
   /**
-   * Cadrage (position + zoom) de la photo ci-dessus — D-205, 0147.
+   * Cadrage (position + zoom) de la photo ci-dessus — D-206, 0147.
    * `undefined` en meme temps que `avatarUrl` (pas de photo, pas de
    * cadrage a appliquer) ; sinon toujours present (defaut centre).
    */

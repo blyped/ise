@@ -36,7 +36,7 @@ export interface ProfileHeader {
   headline: string | null;
   bio: string | null;
   avatarPath: string | null;
-  /** Cadrage de la photo de profil (position + zoom) — D-205, 0147. */
+  /** Cadrage de la photo de profil (position + zoom) — D-206, 0147. */
   avatarFocalX: number;
   avatarFocalY: number;
   avatarZoom: number;
