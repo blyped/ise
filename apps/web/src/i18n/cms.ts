@@ -47,6 +47,37 @@ export const frCms = {
     archived: 'Archivé',
   } as Record<string, string>,
 
+  /**
+   * 0137 — pourquoi un contenu marqué « Visible sur la landing » n'y paraît
+   * pourtant pas.
+   *
+   * Ces libellés traduisent les codes renvoyés par
+   * `private.landing_event_block_reason()` et
+   * `private.landing_opportunity_block_reason()`, c'est-à-dire par le
+   * prédicat même dont les projections se servent pour filtrer. Tant qu'un
+   * code apparaît ici, l'écran dit la vérité ; un code inconnu se replie sur
+   * `unknown` plutôt que d'afficher une chaîne vide rassurante.
+   */
+  landingBlocked: {
+    label: 'Ne paraît pas sur la landing',
+    reasons: {
+      /* Événements. */
+      not_published: 'l’événement n’est pas au statut « publié ».',
+      cancelled: 'l’événement est annulé.',
+      past: 'l’événement est terminé. Seuls les événements à venir ou en cours paraissent sur la landing, et l’épinglage ne change pas cette règle. Pour mettre en avant un événement passé, publiez une actualité rétrospective.',
+      /* Opportunités. */
+      not_active: 'l’offre n’est pas au statut « active ».',
+      moderation_pending: 'l’offre attend encore une décision de modération.',
+      not_published_yet: 'l’offre n’a pas encore de date de publication passée.',
+      deadline_passed: 'l’échéance de candidature est dépassée.',
+      /* Communs. */
+      not_members: 'la visibilité du contenu n’est pas « membres ».',
+      landing_hidden: 'le contenu est masqué de la landing.',
+      excluded: 'le contenu est exclu par une règle éditoriale du CMS.',
+      unknown: 'une règle de publication n’est pas satisfaite.',
+    } as Record<string, string>,
+  },
+
   scheduleStatus: {
     pending: 'En attente',
     applied: 'Appliqué',

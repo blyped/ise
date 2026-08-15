@@ -79,6 +79,29 @@ export function statusLabel(status: string): string {
   return frCms.status[status] ?? status;
 }
 
+/**
+ * 0137 — pseudo-statut d'affichage.
+ *
+ * Ce n'est PAS un statut métier : aucune colonne ne le porte, et il ne
+ * transite jamais vers la base. Il sert uniquement de clé de teinte pour la
+ * pastille d'une ligne marquée « Visible sur la landing » que la landing
+ * n'affichera pourtant pas.
+ */
+export const LANDING_BLOCKED_STATUS = 'landing_blocked';
+
+/**
+ * 0137 — motif de non-parution, en clair.
+ *
+ * Les codes viennent de `private.landing_event_block_reason()` et de
+ * `private.landing_opportunity_block_reason()`. Un code inconnu se replie
+ * sur une phrase générique, puis sur le code brut : mieux vaut afficher
+ * `deadline_passed` que rien du tout.
+ */
+export function landingBlockedLabel(reason: string): string {
+  const { reasons } = frCms.landingBlocked;
+  return reasons[reason] ?? reasons['unknown'] ?? reason;
+}
+
 export type StatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'accent';
 
 /**
@@ -86,6 +109,9 @@ export type StatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 
  * le libelle est toujours affiche a cote (D-90).
  */
 export function statusTone(status: string): StatusTone {
+  // 0137 — une contradiction entre le CMS et la landing s'annonce en
+  // avertissement, jamais en vert.
+  if (status === LANDING_BLOCKED_STATUS) return 'warning';
   switch (status as CmsStatus) {
     case 'published':
       return 'success';
