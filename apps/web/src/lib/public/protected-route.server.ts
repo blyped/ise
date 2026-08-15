@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import type { PhotoCrop } from '@ise/ui-web';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { signedAvatarUrl } from '@/lib/queries/member-profile';
 import { protectedHref, type ResourceType } from './protected-route';
@@ -22,6 +23,12 @@ export interface PublicViewer {
    */
   readonly avatarUrl: string | undefined;
   /**
+   * Cadrage (position + zoom) de la photo ci-dessus — D-205, 0147.
+   * `undefined` en meme temps que `avatarUrl` (pas de photo, pas de
+   * cadrage a appliquer) ; sinon toujours present (defaut centre).
+   */
+  readonly avatarCrop: PhotoCrop | undefined;
+  /**
    * D-194 — nombre de notifications non lues (meme RPC
    * `my_notification_summary()` que le centre de notifications membre,
    * ISE-098). `undefined` si non authentifie ou si la lecture a echoue :
@@ -34,6 +41,7 @@ const ANONYMOUS: PublicViewer = {
   authenticated: false,
   displayName: null,
   avatarUrl: undefined,
+  avatarCrop: undefined,
   unreadNotifications: undefined,
 };
 
@@ -57,27 +65,41 @@ function rethrowFrameworkError(cause: unknown): void {
  * empecher `readPublicViewer()` de repondre ni la page publique de
  * s'afficher — meme discipline que le reste de ce module (ADDENDUM §47).
  */
-async function readAvatarUrl(
+async function readAvatar(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   userId: string,
-): Promise<string | undefined> {
+): Promise<{ url: string; crop: PhotoCrop } | undefined> {
   try {
     const { data, error } = await supabase
       .from('ise_profiles')
-      .select('avatar_path')
+      .select('avatar_path, avatar_focal_x, avatar_focal_y, avatar_zoom')
       .eq('user_id', userId)
       .is('deleted_at', null)
       .maybeSingle();
     if (error || !data) return undefined;
-    const avatarPath = (data as unknown as { avatar_path: string | null }).avatar_path;
-    return await signedAvatarUrl(avatarPath);
+    const row = data as unknown as {
+      avatar_path: string | null;
+      avatar_focal_x: number | null;
+      avatar_focal_y: number | null;
+      avatar_zoom: number | null;
+    };
+    const url = await signedAvatarUrl(row.avatar_path);
+    if (url === undefined) return undefined;
+    return {
+      url,
+      crop: {
+        focalX: row.avatar_focal_x ?? 50,
+        focalY: row.avatar_focal_y ?? 50,
+        zoom: row.avatar_zoom ?? 1,
+      },
+    };
   } catch {
     return undefined;
   }
 }
 
 /**
- * D-194 — pendant non lu de `readAvatarUrl()` ci-dessus : meme discipline
+ * D-194 — pendant non lu de `readAvatar()` ci-dessus : meme discipline
  * TOLERANTE A L'ECHEC, isolee dans son propre `try/catch`. Reutilise
  * directement `my_notification_summary()` (deja utilisee par
  * `loadNotificationSummary()` cote centre de notifications, ISE-098) sans
@@ -105,7 +127,7 @@ async function readUnreadNotificationCount(
  * « Mon espace »). La lecture du nom reste purement issue de la session
  * (`user_metadata`), sans requete sur `ise_profiles` : une panne
  * d'authentification ne doit pas casser PUB-001. La photo, elle, necessite
- * une lecture de profil — elle est donc isolee dans `readAvatarUrl()` et ne
+ * une lecture de profil — elle est donc isolee dans `readAvatar()` et ne
  * peut, par construction, jamais faire echouer cette fonction.
  */
 export async function readPublicViewer(): Promise<PublicViewer> {
@@ -121,12 +143,18 @@ export async function readPublicViewer(): Promise<PublicViewer> {
         ? rawName.trim()
         : (data.user.email ?? null);
 
-    const [avatarUrl, unreadNotifications] = await Promise.all([
-      readAvatarUrl(supabase, data.user.id),
+    const [avatar, unreadNotifications] = await Promise.all([
+      readAvatar(supabase, data.user.id),
       readUnreadNotificationCount(supabase),
     ]);
 
-    return { authenticated: true, displayName, avatarUrl, unreadNotifications };
+    return {
+      authenticated: true,
+      displayName,
+      avatarUrl: avatar?.url,
+      avatarCrop: avatar?.crop,
+      unreadNotifications,
+    };
   } catch (cause) {
     rethrowFrameworkError(cause);
     // Une panne d'authentification ne doit pas casser PUB-001 (ADDENDUM §47).

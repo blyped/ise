@@ -23,6 +23,7 @@ function fail<T>(raw: unknown, correlationId: string): Result<T> {
 
 const HEADER_COLUMNS =
   'id, first_name, last_name, display_name, headline, bio, avatar_path, ' +
+  'avatar_focal_x, avatar_focal_y, avatar_zoom, ' +
   'linkedin_url, website_url, current_position, current_organization_id, ' +
   'current_organization_raw, current_country_code, current_city, ' +
   'promotion_id, claim_status, verification_status, onboarding_completed_at, updated_at';
@@ -35,6 +36,10 @@ export interface ProfileHeader {
   headline: string | null;
   bio: string | null;
   avatarPath: string | null;
+  /** Cadrage de la photo de profil (position + zoom) — D-205, 0147. */
+  avatarFocalX: number;
+  avatarFocalY: number;
+  avatarZoom: number;
   linkedinUrl: string | null;
   websiteUrl: string | null;
   currentPosition: string | null;
@@ -76,6 +81,9 @@ export async function loadProfileHeader(
       headline: (row['headline'] as string | null) ?? null,
       bio: (row['bio'] as string | null) ?? null,
       avatarPath: (row['avatar_path'] as string | null) ?? null,
+      avatarFocalX: Number(row['avatar_focal_x'] ?? 50),
+      avatarFocalY: Number(row['avatar_focal_y'] ?? 50),
+      avatarZoom: Number(row['avatar_zoom'] ?? 1),
       linkedinUrl: (row['linkedin_url'] as string | null) ?? null,
       websiteUrl: (row['website_url'] as string | null) ?? null,
       currentPosition: (row['current_position'] as string | null) ?? null,
