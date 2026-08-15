@@ -4,7 +4,7 @@ import { newCorrelationId } from '@/lib/correlation';
 import { readAdminAccess } from '@/lib/admin/permissions';
 import { isDonationModuleAvailable } from '@/lib/donations/config';
 import { loadMaintenanceState, scopeMatchesPath } from '@/lib/queries/maintenance';
-import { loadViewerAvatarUrl } from '@/lib/queries/viewer';
+import { loadViewerAvatar } from '@/lib/queries/viewer';
 import { loadNotificationSummary } from '@/lib/queries/notifications';
 import { ROUTES } from '@/lib/routes';
 import {
@@ -50,7 +50,7 @@ export async function AppShell({ currentPath, displayName, contextLine, children
   // echec n'affiche rien — le lien est un confort, jamais un droit.
   //
   // La photo de profil (avatar) de l'en-tete suit la meme discipline
-  // d'AFFICHAGE seulement : `loadViewerAvatarUrl()` est une lecture
+  // d'AFFICHAGE seulement : `loadViewerAvatar()` est une lecture
   // INDEPENDANTE de `displayName`/`contextLine` (fournis par l'appelant),
   // exactement comme `readAdminAccess()` — un affichage d'en-tete ne doit
   // pas dependre du calendrier d'une autre tranche, et un echec retombe
@@ -59,9 +59,9 @@ export async function AppShell({ currentPath, displayName, contextLine, children
   // INDEPENDANTE (`my_notification_summary()`), qui degrade en silence
   // (`unreadNotifications === undefined`) si la RPC echoue. `NotificationBell`
   // n'affiche alors aucune pastille — jamais de page cassee pour ce confort.
-  const [adminAccess, avatarUrl, notificationSummary] = await Promise.all([
+  const [adminAccess, viewerAvatar, notificationSummary] = await Promise.all([
     readAdminAccess(),
-    loadViewerAvatarUrl(),
+    loadViewerAvatar(),
     loadNotificationSummary(newCorrelationId()),
   ]);
   const showAdminLink = adminAccess !== null && adminAccess.permissions.size > 0;
@@ -117,7 +117,8 @@ export async function AppShell({ currentPath, displayName, contextLine, children
         <Topbar
           displayName={displayName}
           contextLine={contextLine}
-          avatarUrl={avatarUrl}
+          avatarUrl={viewerAvatar?.url}
+          avatarCrop={viewerAvatar?.crop}
           showAdminLink={showAdminLink}
           unreadNotifications={unreadNotifications}
         />

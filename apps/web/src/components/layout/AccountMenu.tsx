@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Avatar, cx, type AvatarSize } from '@ise/ui-web';
+import { Avatar, cx, type AvatarSize, type PhotoCrop } from '@ise/ui-web';
 import { fr } from '@/i18n/fr';
 import { SignOutButton } from './SignOutButton';
 
@@ -11,6 +11,8 @@ export interface AccountMenuProps {
   displayName: string;
   /** URL signee de la photo de profil. `undefined` : repli sur les initiales, jamais d'erreur. */
   avatarUrl?: string | undefined;
+  /** Cadrage (position + zoom) de `avatarUrl` — D-205, 0147. */
+  avatarCrop?: PhotoCrop | undefined;
   avatarSize?: AvatarSize;
   /** Ligne secondaire (promotion) affichee sous le libelle, si fournie. */
   contextLine?: string | undefined;
@@ -43,6 +45,7 @@ export interface AccountMenuProps {
 export function AccountMenu({
   displayName,
   avatarUrl,
+  avatarCrop,
   avatarSize = 32,
   contextLine,
   label,
@@ -100,7 +103,7 @@ export function AccountMenu({
           triggerClassName,
         )}
       >
-        <Avatar name={displayName} src={avatarUrl} size={avatarSize} decorative />
+        <Avatar name={displayName} src={avatarUrl} crop={avatarCrop} size={avatarSize} decorative />
         <span
           className={cx(
             'flex flex-col text-left leading-tight',

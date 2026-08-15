@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { PhotoCrop } from '@ise/ui-web';
 import { fr } from '@/i18n/fr';
 import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { AccountMenu } from './AccountMenu';
@@ -15,6 +16,8 @@ export interface TopbarProps {
    * `AccountMenu` retombe alors sur les initiales : jamais d'erreur visible.
    */
   avatarUrl?: string | undefined;
+  /** Cadrage (position + zoom) de `avatarUrl` — D-205, 0147. */
+  avatarCrop?: PhotoCrop | undefined;
   /**
    * D-160 — `true` si le compte detient AU MOINS une permission
    * d'administration (lecture `readAdminAccess()` dans AppShell).
@@ -36,6 +39,7 @@ export function Topbar({
   displayName,
   contextLine,
   avatarUrl,
+  avatarCrop,
   showAdminLink = false,
   unreadNotifications,
 }: TopbarProps) {
@@ -56,6 +60,7 @@ export function Topbar({
         <AccountMenu
           displayName={displayName}
           avatarUrl={avatarUrl}
+          avatarCrop={avatarCrop}
           avatarSize={32}
           contextLine={contextLine}
           label={displayName}
