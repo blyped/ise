@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import type { PhotoCrop } from '@ise/ui-web';
 
 /**
  * ADDENDUM §4 — Etat de session partage par tout le site public.
@@ -14,6 +15,8 @@ export interface PublicViewerState {
   readonly displayName: string | null;
   /** URL signee de la photo de profil du membre connecte, ou `undefined`. */
   readonly avatarUrl: string | undefined;
+  /** Cadrage (position + zoom) de l'avatar ci-dessus — D-205, 0147. */
+  readonly avatarCrop: PhotoCrop | undefined;
   /**
    * D-194 — nombre de notifications non lues du membre connecte, ou
    * `undefined` si non authentifie ou si la lecture a echoue.
@@ -26,6 +29,7 @@ const ANONYMOUS: PublicViewerState = {
   authenticated: false,
   displayName: null,
   avatarUrl: undefined,
+  avatarCrop: undefined,
   unreadNotifications: undefined,
 };
 
@@ -35,18 +39,20 @@ export function PublicViewerProvider({
   authenticated,
   displayName,
   avatarUrl,
+  avatarCrop,
   unreadNotifications,
   children,
 }: {
   authenticated: boolean;
   displayName: string | null;
   avatarUrl: string | undefined;
+  avatarCrop: PhotoCrop | undefined;
   unreadNotifications: number | undefined;
   children: ReactNode;
 }) {
   const value = useMemo<PublicViewerState>(
-    () => ({ authenticated, displayName, avatarUrl, unreadNotifications }),
-    [authenticated, displayName, avatarUrl, unreadNotifications],
+    () => ({ authenticated, displayName, avatarUrl, avatarCrop, unreadNotifications }),
+    [authenticated, displayName, avatarUrl, avatarCrop, unreadNotifications],
   );
   return <PublicViewerContext.Provider value={value}>{children}</PublicViewerContext.Provider>;
 }

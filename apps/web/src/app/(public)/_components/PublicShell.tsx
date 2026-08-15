@@ -20,6 +20,7 @@ export function PublicShell({ viewer, children }: { viewer: PublicViewer; childr
       authenticated={viewer.authenticated}
       displayName={viewer.displayName}
       avatarUrl={viewer.avatarUrl}
+      avatarCrop={viewer.avatarCrop}
       unreadNotifications={viewer.unreadNotifications}
     >
       <LandingTrackerProvider>

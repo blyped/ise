@@ -85,6 +85,7 @@ export function PublicHeader() {
       <AccountMenu
         displayName={viewer.displayName ?? fr.public.nav.memberSpace}
         avatarUrl={viewer.avatarUrl}
+        avatarCrop={viewer.avatarCrop}
         avatarSize={24}
         label={fr.public.nav.memberSpace}
         profileLabel={fr.public.nav.memberSpace}
