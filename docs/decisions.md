@@ -42,7 +42,7 @@ Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 | D-174 → D-178 | [`decisions/07-mises-en-avant-et-ise-du-jour.md`](decisions/07-mises-en-avant-et-ise-du-jour.md) |
 | D-179, D-180, exécution de C-08 | [`decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md`](decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md) |
 | D-181 → D-183 | [`decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md`](decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md) |
-| D-184 → D-205 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
+| D-184 → D-204 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
 
 ### [Partie 1 — Fondations et modèle de données](decisions/01-fondations-et-modele-de-donnees.md)
 
@@ -134,7 +134,7 @@ Sections 41 à 43.
 
 ### [Partie 10 — Dons, organisations, cadrage et pastilles](decisions/10-dons-organisations-cadrage-et-pastilles.md)
 
-Sections 44 à 60.
+Sections 44 à 59.
 
 - **§44. Lien de retour vers l'espace membre depuis Administration et CMS** — D-184
 - **§45. Proposition de contenu par les ISE, avec validation administrative** — D-185, bucket privé `content-proposals`, gap ouvert sur l'image des opportunités
@@ -152,5 +152,4 @@ Sections 44 à 60.
 - **§56. Bandeau d'annonces admin en tête du tableau de bord membre** — D-200, diffusion descendante distincte du module Communication ascendant (D-183)
 - **§57. Rattachement automatique d'un compte Google à un profil ISE non réclamé** — D-201, l'e-mail Google vérifié fait office de preuve de possession, au même titre que le clic sur le lien d'activation (D-161)
 - **§58. Sixième emplacement « Organisations (logos) » dans la médiathèque CMS** — D-203, sixième préfixe reconnu par `private.is_landing_media_path()` + comptage de références étendu à `cms_landing_organizations`
-- **§59. Cadrage vertical du portrait public — diagnostic et correctif, zoom réducteur** — D-204, l'ancienne formule `object-position` + `transform: scale()` ne laissait de marge de déplacement que sur l'axe où la photo débordait déjà du cadre
-- **§60. Cadrage ajustable étendu à la photo de profil (avatar)** — D-205, même mécanisme que le portrait public, appliqué au cockpit (en-tête) et à l'écran d'édition
+- **§59. Bouton de slide carrousel : correctif d'affichage et destination externe** — D-204, bug de rendu (jamais de projection) + colonne `target_url` alignée sur `cms_partner_campaigns`
