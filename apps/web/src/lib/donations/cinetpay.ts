@@ -1,100 +1,240 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash } from 'node:crypto';
+import { asCleanString, parseAmount } from './cinetpay-utils';
 
 /**
- * CINETPAY — guichet de paiement HEBERGE, jeton HMAC `x-token` et
- * REVERIFICATION obligatoire de la transaction.
+ * CINETPAY v2 — GUICHET HEBERGE, AUTHENTIFICATION OAUTH, REVERIFICATION
+ * OBLIGATOIRE DE LA TRANSACTION.
  *
- * LE POINT LE PLUS IMPORTANT DE CE FICHIER : CinetPay n'envoie JAMAIS le
- * statut du paiement dans sa notification. Sa documentation le dit
- * explicitement — « CinetPay ne vous enverra pas les informations sur le
- * statut de la transaction pour eviter certaine faille de securite comme le
- * man in the middle », et « il faudra toujours effectuer un appel a l'API de
- * Verification de transaction pour avoir les vraies valeurs du paiement ».
- * On appelle donc systematiquement `/v2/payment/check` avant de conclure
- * quoi que ce soit, meme quand le jeton HMAC est valide.
+ * CE FICHIER A ETE ENTIEREMENT REECRIT (0135). L'implantation precedente
+ * visait l'ANCIENNE plateforme — `api-checkout.cinetpay.com/v2/payment`,
+ * couple `apikey` + `site_id`, jeton HMAC `x-token` sur seize champs. Ce
+ * n'est PAS la plateforme du porteur : la sienne, deja en service sur son
+ * autre produit, est la v2, ou l'on s'authentifie par jeton OAuth et ou
+ * `site_id` N'EXISTE PLUS.
  *
- * AUCUNE DONNEE DE CARTE NE PASSE PAR NOUS : on cree un lien de paiement,
- * le donateur paie sur le guichet CinetPay.
+ * TROIS APPELS, PAS UN DE PLUS :
+ *   1. `POST {base}/v1/oauth/login`   { api_key, api_password } -> jeton ;
+ *   2. `POST {base}/v1/payment`       initiation, en-tete Bearer ;
+ *   3. `GET  {base}/v1/payment/{mid}` verification, en-tete Bearer.
  *
- * Reference : https://docs.cinetpay.com/api/1.0-fr/checkout/initialisation
- *             https://docs.cinetpay.com/api/1.0-fr/checkout/notification
- *             https://docs.cinetpay.com/api/1.0-fr/checkout/hmac
- *             https://docs.cinetpay.com/api/1.0-fr/checkout/verification
+ * CE QUI N'A PAS BOUGE, ET NE BOUGERA PAS :
+ *
+ *  · AUCUNE DONNEE DE CARTE NE PASSE PAR NOUS. Le donateur paie sur le
+ *    guichet HEBERGE de CinetPay ; nous ne recevons qu'une reference.
+ *
+ *  · LE STATUT NE VIENT JAMAIS DE LA NOTIFICATION. La v2 ne signe pas ses
+ *    notifications ; elle remet a l'initiation un `notify_token` a usage
+ *    unique qu'elle renvoie ensuite. Ce jeton etablit — au mieux — que
+ *    l'appel n'est pas forge. Il n'etablit PAS l'issue du paiement :
+ *    celle-ci ne vient que de `checkCinetpayTransaction()`, appelee A
+ *    CHAQUE FOIS, meme quand le jeton concorde.
+ *
+ *  · AUCUNE ISSUE N'EST INVENTEE. Un statut inconnu, ou une attente de
+ *    validation par l'utilisateur, donne `pending` : l'etat du don
+ *    n'avance pas. Conclure a l'echec sur un premier appel casse les
+ *    paiements par mobile money, qui repondent d'abord « en attente ».
+ *
+ * BASE URL : `https://api.cinetpay.co` est la PRODUCTION,
+ * `https://api.cinetpay.net` est le BAC A SABLE. Le defaut est la
+ * production (cf. `packages/config/src/env.ts`) : une variable oubliee ne
+ * doit jamais envoyer un paiement reel en bac a sable.
  */
 
-const CINETPAY_PAYMENT_URL = 'https://api-checkout.cinetpay.com/v2/payment';
-const CINETPAY_CHECK_URL = 'https://api-checkout.cinetpay.com/v2/payment/check';
+/* ------------------------------------------------------------------ */
+/* Bornes imposees par la plateforme                                   */
+/* ------------------------------------------------------------------ */
+
+/** `merchant_transaction_id` et notre reference : 30 caracteres au plus. */
+export const CINETPAY_MAX_TRANSACTION_ID_LENGTH = 30;
+/** `success_url`, `failed_url`, `notify_url` : 120 caracteres au plus. */
+export const CINETPAY_MAX_URL_LENGTH = 120;
+
+/** `true` si l'URL tient dans la limite de la plateforme. */
+export function isCinetpayUrlAcceptable(url: string): boolean {
+  return url.length > 0 && url.length <= CINETPAY_MAX_URL_LENGTH;
+}
+
+/** `true` si la reference est utilisable telle quelle comme identifiant marchand. */
+export function isCinetpayTransactionIdAcceptable(reference: string): boolean {
+  return reference.length > 0 && reference.length <= CINETPAY_MAX_TRANSACTION_ID_LENGTH;
+}
+
+/* ------------------------------------------------------------------ */
+/* Lecture defensive des reponses                                      */
+/* ------------------------------------------------------------------ */
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function asText(value: unknown): string | null {
+  const cleaned = asCleanString(value);
+  return cleaned.length > 0 ? cleaned : null;
+}
+
+/** `must_be_redirected` peut arriver en booleen, en nombre ou en chaine. */
+function asFlag(value: unknown): boolean {
+  if (typeof value === 'boolean') return value;
+  const cleaned = asCleanString(value).toLowerCase();
+  return cleaned === 'true' || cleaned === '1' || cleaned === 'yes' || cleaned === 'oui';
+}
 
 /**
- * ORDRE EXACT de concatenation du jeton HMAC, tel que documente. Une seule
- * permutation, un seul champ oublie, et toute notification legitime serait
- * rejetee — ou pire, une contrefacon acceptee.
+ * La v2 place tantot l'information a la racine, tantot dans `details`,
+ * tantot dans `data`. On regarde les trois, dans cet ordre, plutot que de
+ * parier sur une forme unique.
  */
-export const CINETPAY_TOKEN_FIELDS = [
-  'cpm_site_id',
-  'cpm_trans_id',
-  'cpm_trans_date',
-  'cpm_amount',
-  'cpm_currency',
-  'signature',
-  'payment_method',
-  'cel_phone_num',
-  'cpm_phone_prefixe',
-  'cpm_language',
-  'cpm_version',
-  'cpm_payment_config',
-  'cpm_page_action',
-  'cpm_custom',
-  'cpm_designation',
-  'cpm_error_message',
-] as const;
+function pick(payload: Record<string, unknown>, key: string): unknown {
+  if (payload[key] !== undefined) return payload[key];
+  const details = asRecord(payload['details']);
+  if (details[key] !== undefined) return details[key];
+  const data = asRecord(payload['data']);
+  return data[key];
+}
+
+/* ------------------------------------------------------------------ */
+/* Identifiants et jeton OAuth                                         */
+/* ------------------------------------------------------------------ */
+
+export interface CinetpayCredentials {
+  /** Racine de l'API, SANS barre oblique finale. Production par defaut. */
+  readonly baseUrl: string;
+  readonly apiKey: string;
+  readonly apiPassword: string;
+}
+
+type TokenResult =
+  | { readonly ok: true; readonly token: string }
+  | { readonly ok: false; readonly reason: string };
+
+/**
+ * `POST {base}/v1/oauth/login`.
+ *
+ * Le jeton n'est ni journalise, ni renvoye a l'appelant au-dela de cette
+ * couche, ni mis en cache : il est obtenu a chaque operation. Un cache
+ * partage entre requetes serverless n'apporterait rien de sur.
+ */
+async function login(credentials: CinetpayCredentials): Promise<TokenResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${credentials.baseUrl}/v1/oauth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: credentials.apiKey,
+        api_password: credentials.apiPassword,
+      }),
+      cache: 'no-store',
+    });
+  } catch {
+    return { ok: false, reason: 'auth_network' };
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    return { ok: false, reason: 'auth_invalid_response' };
+  }
+
+  const record = asRecord(payload);
+  const token = asText(record['access_token']);
+  const code = asText(record['code']);
+
+  if (!response.ok || token === null || (code !== null && Number(code) !== 200)) {
+    // On ne recopie ni le corps ni le jeton : le motif suffit au diagnostic.
+    return { ok: false, reason: `auth_code_${code ?? String(response.status)}` };
+  }
+
+  return { ok: true, token };
+}
+
+/* ------------------------------------------------------------------ */
+/* Initiation du paiement                                              */
+/* ------------------------------------------------------------------ */
 
 export interface CinetpayPaymentInput {
-  readonly apiKey: string;
-  readonly siteId: string;
-  /** NOTRE reference : elle devient le `transaction_id` de CinetPay. */
+  readonly credentials: CinetpayCredentials;
+  /**
+   * NOTRE reference. Elle part telle quelle comme `merchant_transaction_id`
+   * (30 caracteres au plus, cf. 0135) : une seule identite, aucun mappage.
+   */
   readonly reference: string;
-  /** Entier, en francs CFA. Doit etre un multiple de 5 (impose par CinetPay). */
+  /** Entier, en francs CFA. Le XOF n'a pas de sous-unite. */
   readonly amount: number;
   readonly currency: string;
   readonly description: string;
   readonly notifyUrl: string;
-  readonly returnUrl: string;
+  readonly successUrl: string;
+  readonly failedUrl: string;
+  /** Facultatif : CinetPay s'en sert pour le recu, jamais nous. */
+  readonly customerEmail: string | null;
+}
+
+export interface CinetpayPaymentSession {
+  /** URL du guichet HEBERGE. Renseignee uniquement si la v2 demande la redirection. */
+  readonly url: string;
+  /** Jeton a usage unique renvoye dans la notification. A CONSERVER. */
+  readonly notifyToken: string | null;
+  /** Identifiant CinetPay de la transaction (leur cote), a titre de trace. */
+  readonly transactionId: string | null;
+  readonly merchantTransactionId: string;
+  readonly status: string;
 }
 
 export type CinetpayPaymentResult =
-  | { readonly ok: true; readonly url: string; readonly token: string }
+  | { readonly ok: true; readonly session: CinetpayPaymentSession }
   | { readonly ok: false; readonly reason: string };
 
-function asString(value: unknown): string | null {
-  return typeof value === 'string' && value.length > 0 ? value : null;
-}
-
-function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
-}
+/** Statuts que la v2 emploie pour dire « non ». Aucun n'est devine. */
+const REFUSED_STATUSES = new Set([
+  'FAILED',
+  'REFUSED',
+  'ERROR',
+  'INVALID_PARAMS',
+  'INSUFFICIENT_BALANCE',
+]);
 
 export async function createCinetpayPayment(
   input: CinetpayPaymentInput,
 ): Promise<CinetpayPaymentResult> {
+  // Garde-fous de format AVANT tout appel reseau : un depassement de
+  // longueur ferait echouer l'initiation avec un message obscur, ou pire,
+  // ferait tronquer notre reference cote CinetPay et rendrait la
+  // notification impossible a rattacher.
+  if (!isCinetpayTransactionIdAcceptable(input.reference)) {
+    return { ok: false, reason: 'reference_too_long' };
+  }
+  for (const url of [input.notifyUrl, input.successUrl, input.failedUrl]) {
+    if (!isCinetpayUrlAcceptable(url)) return { ok: false, reason: 'url_too_long' };
+  }
+
+  const auth = await login(input.credentials);
+  if (!auth.ok) return { ok: false, reason: auth.reason };
+
   let response: Response;
   try {
-    response = await fetch(CINETPAY_PAYMENT_URL, {
+    response = await fetch(`${input.credentials.baseUrl}/v1/payment`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${auth.token}`,
+      },
       body: JSON.stringify({
-        apikey: input.apiKey,
-        site_id: input.siteId,
-        transaction_id: input.reference,
-        amount: input.amount,
+        // AUCUN `site_id` : il n'existe plus dans la v2.
         currency: input.currency,
-        description: input.description,
-        notify_url: input.notifyUrl,
-        return_url: input.returnUrl,
-        // ALL : mobile money ET carte bancaire, c'est au donateur de choisir
-        // sur le guichet. Aucune coordonnee ne revient chez nous.
-        channels: 'ALL',
+        merchant_transaction_id: input.reference,
+        amount: input.amount,
         lang: 'fr',
+        designation: input.description,
+        ...(input.customerEmail === null ? {} : { client_email: input.customerEmail }),
+        success_url: input.successUrl,
+        failed_url: input.failedUrl,
+        notify_url: input.notifyUrl,
+        // Notre reference, et rien d'autre : aucune donnee personnelle ne
+        // part dans les metadonnees du prestataire.
         metadata: input.reference,
       }),
       cache: 'no-store',
@@ -111,55 +251,36 @@ export async function createCinetpayPayment(
   }
 
   const record = asRecord(payload);
-  const code = asString(record['code']);
-  if (code !== '201') {
-    return { ok: false, reason: `code_${code ?? 'inconnu'}` };
+  const status = asText(pick(record, 'status')) ?? '';
+  const code = asText(pick(record, 'code'));
+
+  if (!response.ok || REFUSED_STATUSES.has(status.toUpperCase())) {
+    return { ok: false, reason: `code_${code ?? String(response.status)}_${status || 'inconnu'}` };
   }
 
-  const data = asRecord(record['data']);
-  const url = asString(data['payment_url']);
-  const token = asString(data['payment_token']);
-  if (url === null || token === null) return { ok: false, reason: 'invalid_response' };
+  const url = asText(record['payment_url']);
+  const merchantTransactionId = asText(record['merchant_transaction_id']) ?? input.reference;
 
-  return { ok: true, url, token };
-}
-
-/* ------------------------------------------------------------------ */
-/* Jeton HMAC `x-token`                                                */
-/* ------------------------------------------------------------------ */
-
-function hexEquals(a: string, b: string): boolean {
-  if (a.length !== b.length || a.length === 0) return false;
-  try {
-    return timingSafeEqual(Buffer.from(a, 'hex'), Buffer.from(b, 'hex'));
-  } catch {
-    return false;
+  // ON NE REDIRIGE QUE SI LA PLATEFORME LE DEMANDE. `must_be_redirected`
+  // faux signifie que le paiement se poursuit hors navigateur (paiement
+  // direct par l'operateur) : ce parcours n'existe pas ici, faute de quoi
+  // il faudrait collecter un numero de telephone et un code de
+  // confirmation. On ne fabrique pas une redirection qui n'a pas ete
+  // demandee, et on n'affirme pas non plus un paiement en cours.
+  if (!asFlag(pick(record, 'must_be_redirected')) || url === null) {
+    return { ok: false, reason: 'not_redirectable' };
   }
-}
 
-/**
- * Verifie le jeton HMAC place par CinetPay dans l'en-tete `x-token`.
- *
- * Le message signe est la CONCATENATION SANS SEPARATEUR des seize champs
- * du corps, dans l'ordre documente, un champ absent comptant pour une
- * chaine vide. La cle est la « Secret Key » du compte marchand.
- *
- * Ce controle etablit l'AUTHENTICITE de l'appel. Il n'etablit PAS le
- * resultat du paiement : celui-ci ne vient que de `checkCinetpayTransaction`.
- */
-export function verifyCinetpayToken(
-  form: URLSearchParams,
-  receivedToken: string | null,
-  secretKey: string,
-): boolean {
-  if (receivedToken === null) return false;
-  const received = receivedToken.trim().toLowerCase();
-  if (received.length === 0) return false;
-
-  const data = CINETPAY_TOKEN_FIELDS.map((field) => form.get(field) ?? '').join('');
-  const expected = createHmac('sha256', secretKey).update(data, 'utf8').digest('hex');
-
-  return hexEquals(expected, received);
+  return {
+    ok: true,
+    session: {
+      url,
+      notifyToken: asText(record['notify_token']),
+      transactionId: asText(record['transaction_id']),
+      merchantTransactionId,
+      status,
+    },
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -177,6 +298,7 @@ export interface CinetpayTransaction {
   readonly amountMinor: number | null;
   readonly currency: string | null;
   readonly paymentMethod: string | null;
+  readonly merchantTransactionId: string | null;
 }
 
 export type CinetpayCheckResult =
@@ -184,45 +306,49 @@ export type CinetpayCheckResult =
   | { readonly ok: false; readonly reason: string };
 
 /**
- * Traduit le statut CinetPay en issue interne.
+ * Traduit le statut v2 en issue interne.
  *
- * AUCUNE ISSUE N'EST INVENTEE. Un statut inconnu, ou une attente de
- * validation par l'utilisateur, donne `pending` : l'etat du don n'avance
- * pas. CinetPay avertit explicitement qu'un premier appel peut arriver en
- * `WAITING_FOR_CUSTOMER` et que conclure a l'echec a ce moment-la casse les
- * paiements par mobile money.
+ * `INITIATED`, `PENDING`, `WAITING_FOR_CUSTOMER` et tout statut inconnu
+ * donnent `pending`. C'est volontaire : le don n'avance pas, la
+ * notification suivante tranchera. Rien n'est suppose.
  */
 function mapCinetpayStatus(status: string): CinetpayOutcome {
   const normalized = status.trim().toUpperCase();
-  if (normalized === 'ACCEPTED') return 'succeeded';
-  if (normalized === 'REFUSED') return 'failed';
-  if (normalized === 'CANCELED' || normalized === 'CANCELLED') return 'cancelled';
+  if (normalized === 'SUCCESS' || normalized === 'ACCEPTED') return 'succeeded';
+  if (REFUSED_STATUSES.has(normalized)) return 'failed';
+  if (normalized === 'CANCELED' || normalized === 'CANCELLED' || normalized === 'EXPIRED') {
+    return 'cancelled';
+  }
   return 'pending';
 }
 
-/** Montant renvoye par CinetPay : chaine ou nombre, toujours en unite minimale. */
-function parseAmount(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) return Math.round(value);
-  if (typeof value !== 'string') return null;
-  const normalized = value.replace(/[\s ]/g, '');
-  if (!/^\d+(\.\d+)?$/.test(normalized)) return null;
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? Math.round(parsed) : null;
-}
-
+/**
+ * `GET {base}/v1/payment/{merchant_transaction_id}`.
+ *
+ * SEULE PAROLE QUI COMPTE. Appelee a chaque notification, et par elle
+ * seule : jamais depuis le navigateur, jamais sur la foi d'un parametre
+ * d'URL.
+ */
 export async function checkCinetpayTransaction(
-  apiKey: string,
-  siteId: string,
-  transactionId: string,
+  credentials: CinetpayCredentials,
+  merchantTransactionId: string,
 ): Promise<CinetpayCheckResult> {
+  const auth = await login(credentials);
+  if (!auth.ok) return { ok: false, reason: auth.reason };
+
   let response: Response;
   try {
-    response = await fetch(CINETPAY_CHECK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apikey: apiKey, site_id: siteId, transaction_id: transactionId }),
-      cache: 'no-store',
-    });
+    response = await fetch(
+      `${credentials.baseUrl}/v1/payment/${encodeURIComponent(merchantTransactionId)}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
+        },
+        cache: 'no-store',
+      },
+    );
   } catch {
     return { ok: false, reason: 'network' };
   }
@@ -234,10 +360,11 @@ export async function checkCinetpayTransaction(
     return { ok: false, reason: 'invalid_response' };
   }
 
+  if (!response.ok) return { ok: false, reason: `http_${response.status}` };
+
   const record = asRecord(payload);
-  const code = asString(record['code']) ?? '';
-  const data = asRecord(record['data']);
-  const status = asString(data['status']) ?? '';
+  const status = asText(pick(record, 'status')) ?? '';
+  const code = asText(pick(record, 'code')) ?? '';
 
   // Ni code ni statut exploitables : on ne conclut rien plutot que de
   // deviner. Le prestataire reessaiera, et le don reste en attente.
@@ -251,9 +378,28 @@ export async function checkCinetpayTransaction(
       outcome: mapCinetpayStatus(status),
       status,
       code,
-      amountMinor: parseAmount(data['amount']),
-      currency: asString(data['currency']),
-      paymentMethod: asString(data['payment_method']),
+      // XOF : exposant 0, l'unite minimale EST le franc. `parseAmount`
+      // tronque et refuse les valeurs non numeriques (cf. cinetpay-utils).
+      amountMinor: parseAmount(pick(record, 'amount')),
+      currency: asText(pick(record, 'currency')),
+      paymentMethod: asText(pick(record, 'payment_method')),
+      merchantTransactionId: asText(pick(record, 'merchant_transaction_id')),
     },
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Empreinte du `notify_token`                                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * SHA-256 hexadecimal minuscule du `notify_token`.
+ *
+ * Le jeton en clair ne quitte jamais cette couche : c'est son EMPREINTE
+ * qui est conservee (schema `private`, migration 0135) et son EMPREINTE
+ * qui est comparee a la reception. Meme une lecture de la table ne
+ * permettrait donc pas de fabriquer une notification credible.
+ */
+export function cinetpayNotifyTokenDigest(token: string): string {
+  return createHash('sha256').update(token.trim(), 'utf8').digest('hex');
 }
