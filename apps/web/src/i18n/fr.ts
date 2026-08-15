@@ -234,8 +234,8 @@ export const fr = {
       methodEmailUnavailable:
         'Aucune adresse historique n’est enregistrée pour ce profil : cette méthode n’est pas proposée.',
       methodDocument: 'Je fournirai une pièce justificative',
-      // Honnêteté : le dépôt de fichier n'est pas encore ouvert (bucket
-      // `verification-documents` créé, aucun écran de dépôt livré).
+      // Honnetete : le depot de fichier n'est pas encore ouvert (bucket
+      // `verification-documents` cree, aucun ecran de depot livre).
       methodDocumentHint:
         'Diplôme, attestation ou pièce d’identité. Votre demande part en revue ; le dépôt du fichier en ligne n’est pas encore ouvert.',
       methodPromotionManager: 'Le délégué de ma promotion peut confirmer mon identité',
@@ -505,7 +505,7 @@ export const fr = {
       play: 'Reprendre le défilement',
       goTo: 'Aller à la diapositive {index}',
       position: 'Diapositive {index} sur {total}',
-      /** 0146 — bouton pointant une adresse externe plutôt qu'une ressource interne. */
+      /** 0148 — bouton pointant une adresse externe plutôt qu'une ressource interne. */
       externalHint: 'Ouvre un site externe dans un nouvel onglet',
       emptyTitle: 'Aucune mise en avant publiée.',
       emptyBody:
@@ -531,16 +531,16 @@ export const fr = {
        * ce que voit un visiteur vient de la base, pas d'ici.
        *
        * Pourquoi les garder alors ? Pour deux cas où la base ne dit rien,
-       * et où une carte vide serait un contenu cassé :
+       * et où une carte vide serait un contenu casse :
        *   1. l'administrateur vide le champ — l'aide du formulaire annonce
        *      justement « laisser vide = revenir au texte d'origine » ;
        *   2. `get_landing_pillars()` est en panne — la section doit encore
        *      afficher ses quatre piliers.
-       * La clé s'appelle `defaults` et non `items` précisément pour qu'aucun
-       * appelant ne puisse la prendre pour la source de vérité. Ces libellés
-       * ne sont donc pas un doublon silencieux : ils sont le repli déclaré.
-       * Elle fixe aussi l'ordre et la liste des quatre clés, qui eux ne sont
-       * pas éditables (4 lignes fixes en base depuis 0114).
+       * La cle s'appelle `defaults` et non `items` precisement pour qu'aucun
+       * appelant ne puisse la prendre pour la source de verite. Ces libelles
+       * ne sont donc pas un doublon silencieux : ils sont le repli declare.
+       * Elle fixe aussi l'ordre et la liste des quatre cles, qui eux ne sont
+       * pas editables (4 lignes fixes en base depuis 0114).
        */
       defaults: [
         { key: 'connecter', title: 'Connecter', body: 'Trouvez l’expertise et la bonne personne.' },

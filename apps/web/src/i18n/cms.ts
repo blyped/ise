@@ -47,7 +47,7 @@ export const frCms = {
      * s'écarte de ce que le CMS a demandé.
      */
     pendingCount: (count: number) => `, ${count} à traiter`,
-    /** Même comptage, cumulé, sur le bouton du menu replié (mobile). */
+    /** Même comptage, cumulé, sur le bouton du menu replie (mobile). */
     pendingTotal: (count: number) =>
       count > 1 ? `${count} éléments à traiter` : `${count} élément à traiter`,
   },
@@ -78,7 +78,7 @@ export const frCms = {
       /* Événements. */
       not_published: 'l’événement n’est pas au statut « publié ».',
       cancelled: 'l’événement est annulé.',
-      past: 'l’événement est terminé. Seuls les événements à venir ou en cours paraissent sur la landing, et l’épinglage ne change pas cette règle. Pour mettre en avant un événement passé, publiez une actualité rétrospective.',
+      past: 'l’événement est terminé. Seuls les événements à venir ou en cours paraîssent sur la landing, et l’épinglage ne change pas cette règle. Pour mettre en avant un événement passé, publiez une actualité rétrospective.',
       /* Opportunités. */
       not_active: 'l’offre n’est pas au statut « active ».',
       moderation_pending: 'l’offre attend encore une décision de modération.',
@@ -264,6 +264,9 @@ export const frCms = {
       'La slide pointe une ressource par son type et son identifiant. Aucune URL interne n’est stockée : la route est calculée par l’application (ADDENDUM §10).',
     fieldEntityType: 'Type de ressource',
     fieldEntityId: 'Identifiant de la ressource',
+    fieldTargetUrl: 'Ou adresse externe (https)',
+    fieldTargetUrlHelp:
+      'Destination du bouton quand elle n’est pas une ressource interne de la plateforme : adresse complète en https://, par exemple le site d’un partenaire ou un formulaire externe. Ne renseignez ni la ressource interne ni cette adresse : le bouton ne s’affiche pas sur la landing. Renseignez l’une des deux, jamais les deux à la fois — le bouton ouvre alors cette adresse dans un nouvel onglet plutôt que de naviguer dans le site.',
     fieldStart: 'Début de diffusion',
     fieldEnd: 'Fin de diffusion',
     fieldPriority: 'Priorité (0 à 1000)',
@@ -287,7 +290,7 @@ export const frCms = {
       'Aperçu du brouillon en cours. Il ne modifie pas la landing tant que la slide n’est pas publiée.',
     createdTitle: 'Nouvelle slide',
     createdBody:
-      'La slide est créée en brouillon. Publiez-la pour qu’elle paraisse sur la landing.',
+      'La slide est créée en brouillon. Publiez-la pour qu’elle paraîsse sur la landing.',
     deleteTitle: 'Supprimer cette slide ?',
     deleteBody:
       'La slide et son texte éditorial seront supprimés définitivement. Les médias restent dans la médiathèque.',
@@ -315,7 +318,7 @@ export const frCms = {
     structuralHelp:
       'Une section structurelle fait partie du squelette de la landing : elle peut être masquée, jamais supprimée.',
     sourceHelp:
-      'Automatique : la section se remplit depuis les modules. Manuel : seuls les contenus épinglés paraissent. Mixte : les épinglages passent devant, le reste suit la source automatique.',
+      'Automatique : la section se remplit depuis les modules. Manuel : seuls les contenus épinglés paraîssent. Mixte : les épinglages passent devant, le reste suit la source automatique.',
     cardsCount: (n: number) => `${n} carte${n > 1 ? 's' : ''}`,
   },
 
@@ -365,7 +368,7 @@ export const frCms = {
     subtitle: 'Choisissez ce qui paraît sur la landing, et quand.',
     emptyTitle: 'Aucune actualité',
     emptyBody:
-      'Le module Actualités ne contient encore aucun article. Le CMS n’en crée pas : il choisit lesquels paraissent sur la vitrine publique.',
+      'Le module Actualités ne contient encore aucun article. Le CMS n’en crée pas : il choisit lesquels paraîssent sur la vitrine publique.',
     scopeNote:
       'Le CMS orchestre l’exposition sur la landing. Il ne remplace pas le circuit éditorial du module Actualités : ni le statut éditorial ni le corps de l’article ne sont modifiables ici (D-128).',
     editorialStatus: 'Statut éditorial',
@@ -564,10 +567,10 @@ export const frCms = {
     fieldMediaHelp:
       'Deux visuels distincts : le Desktop est cadré en 16/9, le Mobile en portrait. Formats recommandés : Desktop 1920 × 1080 px (16/9), Mobile 1080 × 1350 px (4/5), JPEG/WebP/AVIF, 5 Mo maximum. Pour l’emplacement « Bandeau bas de page », le format attendu est différent : 1920 × 480 px (ratio 4:1).',
     /**
-     * 0133 — rappel affiché sous le sélecteur d'emplacement. Le format du
-     * bandeau n'est pas une préférence : c'est la taille annoncée au porteur,
-     * et le conteneur de la page d'accueil est calé dessus. Une image d'un
-     * autre rapport n'est pas rognée — elle apparaît avec des bandes.
+     * 0133 — rappel affiche sous le selecteur d'emplacement. Le format du
+     * bandeau n'est pas une preference : c'est la taille annoncee au porteur,
+     * et le conteneur de la page d'accueil est cale dessus. Une image d'un
+     * autre rapport n'est pas rognee — elle apparait avec des bandes.
      */
     placementFooterHelp:
       '« Bandeau bas de page » : la campagne s’affiche en bas de la page d’accueil sous la forme d’une image seule, qui défile avec les autres bandeaux. Ni titre, ni description, ni bouton ne sont affichés — seul le visuel Desktop (et le visuel Mobile s’il existe). Format attendu : 1920 × 480 px (ratio 4:1), JPEG ou WebP, 5 Mo maximum. Pour cet emplacement uniquement, l’adresse cible est facultative.',
