@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { newCorrelationId } from '@/lib/correlation';
 import { readAdminAccess } from '@/lib/admin/permissions';
 import { isDonationModuleAvailable } from '@/lib/donations/config';
 import { loadMaintenanceState, scopeMatchesPath } from '@/lib/queries/maintenance';
+import { loadViewerAvatarUrl } from '@/lib/queries/viewer';
+import { ROUTES } from '@/lib/routes';
 import {
   MaintenanceScreen,
   ServiceUnavailableScreen,
@@ -44,7 +47,14 @@ export async function AppShell({ currentPath, displayName, contextLine, children
   // sidebar membre (§89, D-95) reste inchangee : les deux navigations
   // demeurent distinctes, seul un lien d'en-tete est ajoute. Une lecture en
   // echec n'affiche rien — le lien est un confort, jamais un droit.
-  const adminAccess = await readAdminAccess();
+  //
+  // La photo de profil (avatar) de l'en-tete suit la meme discipline
+  // d'AFFICHAGE seulement : `loadViewerAvatarUrl()` est une lecture
+  // INDEPENDANTE de `displayName`/`contextLine` (fournis par l'appelant),
+  // exactement comme `readAdminAccess()` — un affichage d'en-tete ne doit
+  // pas dependre du calendrier d'une autre tranche, et un echec retombe
+  // silencieusement sur les initiales (jamais de page cassee pour une photo).
+  const [adminAccess, avatarUrl] = await Promise.all([readAdminAccess(), loadViewerAvatarUrl()]);
   const showAdminLink = adminAccess !== null && adminAccess.permissions.size > 0;
 
   // 0134 — l'entree « Faire un don » n'existe que si une voie de paiement
@@ -82,13 +92,24 @@ export async function AppShell({ currentPath, displayName, contextLine, children
 
       <div className="border-border bg-surface shrink-0 border-b lg:h-dvh lg:w-[var(--layout-sidebar)] lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <div className="flex h-[var(--layout-topbar)] items-center px-6">
-          <BrandLogo />
+          {/* Le logo ramene a la landing publique (racine), pas au tableau de bord. */}
+          <Link
+            href={ROUTES.home}
+            className="focus-visible:outline-active-blue rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2"
+          >
+            <BrandLogo />
+          </Link>
         </div>
         <SidebarNav currentPath={currentPath} donationsAvailable={donationsAvailable} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar displayName={displayName} contextLine={contextLine} showAdminLink={showAdminLink} />
+        <Topbar
+          displayName={displayName}
+          contextLine={contextLine}
+          avatarUrl={avatarUrl}
+          showAdminLink={showAdminLink}
+        />
         <main id="contenu-principal" className="flex-1 px-7 py-8 max-md:px-5 max-md:py-6">
           <div className="mx-auto flex w-full max-w-[var(--layout-content-max)] flex-col gap-6">
             {banner}

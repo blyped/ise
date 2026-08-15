@@ -1,13 +1,19 @@
 import Link from 'next/link';
-import { Avatar } from '@ise/ui-web';
 import { fr } from '@/i18n/fr';
-import { SignOutButton } from './SignOutButton';
+import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
+import { AccountMenu } from './AccountMenu';
 
 export interface TopbarProps {
   /** Nom reellement lu depuis `ise_profiles`, ou l'adresse e-mail du compte. */
   displayName: string;
   /** Ligne de contexte : promotion, ou rien si l'information n'existe pas. */
   contextLine?: string | undefined;
+  /**
+   * URL signee (courte duree de vie) de la photo de profil, ou `undefined`
+   * si le membre n'en a pas depose une ou si la signature a echoue.
+   * `AccountMenu` retombe alors sur les initiales : jamais d'erreur visible.
+   */
+  avatarUrl?: string | undefined;
   /**
    * D-160 — `true` si le compte detient AU MOINS une permission
    * d'administration (lecture `readAdminAccess()` dans AppShell).
@@ -19,7 +25,7 @@ export interface TopbarProps {
 }
 
 /** Barre superieure, hauteur 68 px (D-91). */
-export function Topbar({ displayName, contextLine, showAdminLink = false }: TopbarProps) {
+export function Topbar({ displayName, contextLine, avatarUrl, showAdminLink = false }: TopbarProps) {
   return (
     <header className="border-border bg-surface sticky top-0 z-20 flex h-[var(--layout-topbar)] shrink-0 items-center justify-between gap-5 border-b px-7 max-md:px-5">
       <p className="text-body-sm text-text-secondary truncate">{fr.brand.name}</p>
@@ -33,16 +39,17 @@ export function Topbar({ displayName, contextLine, showAdminLink = false }: Topb
             {fr.nav.adminArea}
           </Link>
         ) : null}
-        <div className="flex items-center gap-4">
-          <Avatar name={displayName} size={32} decorative />
-          <span className="flex flex-col leading-tight max-sm:hidden">
-            <span className="text-body-sm text-text-primary font-semibold">{displayName}</span>
-            {contextLine ? (
-              <span className="text-caption text-text-muted">{contextLine}</span>
-            ) : null}
-          </span>
-        </div>
-        <SignOutButton />
+        <AccountMenu
+          displayName={displayName}
+          avatarUrl={avatarUrl}
+          avatarSize={32}
+          contextLine={contextLine}
+          label={displayName}
+          profileLabel={fr.nav.myProfile}
+          profileHref={PROFILE_ROUTES.overview}
+          hideLabelOnMobile
+          triggerClassName="inline-flex items-center gap-4"
+        />
       </div>
     </header>
   );
