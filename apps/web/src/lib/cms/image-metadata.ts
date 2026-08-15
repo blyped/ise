@@ -37,10 +37,27 @@ export type CmsMediaMimeType = (typeof CMS_MEDIA_MIME_TYPES)[number];
 /**
  * Emplacements de la vitrine, et donc prefixes de chemin dans le bucket
  * `landing-media` (0068). La politique `ise_landing_media_insert` REFUSE tout
- * depot hors de ces quatre prefixes : la liste ci-dessous n'est pas une
- * convention de nommage, c'est le miroir d'une regle appliquee en base.
+ * depot hors de ces cinq prefixes : la liste ci-dessous n'est pas une
+ * convention de nommage, c'est le miroir d'une regle appliquee en base
+ * (`private.is_landing_media_path()`).
+ *
+ * `organizations` — 0146 : logos de la section « Ils nous font confiance »
+ * (`cms_landing_organizations.media_id`, 0133). Avant 0146, aucun prefixe
+ * dedie n'existait et un redacteur devait choisir « Sections » par defaut
+ * pour un logo, un emplacement qui ne dit pas ce que le fichier est
+ * reellement.
+ *
+ * Le sixieme prefixe reconnu en base, `membres` (0120), n'apparait PAS
+ * ici : il est reserve au depot du portrait consenti d'un membre
+ * (member-self-service), jamais un choix propose au redacteur CMS.
  */
-export const CMS_MEDIA_USAGES = ['carousel', 'partners', 'news', 'sections'] as const;
+export const CMS_MEDIA_USAGES = [
+  'carousel',
+  'partners',
+  'news',
+  'sections',
+  'organizations',
+] as const;
 export type CmsMediaUsage = (typeof CMS_MEDIA_USAGES)[number];
 
 export const DEFAULT_CMS_MEDIA_USAGE: CmsMediaUsage = 'sections';

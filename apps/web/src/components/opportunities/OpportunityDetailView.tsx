@@ -27,9 +27,17 @@ export function OpportunityDetailView({ opportunity }: { opportunity: Opportunit
           televersement « version mobile » : `next/image` derive les
           resolutions de l'original via `sizes` (meme regle que l'actualite,
           D-172). Sans visuel, rien n'est rendu — pas de cadre vide.
+
+          Hauteur PLAFONNEE (0146, retour du porteur) : en 16/9 pleine
+          largeur, le visuel occupait jusqu'a ~450 px avant meme le titre de
+          l'offre, reduisant la lisibilite du texte de l'annonce en dessous.
+          `aspect-[21/9]` + `max-h-64` (256 px) donnent un bandeau large mais
+          court, quelle que soit la largeur de la carte — un cadrage de
+          couverture, pas un visuel plein cadre. `object-cover` continue de
+          remplir la boite sans deformer l'image.
         */}
         {opportunity.cover === null ? null : (
-          <div className="bg-surface-muted rounded-base relative mb-5 aspect-[16/9] w-full overflow-hidden">
+          <div className="bg-surface-muted rounded-base relative mb-5 aspect-[21/9] max-h-64 w-full overflow-hidden">
             <StorageImage
               src={landingMediaUrl(opportunity.cover) ?? ''}
               alt={opportunity.cover.alt}
