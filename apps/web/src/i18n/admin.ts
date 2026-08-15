@@ -41,6 +41,16 @@ export const frAdmin = {
     audit: "Journal d'audit",
     openCms: 'Aller au CMS',
     backToMember: "Retour à l'espace membre",
+    /**
+     * Pastille de comptage d'une entrée de menu. Le nombre seul ne dit
+     * pas de quoi il s'agit : ce complément est lu à la suite du libellé
+     * (« Actualités, 3 en attente »), et la couleur de la pastille ne
+     * porte donc jamais seule l'information (D-90).
+     */
+    pendingCount: (count: number) => `, ${count} en attente`,
+    /** Même comptage, cumulé, sur le bouton du menu replié (mobile). */
+    pendingTotal: (count: number) =>
+      count > 1 ? `${count} éléments en attente` : `${count} élément en attente`,
   },
 
   common: {
