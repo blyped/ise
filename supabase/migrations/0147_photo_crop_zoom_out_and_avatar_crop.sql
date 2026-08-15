@@ -2,18 +2,20 @@
 -- 0147_photo_crop_zoom_out_and_avatar_crop
 -- Corrige le cadrage vertical du portrait public, autorise un zoom
 -- REDUCTEUR (< 1.0), et etend le meme cadrage a la photo de profil
--- (avatar). Reference : D-204 (diagnostic + borne de zoom), D-205
+-- (avatar). Reference : D-205 (diagnostic + borne de zoom), D-206
 -- (extension a l'avatar) — docs/decisions.md.
 -- =====================================================================
--- NOTE DE VERSION — cette migration a ete appliquee trois fois de suite
+-- NOTE DE VERSION — cette migration a ete appliquee quatre fois de suite
 -- (meme nom) pendant la meme session de travail, uniquement pour faire
 -- correspondre les numeros D-xxx cites dans les commentaires SQL aux
--- decisions reellement libres sur `main` (deux collisions successives
+-- decisions reellement libres sur `main` (trois collisions successives
 -- avec des decisions prises EN PARALLELE par d'autres lots de travail
--- sur le meme depot). AUCUN changement de comportement entre ces trois
--- applications : SQL entierement idempotent (create or replace, drop
--- if exists + add), seul le TEXTE des `comment on ...` a change. Le
--- contenu ci-dessous est la version finale.
+-- sur le meme depot, la derniere avec la tache carrousel qui avait
+-- elle-meme choisi D-204 apres une premiere collision). AUCUN changement
+-- de comportement entre ces quatre applications : SQL entierement
+-- idempotent (create or replace, drop if exists + add), seul le TEXTE
+-- des `comment on ...` a change. Le contenu ci-dessous est la version
+-- finale.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -26,7 +28,7 @@ alter table public.ise_profiles
   check (public_photo_zoom >= 0.5 and public_photo_zoom <= 3.0);
 
 comment on column public.ise_profiles.public_photo_zoom is
-  'Zoom applique au portrait public au moment de l''affichage (0.5 = photo reduite dans le cadre, 1.0 = aucun zoom, 3.0 = maximum ; borne basse elargie de 1.0 a 0.5 par 0147/D-204). Traduit cote client par un conteneur de cadrage (photoCropWrapperStyle, @ise/ui-web). N''affecte jamais les octets de l''image.';
+  'Zoom applique au portrait public au moment de l''affichage (0.5 = photo reduite dans le cadre, 1.0 = aucun zoom, 3.0 = maximum ; borne basse elargie de 1.0 a 0.5 par 0147/D-205). Traduit cote client par un conteneur de cadrage (photoCropWrapperStyle, @ise/ui-web). N''affecte jamais les octets de l''image.';
 
 create or replace function public.set_my_public_photo_crop(
   p_focal_x numeric,
@@ -56,7 +58,7 @@ begin
   if p_focal_y is null or p_focal_y < 0 or p_focal_y > 100 then
     raise exception 'invalid_focal_y' using errcode = 'P0001';
   end if;
-  -- 0147/D-204 : borne basse abaissee de 1.0 a 0.5 (zoom reducteur).
+  -- 0147/D-205 : borne basse abaissee de 1.0 a 0.5 (zoom reducteur).
   if p_zoom is null or p_zoom < 0.5 or p_zoom > 3.0 then
     raise exception 'invalid_zoom' using errcode = 'P0001';
   end if;
@@ -94,10 +96,10 @@ end
 $$;
 
 comment on function public.set_my_public_photo_crop(numeric, numeric, numeric) is
-  '0141, borne basse du zoom elargie a 0.5 par 0147/D-204. Enregistre le cadrage (position focale, zoom) du portrait PUBLIC deja publie par le membre appelant. Ne modifie jamais l''image elle-meme, refuse l''appel si aucun portrait n''existe. Audite.';
+  '0141, borne basse du zoom elargie a 0.5 par 0147/D-205. Enregistre le cadrage (position focale, zoom) du portrait PUBLIC deja publie par le membre appelant. Ne modifie jamais l''image elle-meme, refuse l''appel si aucun portrait n''existe. Audite.';
 
 -- ---------------------------------------------------------------------
--- 2. Cadrage de la photo de profil (avatar, D-205).
+-- 2. Cadrage de la photo de profil (avatar, D-206).
 -- ---------------------------------------------------------------------
 alter table public.ise_profiles
   add column if not exists avatar_focal_x numeric(5,2) not null default 50.0,
@@ -123,11 +125,11 @@ alter table public.ise_profiles
   check (avatar_zoom >= 0.5 and avatar_zoom <= 3.0);
 
 comment on column public.ise_profiles.avatar_focal_x is
-  'Position horizontale du cadrage de la photo de profil (avatar), en pourcentage (0-100, defaut 50 = centre). Meme forme que public_photo_focal_x (0141), etendue a l''avatar par 0147/D-205. Purement cosmetique, jamais applique aux octets stockes.';
+  'Position horizontale du cadrage de la photo de profil (avatar), en pourcentage (0-100, defaut 50 = centre). Meme forme que public_photo_focal_x (0141), etendue a l''avatar par 0147/D-206. Purement cosmetique, jamais applique aux octets stockes.';
 comment on column public.ise_profiles.avatar_focal_y is
-  'Position verticale du cadrage de la photo de profil (avatar). Meme role que avatar_focal_x (0147/D-205).';
+  'Position verticale du cadrage de la photo de profil (avatar). Meme role que avatar_focal_x (0147/D-206).';
 comment on column public.ise_profiles.avatar_zoom is
-  'Zoom applique a la photo de profil au moment de l''affichage (0.5 = reduite, 1.0 = aucun zoom, 3.0 = maximum). Meme forme que public_photo_zoom (0147/D-205).';
+  'Zoom applique a la photo de profil au moment de l''affichage (0.5 = reduite, 1.0 = aucun zoom, 3.0 = maximum). Meme forme que public_photo_zoom (0147/D-206).';
 
 -- Ecriture directe, comme avatar_path lui-meme (0126) : la politique
 -- ise_profiles_update_own (0021) borne deja l'UPDATE a la ligne du
@@ -160,7 +162,7 @@ end
 $$;
 
 comment on function private.tg_ise_profiles_avatar_crop_reset() is
-  '0147/D-205. Remet le cadrage de l''avatar au centre (50/50, zoom 1.0) des que avatar_path change (remplacement ou retrait), meme motif que private.tg_ise_profiles_public_photo_guard (0141) pour le portrait public.';
+  '0147/D-206. Remet le cadrage de l''avatar au centre (50/50, zoom 1.0) des que avatar_path change (remplacement ou retrait), meme motif que private.tg_ise_profiles_public_photo_guard (0141) pour le portrait public.';
 
 drop trigger if exists trg_ise_profiles_avatar_crop_reset on public.ise_profiles;
 create trigger trg_ise_profiles_avatar_crop_reset
