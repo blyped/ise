@@ -272,8 +272,19 @@ function EventCard({ item }: { item: LandingEvent }) {
   );
 }
 
+/**
+ * 0137 — le resume ouvre le meta, exactement comme dans `NewsCard`.
+ *
+ * La carte Opportunite etait la seule des quatre a n'annoncer que des
+ * etiquettes (organisation, ville, teletravail) sans jamais dire de quoi
+ * l'offre parlait : `opportunities.summary` etait renseigne depuis toujours,
+ * mais `get_landing_opportunities()` ne le projetait pas. Plutot que
+ * d'inventer une mise en forme propre a cette carte, on reprend celle de
+ * l'actualite — resume d'abord, faits ensuite, meme separateur.
+ */
 function OpportunityCard({ item }: { item: LandingOpportunity }) {
   const meta = joinMeta([
+    item.summary,
     item.organization,
     item.city,
     item.remoteAllowed ? frPublic.cards.remote : null,
