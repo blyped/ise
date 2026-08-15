@@ -6,6 +6,13 @@ import { cx } from '@ise/ui-web';
  *
  * La largeur, la gouttiere et les ruptures suivent D-96 : 1160 px de contenu
  * maximum, gouttiere 24 px au-dessus de 1024 px et 16 px en dessous.
+ *
+ * `scroll-margin-top` : l'en-tete public est `sticky top-0` (hauteur
+ * `--layout-topbar`). Sans cette marge, un lien d'ancre ("A la une",
+ * "Le reseau"...) place le haut de la section exactement sous l'en-tete
+ * collant, qui en recouvre alors le debut — la premiere rangee de cartes
+ * (photos comprises) se retrouve coupee. La marge de defilement compense
+ * exactement cette hauteur, plus un petit espace de respiration.
  */
 export function SectionShell({
   id,
@@ -25,7 +32,11 @@ export function SectionShell({
   return (
     <section
       id={id}
-      className={cx('mx-auto w-full max-w-[var(--layout-content-max)] px-7 max-md:px-5', className)}
+      className={cx(
+        'mx-auto w-full max-w-[var(--layout-content-max)] px-7 max-md:px-5',
+        id ? 'scroll-mt-[calc(var(--layout-topbar)+16px)]' : undefined,
+        className,
+      )}
     >
       {title ? (
         <Heading className="text-h2 text-text-primary max-md:text-h3 mb-7 font-bold max-md:mb-5">
