@@ -22,7 +22,7 @@ import { removeAvatarAction, updateAvatarCropAction, uploadAvatarAction } from '
 
 /**
  * Dépôt, retrait et cadrage de la photo de profil — révision de D-117
- * (14/08/2026), cadrage étendu par D-205 (0147).
+ * (14/08/2026), cadrage étendu par D-206 (0147).
  *
  * Calqué sur `PublicPhotoForm` (vitrine publique, 0120/0141), mais vers le
  * bucket PRIVÉ `avatars` : la photo n'est jamais servie au web ouvert, elle
@@ -31,11 +31,11 @@ import { removeAvatarAction, updateAvatarCropAction, uploadAvatarAction } from '
  * objets distincts, et les confondre serait le contraire de ce que 0120 a
  * pris soin de séparer.
  *
- * CADRAGE (D-205) — même mécanisme que le portrait public : un curseur
+ * CADRAGE (D-206) — même mécanisme que le portrait public : un curseur
  * horizontal, un curseur vertical, un zoom (0.5-3.0, en dessous de 1.0 la
  * photo est réduite dans le cadre). `photoCropWrapperStyle` (`@ise/ui-web`)
  * porte le déplacement ET le zoom dans un conteneur interne — c'est le
- * correctif D-204 du bug d'axe vertical de la vitrine publique, appliqué
+ * correctif D-205 du bug d'axe vertical de la vitrine publique, appliqué
  * ici dès la première version pour ne pas reproduire le même défaut.
  *
  * Trois formulaires frères, pas un seul : déposer, retirer et cadrer sont
@@ -52,7 +52,7 @@ export interface AvatarFormProps {
   avatarUrl: string | null;
   /** Repli affiché tant qu'aucune photo n'est déposée. */
   initials: string;
-  /** Cadrage actuellement enregistré (0147/D-205). */
+  /** Cadrage actuellement enregistré (0147/D-206). */
   focalX: number;
   focalY: number;
   zoom: number;
@@ -109,7 +109,7 @@ export function AvatarForm({ avatarUrl, initials, focalX: initialFocalX, focalY:
           /* Bucket PRIVÉ : l'URL est signée et expire. Pas de `next/image` —
              le domaine Supabase n'est pas déclaré comme source distante, et
              une URL signée n'a rien à faire dans un cache d'images.
-             Cadrage (D-205) : même conteneur interne que la vitrine
+             Cadrage (D-206) : même conteneur interne que la vitrine
              publique, voir photoCropWrapperStyle. */
           <div
             className="border-border h-[96px] w-[96px] rounded-full border"
@@ -156,7 +156,7 @@ export function AvatarForm({ avatarUrl, initials, focalX: initialFocalX, focalY:
 
           {/* Les curseurs pilotent l'état local (aperçu instantané) ; les
               champs cachés portent les mêmes valeurs vers la Server Action,
-              qui les revérifie et les enregistre (D-205). */}
+              qui les revérifie et les enregistre (D-206). */}
           <input type="hidden" name="focalX" value={focalX} />
           <input type="hidden" name="focalY" value={focalY} />
           <input type="hidden" name="zoom" value={zoom} />

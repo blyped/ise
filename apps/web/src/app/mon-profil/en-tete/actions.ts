@@ -11,7 +11,7 @@ import { inspectImage } from '@/lib/cms/image-metadata';
 
 /**
  * Dépôt, retrait et cadrage de la PHOTO DE PROFIL — révision de D-117
- * (14/08/2026), cadrage étendu par D-205 (0147).
+ * (14/08/2026), cadrage étendu par D-206 (0147).
  *
  * D-117 ne disait pas « impossible » : elle constatait qu'aucun écran de
  * téléversement n'était livré et refusait d'afficher un bouton décoratif
@@ -22,7 +22,7 @@ import { inspectImage } from '@/lib/cms/image-metadata';
  * TROIS ACTES DISTINCTS, comme pour la vitrine publique :
  *   1. `uploadAvatarAction`      — dépôt (ou remplacement) de la photo ;
  *   2. `removeAvatarAction`      — retrait de la photo ;
- *   3. `updateAvatarCropAction`  — cadrage d'affichage (position/zoom, D-205)
+ *   3. `updateAvatarCropAction`  — cadrage d'affichage (position/zoom, D-206)
  *      de la photo déjà déposée, sans toucher au fichier.
  * Ils sont séparés de `saveProfileHeaderAction` : enregistrer du texte ne
  * doit jamais emporter silencieusement une image, et réciproquement.
@@ -230,10 +230,10 @@ export async function removeAvatarAction(
 }
 
 /* ------------------------------------------------------------------ */
-/* 3. Cadrage de la photo de profil (position + zoom) — D-205, 0147     */
+/* 3. Cadrage de la photo de profil (position + zoom) — D-206, 0147     */
 /* ------------------------------------------------------------------ */
 
-/** 0147/D-205 — bornes du cadrage, alignées sur les CHECK de la migration. */
+/** 0147/D-206 — bornes du cadrage, alignées sur les CHECK de la migration. */
 const AVATAR_CROP_FOCAL_MIN = 0;
 const AVATAR_CROP_FOCAL_MAX = 100;
 const AVATAR_CROP_ZOOM_MIN = 0.5;
