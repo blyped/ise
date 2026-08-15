@@ -198,7 +198,7 @@ export function LandingCarousel({
         const resourceType =
           slide.target === null ? undefined : entityResourceType(slide.target.entityType);
         /**
-         * D-202 — BUG CORRIGE (porteur, 2026-08-15) : le bouton restait
+         * D-204 — BUG CORRIGE (porteur, 2026-08-15) : le bouton restait
          * invisible des que `route` valait `null`, meme quand `ctaLabel`
          * etait rempli en CMS. `route` couvre uniquement la ressource
          * INTERNE (`entity_type` + `entity_id`) ; `slide.externalUrl` couvre
