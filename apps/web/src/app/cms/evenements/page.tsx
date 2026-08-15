@@ -4,7 +4,7 @@ import { CMS_ROUTES } from '@/lib/routes/cms';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireCmsAccess } from '@/lib/cms/permissions';
 import { loadCmsEvents, loadMediaOptions } from '@/lib/cms/queries';
-import { formatDateTime } from '@/lib/cms/format';
+import { formatDateTime, landingBlockedLabel, LANDING_BLOCKED_STATUS } from '@/lib/cms/format';
 import { CmsShell } from '../_components/CmsShell';
 import { PageHeader, SearchField } from '../_components/PageHeader';
 import { RowCard, RowList } from '../_components/RowCard';
@@ -85,6 +85,17 @@ export default async function CmsEventsPage({
         <RowList label={frCms.events.title}>
           {rows.map((row) => {
             const visible = row.landingVisibility === 'visible';
+            /**
+             * 0137 — l'écran ne peut plus annoncer « Visible sur la landing »
+             * pour un événement que la landing n'affichera pas.
+             *
+             * Le motif est calculé en base par le prédicat même dont
+             * `get_landing_events()` se sert pour filtrer : les deux ne
+             * peuvent plus diverger. On ne l'affiche que si l'exposition est
+             * demandée — un événement volontairement masqué n'est pas une
+             * contradiction, et sa pastille « Masqué » suffit.
+             */
+            const blockedReason = visible ? row.landingBlockedReason : null;
             return (
               <RowCard
                 key={row.id}
@@ -100,18 +111,39 @@ export default async function CmsEventsPage({
                 meta={`${row.format} · ${row.city ?? '—'} · ${
                   row.isUpcoming ? frCms.events.upcoming : frCms.events.past
                 } · ${row.status}`}
-                status={visible ? 'published' : 'draft'}
-                statusText={visible ? frCms.news.landingVisible : frCms.news.landingHidden}
+                status={
+                  blockedReason !== null
+                    ? LANDING_BLOCKED_STATUS
+                    : visible
+                      ? 'published'
+                      : 'draft'
+                }
+                statusText={
+                  blockedReason !== null
+                    ? frCms.landingBlocked.label
+                    : visible
+                      ? frCms.news.landingVisible
+                      : frCms.news.landingHidden
+                }
                 period={`${formatDateTime(row.startsAt)}${
                   row.endsAt === null ? '' : ` → ${formatDateTime(row.endsAt)}`
                 }`}
                 notice={
-                  row.pendingSchedule !== null ? (
-                    <span className="text-caption text-warning">
-                      {frCms.news.pendingSchedule}
-                      {row.pendingSchedule.publishAt !== null
-                        ? ` · ${formatDateTime(row.pendingSchedule.publishAt)}`
-                        : ''}
+                  blockedReason !== null || row.pendingSchedule !== null ? (
+                    <span className="flex flex-col gap-1">
+                      {blockedReason !== null ? (
+                        <span className="text-caption text-warning">
+                          {frCms.landingBlocked.label} : {landingBlockedLabel(blockedReason)}
+                        </span>
+                      ) : null}
+                      {row.pendingSchedule !== null ? (
+                        <span className="text-caption text-warning">
+                          {frCms.news.pendingSchedule}
+                          {row.pendingSchedule.publishAt !== null
+                            ? ` · ${formatDateTime(row.pendingSchedule.publishAt)}`
+                            : ''}
+                        </span>
+                      ) : null}
                     </span>
                   ) : null
                 }

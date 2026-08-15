@@ -4,7 +4,7 @@ import { CMS_ROUTES } from '@/lib/routes/cms';
 import { newCorrelationId } from '@/lib/correlation';
 import { requireCmsAccess } from '@/lib/cms/permissions';
 import { loadCmsOpportunities, loadMediaOptions } from '@/lib/cms/queries';
-import { formatDateTime } from '@/lib/cms/format';
+import { formatDateTime, landingBlockedLabel, LANDING_BLOCKED_STATUS } from '@/lib/cms/format';
 import { CmsShell } from '../_components/CmsShell';
 import { PageHeader, SearchField } from '../_components/PageHeader';
 import { RowCard, RowList } from '../_components/RowCard';
@@ -89,7 +89,16 @@ export default async function CmsOpportunitiesPage({
         <RowList label={frCms.opportunities.title}>
           {rows.map((row) => {
             const visible = row.landingVisibility === 'visible';
+            /** 0137 — voir le commentaire jumeau dans /cms/evenements. */
+            const blockedReason = visible ? row.landingBlockedReason : null;
+            /**
+             * 0137 — le résumé ouvre le méta, comme sur la carte de la
+             * landing : l'admin voit ici le texte exact que le visiteur
+             * lira. Son absence se dit aussi, plutôt que de laisser croire
+             * qu'un descriptif existe.
+             */
             const metaParts = [
+              row.summary ?? 'Aucun résumé — la carte n’affichera pas de descriptif.',
               row.opportunityType ?? '—',
               row.contractType ?? '—',
               row.city ?? row.countryCode ?? '—',
@@ -108,20 +117,41 @@ export default async function CmsOpportunitiesPage({
                   </span>
                 }
                 meta={metaParts.join(' · ')}
-                status={visible ? 'published' : 'draft'}
-                statusText={visible ? frCms.news.landingVisible : frCms.news.landingHidden}
+                status={
+                  blockedReason !== null
+                    ? LANDING_BLOCKED_STATUS
+                    : visible
+                      ? 'published'
+                      : 'draft'
+                }
+                statusText={
+                  blockedReason !== null
+                    ? frCms.landingBlocked.label
+                    : visible
+                      ? frCms.news.landingVisible
+                      : frCms.news.landingHidden
+                }
                 period={
                   row.deadline !== null
                     ? `Échéance : ${formatDateTime(row.deadline)}`
                     : 'Sans échéance'
                 }
                 notice={
-                  row.pendingSchedule !== null ? (
-                    <span className="text-caption text-warning">
-                      {frCms.news.pendingSchedule}
-                      {row.pendingSchedule.publishAt !== null
-                        ? ` · ${formatDateTime(row.pendingSchedule.publishAt)}`
-                        : ''}
+                  blockedReason !== null || row.pendingSchedule !== null ? (
+                    <span className="flex flex-col gap-1">
+                      {blockedReason !== null ? (
+                        <span className="text-caption text-warning">
+                          {frCms.landingBlocked.label} : {landingBlockedLabel(blockedReason)}
+                        </span>
+                      ) : null}
+                      {row.pendingSchedule !== null ? (
+                        <span className="text-caption text-warning">
+                          {frCms.news.pendingSchedule}
+                          {row.pendingSchedule.publishAt !== null
+                            ? ` · ${formatDateTime(row.pendingSchedule.publishAt)}`
+                            : ''}
+                        </span>
+                      ) : null}
                     </span>
                   ) : null
                 }
