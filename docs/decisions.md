@@ -23,9 +23,9 @@ Statut des décisions : **ADOPTÉE** (appliquée au code) · **PROVISOIRE** (à 
 
 ---
 
-## Table des matières — les neuf parties du journal
+## Table des matières — les dix parties du journal
 
-Les décisions **D-01 → D-183** sont réparties dans neuf fichiers thématiques, sous `docs/decisions/`,
+Les décisions **D-01 → D-198** sont réparties dans dix fichiers thématiques, sous `docs/decisions/`,
 dans l'ordre de lecture du journal (les numéros de section d'origine sont conservés).
 Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 
@@ -42,6 +42,7 @@ Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 | D-174 → D-178 | [`decisions/07-mises-en-avant-et-ise-du-jour.md`](decisions/07-mises-en-avant-et-ise-du-jour.md) |
 | D-179, D-180, exécution de C-08 | [`decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md`](decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md) |
 | D-181 → D-183 | [`decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md`](decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md) |
+| D-184 → D-198 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
 
 ### [Partie 1 — Fondations et modèle de données](decisions/01-fondations-et-modele-de-donnees.md)
 
@@ -130,3 +131,20 @@ Sections 41 à 43.
 - **§41. Titre et corps des piliers pilotés par le CMS** — D-181, qui complète D-168 et fait des textes d'i18n un simple jeu de valeurs de repli
 - **§42. Blocage d'un membre et suppression de compte par l'administration** — D-182, qui referme la conséquence non résolue de C-08 et applique D-19
 - **§43. « Remonter une information » (module Communication, premier volet)** — D-183, extension du module support : natures, six statuts, quatre priorités, pièces jointes
+
+### [Partie 10 — Dons, organisations, cadrage et pastilles](decisions/10-dons-organisations-cadrage-et-pastilles.md)
+
+Sections 44 à 54.
+
+- **§44. Lien de retour vers l'espace membre depuis Administration et CMS** — D-184
+- **§45. Proposition de contenu par les ISE, avec validation administrative** — D-185, bucket privé `content-proposals`, gap ouvert sur l'image des opportunités
+- **§46. Bandeau sponsors, logos des organisations et nouvelles sections de landing** — D-186
+- **§47. Carte mondiale de présence des ISE et bloc « Le réseau en quelques chiffres »** — D-187
+- **§48. Seuil de confidentialité de la carte des pays abaissé de 3 à 1** — D-188, révise D-187
+- **§49. Module de dons — architecture et migration vers CinetPay v2** — D-189, D-190
+- **§50. Correctifs des encarts Événement et Opportunité de la landing** — D-191, D-192
+- **§51. Pastilles de comptage dans les menus Administration et CMS** — D-193
+- **§52. Peuplement du référentiel des organisations et section « Ils nous font confiance »** — D-194, réserve non résolue sur le doublon `0140`/`0142`
+- **§53. Cadrage ajustable de la photo « ISE du jour »** — D-195
+- **§54. Crédit auteur dans le pied de page** — D-196
+- **Note méthodologique — dérive de migrations non committées** — D-197 (pratique établie), D-198 (OUVERTE, cause racine non corrigée)
