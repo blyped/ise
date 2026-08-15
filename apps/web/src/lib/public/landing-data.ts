@@ -24,6 +24,13 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                         content_type, entity_type, entity_id, cta_label,
  *                                         priority, media, mobile_media, is_sponsored,
  *                                         sponsored_label }
+ *                                       (0148 : "target_url" AJOUTE. Destination externe
+ *                                        (https) du bouton, alternative a entity_type/
+ *                                        entity_id — meme motif que cta_label/target_url
+ *                                        de get_landing_partner_campaigns(). Avant cette
+ *                                        migration, un bouton sans ressource interne liee
+ *                                        ne pouvait tout simplement pas s'afficher : voir
+ *                                        D-201.)
  *   get_landing_carousel_settings()    -> **objet** { autoplay_seconds } (0111, D-163).
  *                                         Reglage global (`platform_settings`), borne 3-60
  *                                         cote base ; repli 7 si la lecture echoue.
@@ -187,7 +194,7 @@ const DEFAULT_MAX_ITEMS: Record<string, number> = {
 export const SPONSOR_BAND_PLACEMENT = 'footer';
 
 // ---------------------------------------------------------------------------
-// Interface par section
+// Briques par section
 // ---------------------------------------------------------------------------
 
 export type SectionStatus = 'ok' | 'indisponible';
@@ -300,6 +307,13 @@ export interface LandingSlide {
   readonly description: string | null;
   readonly ctaLabel: string | null;
   readonly target: EntityRef | null;
+  /**
+   * 0148 — destination externe (https) du bouton, alternative a `target`.
+   * `target` est prioritaire quand les deux sont presents (ne devrait pas
+   * arriver : le CMS les traite comme mutuellement exclusifs, mais un
+   * instantane publie avant cette regle pourrait porter les deux).
+   */
+  readonly externalUrl: string | null;
   readonly media: LandingMedia | null;
   readonly mobileMedia: LandingMedia | null;
   /** ADDENDUM §26 — transparence publicitaire. */
@@ -772,6 +786,10 @@ export const slideSchema = z
     entity_type: z.unknown(),
     entity_id: z.unknown(),
     cta_label: nullableText,
+    // 0148 — absente des instantanes publies avant cette migration ; `z.unknown()`
+    // + `safeExternalUrl()` en tolerent l'absence exactement comme `text_position`
+    // juste en dessous.
+    target_url: z.unknown(),
     media: z.unknown(),
     mobile_media: z.unknown(),
     is_sponsored: booleanFlag,
@@ -788,6 +806,7 @@ export const slideSchema = z
     description: row.description,
     ctaLabel: row.cta_label,
     target: toEntityRef(row.entity_type, row.entity_id),
+    externalUrl: safeExternalUrl(row.target_url),
     media: parseMedia(row.media),
     mobileMedia: parseMedia(row.mobile_media),
     sponsored: row.is_sponsored,
