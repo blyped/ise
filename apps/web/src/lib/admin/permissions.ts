@@ -39,6 +39,8 @@ export const ADMIN_PERMISSIONS = [
   'roles.manage',
   /** 0134 — registre des dons. Accordee au seul superadmin. */
   'donations.read',
+  /** 0145 — annonces du tableau de bord membre (tache #188). */
+  'communication.announcements.manage',
 ] as const;
 
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];

@@ -1,4 +1,5 @@
 import { frAdmin } from '@/i18n/admin';
+import { frAnnouncements } from '@/i18n/announcements';
 import { frDonations } from '@/i18n/donations';
 import { ADMIN_ROUTES } from '@/lib/routes/admin';
 import { DONATION_ROUTES } from '@/lib/routes/donations';
@@ -99,6 +100,14 @@ const CORE_NAV: readonly AdminNavItem[] = [
     label: frAdmin.nav.support,
     requires: ['support.manage'],
     counter: 'support',
+  },
+  // 0145 — annonces du tableau de bord membre (tache #188). Pas de
+  // pastille : le volume attendu (quelques annonces actives) ne
+  // justifie pas un compteur, cf. la regle "rien de decoratif" ci-dessus.
+  {
+    href: ADMIN_ROUTES.announcements,
+    label: frAnnouncements.admin.navLabel,
+    requires: ['communication.announcements.manage'],
   },
   // 0134 — registre des dons. Permission dediee : le registre nomme des
   // personnes et des sommes, aucune permission existante ne couvrait cela.
