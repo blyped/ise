@@ -2,6 +2,7 @@ import { frAdmin } from '@/i18n/admin';
 import { frDonations } from '@/i18n/donations';
 import { ADMIN_ROUTES } from '@/lib/routes/admin';
 import { DONATION_ROUTES } from '@/lib/routes/donations';
+import type { AdminNavCounterKey } from '@/lib/admin/nav-counters';
 import type { AdminAccess, AdminPermission } from '@/lib/admin/permissions';
 
 /**
@@ -21,46 +22,84 @@ import type { AdminAccess, AdminPermission } from '@/lib/admin/permissions';
  * (recensement Excel) a ete importe directement en migration (0088) et
  * toute integration future se fait par creation de profil individuel.
  * Seul SA-043 (profils incomplets) survit, deplace hors de `/imports`.
+ *
+ * `counter` designe la file d'attente que l'entree donne a traiter
+ * (migration 0138). MEME REGLE « rien de decoratif » : une entree sans
+ * file n'a pas de `counter`, parce qu'une pastille eternellement a zero
+ * est du bruit. Sont donc sans compteur le tableau de bord, les membres
+ * (la liste des doublons est un calcul a la demande, pas une file
+ * recue), les appels au reseau (publies sans revue prealable : leur
+ * moderation est reactive et passe par les signalements, deja comptes
+ * sous « Moderation »), le registre des dons, les profils incomplets
+ * (arriere-plan permanent, pas un flux de nouveautes), l'analytics, les
+ * parametres et le journal d'audit.
  */
 export interface AdminNavItem {
   href: string;
   label: string;
   requires: readonly AdminPermission[];
+  /** File d'attente comptee par `admin_nav_counters()`, s'il y en a une. */
+  counter?: AdminNavCounterKey;
 }
 
 const CORE_NAV: readonly AdminNavItem[] = [
   { href: ADMIN_ROUTES.root, label: frAdmin.nav.dashboard, requires: [] },
   { href: ADMIN_ROUTES.members, label: frAdmin.nav.members, requires: ['profiles.read'] },
-  { href: ADMIN_ROUTES.claims, label: frAdmin.nav.claims, requires: ['profiles.verify'] },
-  { href: ADMIN_ROUTES.promotions, label: frAdmin.nav.promotions, requires: ['promotions.manage'] },
+  {
+    href: ADMIN_ROUTES.claims,
+    label: frAdmin.nav.claims,
+    requires: ['profiles.verify'],
+    counter: 'claims',
+  },
+  {
+    href: ADMIN_ROUTES.promotions,
+    label: frAdmin.nav.promotions,
+    requires: ['promotions.manage'],
+    counter: 'promotions',
+  },
   { href: ADMIN_ROUTES.calls, label: frAdmin.nav.calls, requires: ['calls.moderate'] },
   {
     href: ADMIN_ROUTES.opportunities,
     label: frAdmin.nav.opportunities,
     requires: ['opportunities.manage'],
+    counter: 'opportunities',
   },
   {
     href: ADMIN_ROUTES.projects,
     label: frAdmin.nav.projects,
     requires: ['projects.manage'],
+    counter: 'projects',
   },
   {
     href: ADMIN_ROUTES.communities,
     label: frAdmin.nav.communities,
     requires: ['communities.manage'],
+    counter: 'communities',
   },
   {
     href: ADMIN_ROUTES.events,
     label: frAdmin.nav.events,
     requires: ['events.manage'],
+    counter: 'events',
   },
   {
     href: ADMIN_ROUTES.news,
     label: frAdmin.nav.news,
     requires: ['content.publish'],
+    counter: 'news',
   },
-  { href: ADMIN_ROUTES.moderation, label: frAdmin.nav.moderation, requires: ['profiles.moderate'] },
-  { href: ADMIN_ROUTES.support, label: frAdmin.nav.support, requires: ['support.manage'] },
+  {
+    href: ADMIN_ROUTES.moderation,
+    label: frAdmin.nav.moderation,
+    requires: ['profiles.moderate'],
+    counter: 'moderation',
+  },
+  {
+    href: ADMIN_ROUTES.support,
+    label: frAdmin.nav.support,
+    requires: ['support.manage'],
+    counter: 'support',
+  },
   // 0134 — registre des dons. Permission dediee : le registre nomme des
   // personnes et des sommes, aucune permission existante ne couvrait cela.
   {

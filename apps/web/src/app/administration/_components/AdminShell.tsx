@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { frAdmin } from '@/i18n/admin';
 import type { AdminAccess } from '@/lib/admin/permissions';
+import { loadAdminNavCounters } from '@/lib/admin/queries-nav-counters';
 import { ROUTES } from '@/lib/routes';
 import { CMS_ROUTES } from '@/lib/routes/cms';
 import { readCmsAccess } from '@/lib/cms/permissions';
@@ -35,9 +36,15 @@ export interface AdminShellProps {
  * patron que `cmsLink`, sans condition de permission : toute personne qui
  * atteint l'administration a par construction une session membre, donc la
  * destination n'est jamais un écran refusé.
+ *
+ * Pastilles de comptage (0138) : la lecture est SERVEUR et descend en
+ * props — `AdminNav` est un composant client, il ne parle pas a la base.
+ * Un seul aller-retour par rendu, mene en parallele de la lecture des
+ * permissions CMS. Le filtrage par permission est fait EN BASE : une file
+ * hors permission n'est pas renvoyee, donc jamais affichable.
  */
 export async function AdminShell({ access, currentPath, screenTitle, children }: AdminShellProps) {
-  const cmsAccess = await readCmsAccess();
+  const [cmsAccess, navCounters] = await Promise.all([readCmsAccess(), loadAdminNavCounters()]);
   const cmsLink = cmsAccess?.can('cms.read')
     ? { href: CMS_ROUTES.dashboard, label: frAdmin.nav.openCms }
     : undefined;
@@ -53,6 +60,7 @@ export async function AdminShell({ access, currentPath, screenTitle, children }:
         currentPath={currentPath}
         screenTitle={screenTitle}
         items={visibleNavItems(access)}
+        counters={navCounters}
         {...(cmsLink ? { cmsLink } : {})}
         {...(memberLink ? { memberLink } : {})}
       />

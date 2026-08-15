@@ -4,12 +4,20 @@ import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, ArrowLeftRight, Menu, X } from 'lucide-react';
 import { frAdmin } from '@/i18n/admin';
+import { totalPendingCount, type AdminNavCounters } from '@/lib/admin/nav-counters';
 import { isCurrentNavItem, type AdminNavItem } from './nav';
 
 export interface AdminNavProps {
   currentPath: string;
   screenTitle: string;
   items: readonly AdminNavItem[];
+  /**
+   * Compteurs des files en attente (0138), lus cote serveur par
+   * `AdminShell`. Toujours DEFINI — objet vide quand il n'y a rien a
+   * traiter ou quand la lecture a echoue. Prop obligatoire justement
+   * pour ne pas rejouer le piege des props optionnelles de ce fichier.
+   */
+  counters: AdminNavCounters;
   /**
    * Lien croisé vers le CMS (§30, D-171), affiché uniquement quand le
    * compte courant a effectivement `cms.read` — sinon ce serait un bouton
@@ -31,6 +39,18 @@ const LINK_BASE =
   'flex min-h-[44px] items-center rounded-base px-4 text-body-sm transition-colors ' +
   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue';
 
+const BADGE_BASE =
+  'bg-primary text-primary-foreground text-caption inline-flex h-[22px] min-w-[22px] shrink-0 ' +
+  'items-center justify-center rounded-full px-2 font-semibold tabular-nums';
+
+/** Conteneur du total sur la barre mobile. */
+const MOBILE_BADGE_WRAP = 'ml-auto flex items-center';
+
+/** Au-dela, le chiffre exact n'aide plus et deforme le rail. */
+function badgeText(count: number): string {
+  return count > 99 ? '99+' : String(count);
+}
+
 /**
  * Navigation du back-office Superadmin — meme gabarit que `CmsNav`,
  * DISTINCTE de la sidebar membre (MASTER PROMPT §89) : aucun module
@@ -39,11 +59,25 @@ const LINK_BASE =
  * Client uniquement pour le repli mobile. `aria-current="page"` sur la
  * destination courante : la couleur ne porte jamais seule l'information
  * (D-90). Chaque cible fait au moins 44 px.
+ *
+ * PASTILLES (0138) : une entree ne porte un chiffre que si sa file
+ * contient quelque chose — jamais de « 0 » affiche. Le chiffre est
+ * double d'un texte lu par les lecteurs d'ecran (« Actualites, 3 en
+ * attente ») : ni la couleur, ni le nombre nu ne portent seuls
+ * l'information (D-90).
  */
-export function AdminNav({ currentPath, screenTitle, items, cmsLink, memberLink }: AdminNavProps) {
+export function AdminNav({
+  currentPath,
+  screenTitle,
+  items,
+  counters,
+  cmsLink,
+  memberLink,
+}: AdminNavProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const totalPending = totalPendingCount(counters);
 
   useEffect(() => {
     setOpen(false);
@@ -65,18 +99,28 @@ export function AdminNav({ currentPath, screenTitle, items, cmsLink, memberLink 
     <ul className="flex flex-col gap-1 px-3 pb-6">
       {items.map((item) => {
         const isCurrent = isCurrentNavItem(currentPath, item.href);
+        const counterKey = item.counter;
+        const pending = counterKey === undefined ? 0 : (counters[counterKey] ?? 0);
         return (
           <li key={item.href}>
             <Link
               href={item.href}
               aria-current={isCurrent ? 'page' : undefined}
-              className={`${LINK_BASE} ${
+              className={`${LINK_BASE} justify-between gap-3 ${
                 isCurrent
                   ? 'text-primary bg-[#EFF6FF] font-semibold'
                   : 'text-text-secondary hover:bg-surface-muted hover:text-text-primary'
               }`}
             >
-              {item.label}
+              <span className="min-w-0 truncate">{item.label}</span>
+              {pending > 0 ? (
+                <>
+                  <span className="sr-only">{frAdmin.nav.pendingCount(pending)}</span>
+                  <span aria-hidden="true" className={BADGE_BASE}>
+                    {badgeText(pending)}
+                  </span>
+                </>
+              ) : null}
             </Link>
           </li>
         );
@@ -101,6 +145,16 @@ export function AdminNav({ currentPath, screenTitle, items, cmsLink, memberLink 
         <p className="text-body-sm text-text-primary min-w-0 truncate font-semibold">
           {frAdmin.brand.breadcrumb} · {screenTitle}
         </p>
+        {/* Menu replie : sans ce total, les pastilles seraient invisibles
+            sur mobile tant qu'on n'ouvre pas le panneau. */}
+        {totalPending > 0 && !open ? (
+          <span className={MOBILE_BADGE_WRAP}>
+            <span className="sr-only">{frAdmin.nav.pendingTotal(totalPending)}</span>
+            <span aria-hidden="true" className={BADGE_BASE}>
+              {badgeText(totalPending)}
+            </span>
+          </span>
+        ) : null}
       </div>
 
       <div
