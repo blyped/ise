@@ -31,7 +31,7 @@ import {
 const ACCEPTED = 'image/png,image/jpeg,image/webp,image/avif';
 
 /**
- * 0141, bornes revisees D-204 — alignees sur les CHECK de la migration
+ * 0141, bornes revisees D-205 — alignees sur les CHECK de la migration
  * (`@ise/ui-web` porte les memes constantes, reexportees ici pour ne pas
  * dupliquer les nombres).
  */
@@ -54,7 +54,7 @@ const RANGE_CLASS = 'accent-primary h-2 w-full cursor-pointer';
  * Afficher un champ qui échouerait serait un bouton décoratif
  * (MASTER PROMPT §113) — l'écran explique donc l'ordre des gestes.
  *
- * CADRAGE (0141, corrige et etendu D-204) — trois curseurs, aucun recadrage
+ * CADRAGE (0141, corrige et etendu D-205) — trois curseurs, aucun recadrage
  * serveur. Le membre choisit une position (horizontale, verticale) et un
  * zoom, traduits par `photoCropWrapperStyle` (`@ise/ui-web`) en un
  * conteneur interne qui porte le deplacement et le zoom — exactement comme
@@ -63,7 +63,7 @@ const RANGE_CLASS = 'accent-primary h-2 w-full cursor-pointer';
  * ici est ce qui paraît sur le site public. Le fichier déposé n'est jamais
  * modifié.
  *
- * D-204 — DEUX CORRECTIFS SUR CE QUI EXISTAIT :
+ * D-205 — DEUX CORRECTIFS SUR CE QUI EXISTAIT :
  *   1. l'ancienne formule (`object-position` + `transform: scale()`
  *      directement sur l'image) ne laissait de marge de déplacement que sur
  *      l'axe où la photo débordait déjà du cercle en `object-fit: cover` —
@@ -144,7 +144,7 @@ export function PublicPhotoForm({
               mécanisme que la vignette « ISE du jour » sur la landing
               (`LandingMediaImage`, `photoCropWrapperStyle` de `@ise/ui-web`)
               — un conteneur interne porte le zoom et la position, l'image
-              elle-même reste en `object-fit: cover` centré (D-204 : c'est
+              elle-même reste en `object-fit: cover` centré (D-205 : c'est
               cette formule, et non `object-position` + `transform` sur
               l'image directement, qui garantit une marge de déplacement
               réelle sur les DEUX axes). Image publique servie par le bucket

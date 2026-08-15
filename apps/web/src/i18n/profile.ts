@@ -136,8 +136,8 @@ export const frProfile = {
     photoTooLarge: 'Cette image dépasse 2 Mo. Choisissez un fichier plus léger.',
     photoUploadFailed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
 
-    // 0147/D-205 — cadrage ajustable (position + zoom), meme mecanisme
-    // que la vitrine publique (0141, D-204).
+    // 0147/D-206 — cadrage ajustable (position + zoom), meme mecanisme
+    // que la vitrine publique (0141, D-205).
     photoCropTitle: 'Cadrage de la photo',
     photoCropHint:
       'Ajustez la position et le zoom pour que votre visage reste bien centré dans le médaillon. Un zoom inférieur à 1 réduit la photo si elle paraît trop grande dans le cadre.',
