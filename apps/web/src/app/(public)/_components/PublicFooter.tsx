@@ -9,6 +9,7 @@ export function PublicFooter() {
       <div className="mx-auto flex w-full max-w-[var(--layout-content-max)] flex-wrap items-center justify-between gap-5 px-7 py-8 max-md:flex-col max-md:items-start max-md:px-5">
         <p className="text-caption text-text-muted">
           © {year} {fr.public.footer.rights}
+          <span className="ml-1 opacity-70">— {fr.public.footer.credit}</span>
         </p>
         <nav aria-label={fr.public.footer.label}>
           <ul className="text-caption text-text-secondary flex flex-wrap items-center gap-5">

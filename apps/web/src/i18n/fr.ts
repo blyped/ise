@@ -569,6 +569,8 @@ export const fr = {
       label: 'Liens de bas de page',
       contact: 'Contact',
       rights: 'Compétences ISE',
+      /** Mention discrète de crédit, affichée après le copyright dans PublicFooter. */
+      credit: 'BLY Ped, ISE 2000',
     },
 
     signInPrompt: 'Connectez-vous pour accéder à cette ressource.',
