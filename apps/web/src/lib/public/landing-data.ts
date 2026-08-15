@@ -216,6 +216,17 @@ export interface LandingMedia {
   readonly credit: string | null;
   readonly width: number | null;
   readonly height: number | null;
+  /**
+   * 0141 — cadrage choisi par le membre pour SON portrait public
+   * (`ise_profiles.public_photo_focal_x/_y/_zoom`, via
+   * `private.landing_member_photo()`). `null` pour tout autre media
+   * (carrousel, actualites, piliers, partenaires...) : ces producteurs ne
+   * projettent pas ces cles, et l'absence de cadrage produit exactement le
+   * meme rendu qu'avant cette migration (centre, sans zoom).
+   */
+  readonly focalX: number | null;
+  readonly focalY: number | null;
+  readonly zoom: number | null;
 }
 
 /** Le seul bucket public de la plateforme (migration 0068, D-134). */
@@ -414,7 +425,9 @@ export interface LandingFeaturedProfile {
    * D-165 — visuel editorial choisi par l'admin pour CETTE mise en avant,
    * tire de la mediatheque PUBLIQUE (`landing-media`). Ce n'est PAS
    * l'avatar prive du membre : D-135 (aucun avatar_path projete) reste en
-   * vigueur, inchangee par cet ajout.
+   * vigueur, inchangee par cet ajout. Quand ce visuel provient plutot du
+   * portrait consenti du membre (`private.landing_member_photo()`), il
+   * porte le cadrage choisi par le membre lui-meme (0141).
    */
   readonly photo: LandingMedia | null;
   /** D-165 — accroche courte (3-160 caracteres), propre a cette mise en avant. */
@@ -583,6 +596,14 @@ const nullableInteger = z
     typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value) : null,
   );
 
+/**
+ * 0141 — meme role que `nullableInteger`, sans tronquer : le cadrage
+ * (`focal_x`, `focal_y`, `zoom`) est une donnee decimale (0-100, 1.0-3.0).
+ */
+const nullableNumber = z
+  .unknown()
+  .transform((value) => (typeof value === 'number' && Number.isFinite(value) ? value : null));
+
 const nonNegativeCount = z
   .unknown()
   .transform((value) =>
@@ -618,6 +639,12 @@ const mediaSchema = z.object({
   credit: nullableText,
   width: nullableInteger,
   height: nullableInteger,
+  // 0141 — absentes de la plupart des projections (carrousel, actualites,
+  // piliers...) : `nullableNumber` accepte l'absence de la cle comme `null`,
+  // exactement comme `nullableText` le fait deja pour `credit`.
+  focal_x: nullableNumber,
+  focal_y: nullableNumber,
+  zoom: nullableNumber,
 });
 
 /**
@@ -649,6 +676,10 @@ export function parseMedia(value: unknown): LandingMedia | null {
     credit: row.credit,
     width: row.width,
     height: row.height,
+    // 0141 — cadrage du membre, quand la projection le fournit.
+    focalX: row.focal_x,
+    focalY: row.focal_y,
+    zoom: row.zoom,
   };
 }
 
@@ -930,7 +961,9 @@ export const featuredProfileSchema = z
         : [],
       target: { entityType: 'profile', entityId: row.profile_id },
       // D-165 : visuel de mediatheque publique (jamais l'avatar prive) et
-      // accroche courte, propres a CETTE mise en avant.
+      // accroche courte, propres a CETTE mise en avant. `parseMedia()`
+      // porte deja le cadrage (0141) quand la source est le portrait du
+      // membre plutot qu'un visuel editorial.
       photo: parseMedia(row.photo),
       tagline: nullableText.parse(row.tagline)?.slice(0, FEATURED_TAGLINE_MAX) ?? null,
     };

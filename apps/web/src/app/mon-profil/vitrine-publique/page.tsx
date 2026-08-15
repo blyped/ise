@@ -67,7 +67,9 @@ export default async function PublicShowcasePage() {
 
   // L'URL n'est construite que si le portrait est réellement consenti et
   // décrit : la même règle que la projection SQL, pour ne jamais afficher
-  // ici une image que la vitrine ne montrerait pas.
+  // ici une image que la vitrine ne montrerait pas. Le cadrage (0141)
+  // n'entre pas dans cette URL : c'est une donnée d'affichage, transmise à
+  // part à `PublicPhotoForm`.
   const photoUrl =
     showcase.ok && showcase.data.allowPublicPhoto && showcase.data.photoPath !== null
       ? landingMediaUrl({
@@ -77,6 +79,9 @@ export default async function PublicShowcasePage() {
           credit: null,
           width: showcase.data.photoWidth,
           height: showcase.data.photoHeight,
+          focalX: null,
+          focalY: null,
+          zoom: null,
         })
       : null;
 
@@ -108,7 +113,13 @@ export default async function PublicShowcasePage() {
         ) : (
           <>
             <PublicShowcaseForm showcase={showcase.data} />
-            <PublicPhotoForm showcase={showcase.data} photoUrl={photoUrl} />
+            <PublicPhotoForm
+              showcase={showcase.data}
+              photoUrl={photoUrl}
+              photoFocalX={showcase.data.photoFocalX}
+              photoFocalY={showcase.data.photoFocalY}
+              photoZoom={showcase.data.photoZoom}
+            />
           </>
         )}
       </div>

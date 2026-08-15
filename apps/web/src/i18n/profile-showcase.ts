@@ -1,6 +1,7 @@
 /**
  * Chaînes de « Ma vitrine publique » — brève description et DEUX
- * consentements distincts (révision de D-135, migration 0120).
+ * consentements distincts (révision de D-135, migration 0120), cadrage
+ * ajustable du portrait (migration 0141).
  *
  * Fichier distinct de `src/i18n/profile.ts`, comme `admin-*.ts` l'est de
  * `admin.ts` : plusieurs lots avancent en parallèle sur ce dépôt et un seul
@@ -66,6 +67,19 @@ export const frShowcase = {
   photoTooLarge: 'L’image dépasse 5 Mo.',
   photoAltRequired: 'La description de l’image est obligatoire.',
   photoUploadFailed: 'Le dépôt de l’image a échoué. Réessayez dans un instant.',
+
+  // 0141 — cadrage ajustable (position + zoom), purement d'affichage.
+  photoCropTitle: 'Cadrage de la vignette',
+  photoCropHint:
+    'Ajustez la position et le zoom pour que votre visage reste bien centré dans le médaillon « ISE du jour ». Aucune nouvelle image n’est créée : seul l’affichage change, partout où cette photo apparaît en vignette.',
+  photoCropXLabel: 'Position horizontale',
+  photoCropYLabel: 'Position verticale',
+  photoCropZoomLabel: 'Zoom',
+  photoCropSubmit: 'Enregistrer le cadrage',
+  photoCropSubmitPending: 'Enregistrement…',
+  photoCropReset: 'Réinitialiser',
+  photoCropSaved: 'Le cadrage de votre photo a été enregistré.',
+  photoCropInvalid: 'Le cadrage envoyé est invalide.',
 
   saved: 'Votre vitrine publique a été enregistrée.',
 } as const;

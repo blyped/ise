@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 
 /**
  * Image servie depuis le bucket public `landing-media` (migration 0068).
@@ -40,9 +40,23 @@ export interface StorageImageProps {
   readonly className?: string | undefined;
   /** `true` uniquement au-dessus de la ligne de flottaison. */
   readonly priority?: boolean | undefined;
+  /**
+   * 0141 — cadrage optionnel (`object-position` / `transform: scale()`),
+   * calcule par l'appelant (`LandingMediaImage`) a partir du `LandingMedia`.
+   * Absent pour l'immense majorite des images : seul le portrait public
+   * consenti d'un membre peut en porter un.
+   */
+  readonly style?: CSSProperties | undefined;
 }
 
-export function StorageImage({ src, alt, sizes, className, priority = false }: StorageImageProps) {
+export function StorageImage({
+  src,
+  alt,
+  sizes,
+  className,
+  priority = false,
+  style,
+}: StorageImageProps) {
   const [failed, setFailed] = useState(false);
 
   if (failed) return null;
@@ -55,6 +69,7 @@ export function StorageImage({ src, alt, sizes, className, priority = false }: S
       sizes={sizes}
       {...(priority ? { priority: true } : { loading: 'lazy' as const })}
       className={className}
+      {...(style ? { style } : {})}
       onError={() => setFailed(true)}
     />
   );

@@ -2,13 +2,15 @@ import { toBusinessError, type BusinessError } from '@ise/domain';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 /**
- * Lecture de la vitrine publique du membre (révision D-135, migration 0120).
+ * Lecture de la vitrine publique du membre (révision D-135, migration 0120 ;
+ * cadrage 0141).
  *
- * `ise_profiles` : colonnes énumérées, jamais `select('*')` (0028). Les six
+ * `ise_profiles` : colonnes énumérées, jamais `select('*')` (0028). Les neuf
  * colonnes lues ici ont été explicitement GRANT-ées en SELECT à
- * `authenticated` par la migration 0120 ; les colonnes de portrait sont en
- * lecture seule pour le membre — leur écriture passe par les RPC
- * `set_my_public_photo()` / `clear_my_public_photo()`.
+ * `authenticated` par les migrations 0120 et 0141 ; les colonnes de portrait
+ * (chemin, alternative, dimensions, cadrage) sont en lecture seule pour le
+ * membre — leur écriture passe par les RPC `set_my_public_photo()` /
+ * `clear_my_public_photo()` / `set_my_public_photo_crop()`.
  */
 
 export type Result<T> = { ok: true; data: T } | { ok: false; error: BusinessError };
@@ -16,7 +18,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: BusinessErro
 const SHOWCASE_COLUMNS =
   'id, public_summary, allow_public_feature, allow_public_photo, ' +
   'public_photo_path, public_photo_alt, public_photo_width, public_photo_height, ' +
-  'public_photo_set_at';
+  'public_photo_set_at, public_photo_focal_x, public_photo_focal_y, public_photo_zoom';
 
 export interface PublicShowcase {
   profileId: string;
@@ -28,6 +30,18 @@ export interface PublicShowcase {
   photoWidth: number | null;
   photoHeight: number | null;
   photoSetAt: string | null;
+  /** 0141 — cadrage d'affichage du portrait, en pourcentage (0-100, défaut 50). */
+  photoFocalX: number;
+  /** 0141 — cadrage d'affichage du portrait, en pourcentage (0-100, défaut 50). */
+  photoFocalY: number;
+  /** 0141 — zoom d'affichage du portrait (1.0-3.0, défaut 1.0). */
+  photoZoom: number;
+}
+
+/** Nombre lu depuis une colonne `numeric`, avec repli si la valeur manque. */
+function readNumber(value: unknown, fallback: number): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export async function loadPublicShowcase(
@@ -61,6 +75,9 @@ export async function loadPublicShowcase(
       photoWidth: (row['public_photo_width'] as number | null) ?? null,
       photoHeight: (row['public_photo_height'] as number | null) ?? null,
       photoSetAt: (row['public_photo_set_at'] as string | null) ?? null,
+      photoFocalX: readNumber(row['public_photo_focal_x'], 50),
+      photoFocalY: readNumber(row['public_photo_focal_y'], 50),
+      photoZoom: readNumber(row['public_photo_zoom'], 1),
     },
   };
 }

@@ -12,22 +12,29 @@ import { inspectImage, CMS_MEDIA_MAX_BYTES } from '@/lib/cms/image-metadata';
 import { toPublicShowcaseInput } from '../form-input';
 
 /**
- * Server Actions de la vitrine publique (révision de D-135, migration 0120).
+ * Server Actions de la vitrine publique (révision de D-135, migration 0120 ;
+ * cadrage 0141).
  *
- * TROIS ACTES DISTINCTS, et c'est volontaire :
- *   1. `savePublicShowcaseAction`   — brève description + les deux consentements ;
- *   2. `publishPublicPhotoAction`   — dépôt du portrait dans le bucket public ;
- *   3. `withdrawPublicPhotoAction`  — retrait du portrait.
+ * QUATRE ACTES DISTINCTS, et c'est volontaire :
+ *   1. `savePublicShowcaseAction`     — brève description + les deux consentements ;
+ *   2. `publishPublicPhotoAction`     — dépôt du portrait dans le bucket public ;
+ *   3. `withdrawPublicPhotoAction`    — retrait du portrait ;
+ *   4. `updatePublicPhotoCropAction`  — cadrage d'affichage (position/zoom) du
+ *      portrait déjà déposé, sans toucher au fichier.
  * Séparer 1 et 2 évite qu'un enregistrement de texte emporte silencieusement
- * une publication d'image.
+ * une publication d'image. Séparer 4 des deux évite qu'un simple ajustement
+ * de cadrage rejoue tout le circuit d'upload.
  *
  * LA SÉCURITÉ N'EST PAS ICI. Elle est en base :
  *   · la politique `ise_landing_media_member_photo_insert` refuse tout dépôt
  *     hors de `membres/<mon profile_id>/` et tout dépôt sans consentement ;
  *   · `set_my_public_photo()` revérifie le consentement, le préfixe, le texte
  *     alternatif et l'existence réelle du fichier ;
- *   · un déclencheur retire l'objet public dès que le consentement tombe, que
- *     le compte est supprimé (D-19) ou que le portrait est remplacé.
+ *   · `set_my_public_photo_crop()` (0141) revérifie les bornes du cadrage et
+ *     refuse l'appel s'il n'existe aucun portrait à cadrer ;
+ *   · un déclencheur retire l'objet public et réinitialise le cadrage dès que
+ *     le consentement tombe, que le compte est supprimé (D-19) ou que le
+ *     portrait est remplacé.
  * Ce fichier ne fait qu'offrir le chemin normal ; il ne constitue pas la garde.
  */
 
@@ -39,6 +46,12 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   'image/webp': 'webp',
   'image/avif': 'avif',
 };
+
+/** 0141 — bornes du cadrage, alignées sur les CHECK de la migration. */
+const CROP_FOCAL_MIN = 0;
+const CROP_FOCAL_MAX = 100;
+const CROP_ZOOM_MIN = 1;
+const CROP_ZOOM_MAX = 3;
 
 function refreshShowcase() {
   revalidatePath(PROFILE_ROUTES.publicShowcase);
@@ -235,4 +248,60 @@ export async function withdrawPublicPhotoAction(
 
   refreshShowcase();
   return success(frShowcase.photoRemoved);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Cadrage du portrait déjà publié (position/zoom) — migration 0141 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Enregistre le cadrage du portrait DÉJÀ publié — position focale et zoom,
+ * appliqués en CSS (`object-position` / `transform`) partout où la vignette
+ * est affichée. AUCUN recadrage serveur : l'image déposée par
+ * `publishPublicPhotoAction` n'est jamais modifiée, seules trois coordonnées
+ * changent. `set_my_public_photo_crop()` refuse l'appel s'il n'existe aucun
+ * portrait à cadrer.
+ */
+export async function updatePublicPhotoCropAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const context = await requireProfile();
+  if (!context.ok) return failure(context.message, context.correlationId);
+
+  const { correlationId } = context;
+
+  const focalX = Number(formData.get('focalX'));
+  const focalY = Number(formData.get('focalY'));
+  const zoom = Number(formData.get('zoom'));
+
+  const valid =
+    Number.isFinite(focalX) &&
+    focalX >= CROP_FOCAL_MIN &&
+    focalX <= CROP_FOCAL_MAX &&
+    Number.isFinite(focalY) &&
+    focalY >= CROP_FOCAL_MIN &&
+    focalY <= CROP_FOCAL_MAX &&
+    Number.isFinite(zoom) &&
+    zoom >= CROP_ZOOM_MIN &&
+    zoom <= CROP_ZOOM_MAX;
+
+  if (!valid) {
+    return failure(frShowcase.photoCropInvalid, correlationId);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc('set_my_public_photo_crop', {
+    p_focal_x: focalX,
+    p_focal_y: focalY,
+    p_zoom: zoom,
+  });
+
+  if (error) {
+    const business = toBusinessError(error, correlationId);
+    return failure(business.userMessage, correlationId);
+  }
+
+  refreshShowcase();
+  return success(frShowcase.photoCropSaved);
 }

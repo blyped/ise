@@ -16,6 +16,14 @@ import { StorageImage } from '@/components/media/StorageImage';
  * affichable. Trois causes possibles — aucun media rattache, media dans un
  * bucket prive, media sans alternative textuelle — et une seule
  * consequence : le conteneur reste vide et la mise en page est intacte.
+ *
+ * CADRAGE (0141) — quand `media.focalX` / `focalY` / `zoom` sont renseignes
+ * (seul le portrait public consenti d'un membre les porte aujourd'hui,
+ * `private.landing_member_photo()`), ils sont traduits en `object-position`
+ * / `transform: scale()` et passes a `StorageImage`. C'est la MEME formule
+ * que l'apercu de `PublicPhotoForm` : ce que le membre a regle est
+ * exactement ce que la vignette affiche, partout ou `LandingMediaImage` sert
+ * ce media. Un media sans cadrage garde le rendu d'avant cette migration.
  */
 export function LandingMediaImage({
   media,
@@ -31,6 +39,14 @@ export function LandingMediaImage({
   const url = landingMediaUrl(media);
   if (media === null || url === null) return null;
 
+  const hasCrop = media.focalX !== null || media.focalY !== null || media.zoom !== null;
+  const style = hasCrop
+    ? {
+        objectPosition: `${media.focalX ?? 50}% ${media.focalY ?? 50}%`,
+        transform: `scale(${media.zoom ?? 1})`,
+      }
+    : undefined;
+
   return (
     <StorageImage
       src={url}
@@ -38,6 +54,7 @@ export function LandingMediaImage({
       sizes={sizes}
       className={className}
       priority={priority}
+      {...(style ? { style } : {})}
     />
   );
 }
