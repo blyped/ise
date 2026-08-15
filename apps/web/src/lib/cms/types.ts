@@ -224,6 +224,13 @@ export interface CmsEventRow {
   landingPriority: number;
   isUpcoming: boolean;
   isPinned: boolean;
+  /**
+   * 0137 — motif pour lequel la landing n'affichera PAS cet événement, ou
+   * `null` si elle l'affichera. Calculé en base par le prédicat même dont
+   * `get_landing_events()` se sert pour filtrer : l'écran ne peut donc plus
+   * annoncer « Visible sur la landing » pour un contenu qui n'y paraîtra pas.
+   */
+  landingBlockedReason: string | null;
   /** 0113 — visuel de couverture choisi dans la médiathèque publique. */
   coverMediaId: string | null;
   pendingSchedule: CmsPendingSchedule | null;
@@ -233,6 +240,8 @@ export interface CmsEventRow {
 export interface CmsOpportunityRow {
   id: string;
   title: string;
+  /** 0137 — résumé public, désormais affiché par la carte de la landing. */
+  summary: string | null;
   opportunityType: string | null;
   contractType: string | null;
   sector: string | null;
@@ -249,6 +258,8 @@ export interface CmsOpportunityRow {
   publishedAt: string | null;
   organization: string | null;
   isPinned: boolean;
+  /** 0137 — miroir de `CmsEventRow.landingBlockedReason`. */
+  landingBlockedReason: string | null;
   pendingSchedule: CmsPendingSchedule | null;
 }
 

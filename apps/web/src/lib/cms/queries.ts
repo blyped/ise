@@ -468,6 +468,7 @@ export async function loadCmsEvents(
     landingPriority: num(row['landing_priority']),
     isUpcoming: bool(row['is_upcoming']),
     isPinned: bool(row['is_pinned']),
+    landingBlockedReason: nstr(row['landing_blocked_reason']),
     coverMediaId: nstr(row['cover_media_id']),
     pendingSchedule: toPendingSchedule(row['pending_schedule']),
   }));
@@ -496,6 +497,7 @@ export async function loadCmsOpportunities(
   const rows: CmsOpportunityRow[] = asRows(root['rows']).map((row) => ({
     id: str(row['id']),
     title: str(row['title']),
+    summary: nstr(row['summary']),
     opportunityType: nstr(row['opportunity_type']),
     contractType: nstr(row['contract_type']),
     sector: nstr(row['sector']),
@@ -512,6 +514,7 @@ export async function loadCmsOpportunities(
     publishedAt: nstr(row['published_at']),
     organization: nstr(row['organization']),
     isPinned: bool(row['is_pinned']),
+    landingBlockedReason: nstr(row['landing_blocked_reason']),
     pendingSchedule: toPendingSchedule(row['pending_schedule']),
   }));
 
@@ -1023,8 +1026,11 @@ export async function loadPreviewData(
       news: news.data.rows.filter((row) =>
         keepPublished ? row.landingVisibility === 'visible' : true,
       ),
+      // 0137 — l'apercu « publie » montre exactement ce que la landing
+      // affichera : on se fie au meme motif de blocage que la projection,
+      // plutot que de re-deviner la regle ici.
       events: events.data.rows.filter((row) =>
-        keepPublished ? row.landingVisibility === 'visible' && row.isUpcoming : row.isUpcoming,
+        keepPublished ? row.landingBlockedReason === null : row.isUpcoming,
       ),
       featured: featured.data.current,
       partners: partners.data.filter((campaign) => (keepPublished ? campaign.isLive : true)),
