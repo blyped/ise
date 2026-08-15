@@ -35,16 +35,23 @@ import { SectionShell } from './SectionShell';
  *     lecteur d'ecran n'a rien a faire d'un chemin de 10 ko. Chaque point porte
  *     tout de meme un `<title>` : c'est l'infobulle de survol, pour la souris.
  *
- *  3. SUR TELEPHONE, LA LISTE PLUTOT QU'UNE CARTE ILLISIBLE. Douze pays dont
- *     neuf en Afrique de l'Ouest, sur 340 px de large, c'est une tache de
- *     points superposes. La carte disparait donc sous `md`, la liste passe en
- *     deux colonnes, et personne ne perd d'information.
+ *  3. SUR TELEPHONE, LA LISTE PLUTOT QU'UNE CARTE ILLISIBLE. Vingt-cinq pays
+ *     depuis 0136, dont une dizaine serres sur l'Afrique de l'Ouest, sur
+ *     340 px de large : c'est une tache de points superposes. La carte
+ *     disparait donc sous `md`, la liste passe en deux colonnes, et personne ne
+ *     perd d'information. L'abaissement du seuil a 1 a fait passer la liste de
+ *     douze a vingt-cinq pays : cette regle en devient plus necessaire, pas
+ *     moins.
  *
  *  4. LA PAGE DIT CE QU'ELLE NE MONTRE PAS. Trois mentions honnetes, chacune
  *     conditionnee a un fait reel : la couverture (combien de profils ont un
  *     pays renseigne), le seuil de confidentialite (combien de pays il masque,
  *     et combien d'ISE y exercent, sans les nommer) et, le cas echeant, les
- *     pays que le fond simplifie ne sait pas placer.
+ *     pays que le fond simplifie ne sait pas placer. Depuis 0136 le seuil vaut
+ *     1 : plus aucun pays n'est masque, la deuxieme mention ne s'affiche donc
+ *     plus. Elle est conservee telle quelle, et non retiree, parce qu'elle est
+ *     conditionnee a `hiddenCountries` et redeviendrait juste d'elle-meme si le
+ *     seuil remontait.
  *
  * PLACE RESERVEE (D-138). Le `<svg>` porte un `viewBox` et `h-auto` : le
  * navigateur en connait le rapport avant tout rendu, la hauteur du bloc est

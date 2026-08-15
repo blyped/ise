@@ -27,13 +27,20 @@ import {
  * cache de la landing, pour qu'une invalidation continue de tout rafraichir
  * d'un coup.
  *
- * CONFIDENTIALITE (rappel de l'en-tete de la migration). Le seuil k = 3 est
- * applique EN BASE : un pays comptant un ou deux ISE n'est ni nomme ni compte
- * parmi les `countries`, il n'apparait que dans `hidden_countries` /
- * `hidden_profiles`. Le parseur reapplique le seuil sur ce qu'il recoit — non
- * par defiance, mais parce qu'une regression cote base ne doit pas pouvoir
- * publier un pays a un seul ISE sur une page ouverte a tous. Les profils dont
- * la visibilite du pays est `private` sont deja exclus, y compris du total.
+ * CONFIDENTIALITE (rappel de l'en-tete de la migration). Le seuil d'agregation
+ * est applique EN BASE et vaut 1 DEPUIS 0136 : le porteur a demande, le
+ * 15/08/2026, que la carte nomme les pays a partir d'un seul ISE. Il valait
+ * k = 3 de 0133 a 0136, ou un pays a un ou deux ISE n'etait ni nomme ni compte
+ * parmi les `countries`. Tous les pays de presence sont desormais nommes, et
+ * `hidden_countries` / `hidden_profiles` sont structurellement a zero — les
+ * deux compteurs restent lus et rendus, pour le jour ou le seuil remonterait.
+ *
+ * Ce qui protege les membres n'est donc plus le seuil, mais deux regles que
+ * 0136 laisse intactes : le membre dont la visibilite du champ `country` est
+ * `private` reste exclu du comptage, y compris du total ; et seul un AGREGAT
+ * sort — un code, un libelle, un nombre —, jamais un nom, un identifiant ou
+ * une ville. Le parseur reapplique le seuil sur ce qu'il recoit pour que la
+ * valeur affichee et la valeur filtrante ne puissent pas diverger.
  */
 
 /** Un pays retenu par la projection : nomme, donc au-dessus du seuil. */
@@ -50,7 +57,7 @@ export interface LandingCountryPresence {
   readonly status: 'ok' | 'indisponible';
   /** Vide = rien a montrer. La section ne rend alors rien du tout. */
   readonly countries: readonly LandingCountryCount[];
-  /** Seuil d'agregation applique en base (3 aujourd'hui). */
+  /** Seuil d'agregation applique en base (1 depuis 0136). */
   readonly threshold: number;
   /** Profils publies pris en compte, pays renseigne ou non. */
   readonly totalProfiles: number;
@@ -116,9 +123,15 @@ export function parseCountryPresence(payload: unknown): LandingCountryPresence {
   const parsed = presenceSchema.safeParse(payload);
   if (!parsed.success) return unavailable('forme-inattendue');
 
-  // Un seuil absent ou aberrant ne fait pas retomber la page sur « aucun
-  // seuil » : ce serait ouvrir la porte a la publication d'un pays a un ISE.
-  const threshold = parsed.data.threshold >= 1 ? parsed.data.threshold : 3;
+  // Un seuil absent ou aberrant retombe sur 1, la valeur decidee par le
+  // porteur le 15/08/2026 et posee par 0136 : la carte nomme les pays a partir
+  // d'un seul ISE. Le repli valait 3 jusque-la, au motif qu'un pays a un ISE ne
+  // devait jamais etre publie ; ce motif n'a plus cours, c'est desormais le
+  // comportement voulu. Deux protections subsistent, et elles ne dependent pas
+  // de ce nombre : le membre dont la visibilite du champ `country` est
+  // `private` reste exclu du comptage, et seul un agregat sort d'ici (code,
+  // libelle, nombre) — jamais un nom.
+  const threshold = parsed.data.threshold >= 1 ? parsed.data.threshold : 1;
 
   const countries: LandingCountryCount[] = [];
   for (const row of parsed.data.countries) {
