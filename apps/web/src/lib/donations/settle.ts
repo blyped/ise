@@ -109,3 +109,50 @@ export async function settleDonationNotification(
 
   return { ok: true, result };
 }
+
+/**
+ * PREMIER CONTROLE D'AUTHENTICITE D'UNE NOTIFICATION CINETPAY v2 (0135).
+ *
+ * La v2 ne signe pas ses notifications : elle remet a l'initiation un
+ * `notify_token` a usage unique et le renvoie ensuite. On en a conserve
+ * l'EMPREINTE dans le schema prive ; on compare des empreintes, jamais des
+ * jetons.
+ *
+ * Comme `settle_donation_notification()`, la fonction appelee ici est
+ * REVOQUEE pour `anon` et `authenticated` : seul le role serveur y accede.
+ *
+ * TOLERANCE ASSUMEE : `true` quand il n'y a rien a comparer (aucune
+ * empreinte conservee). Refuser dans ce cas ferait perdre des paiements
+ * REELS, alors que ce controle n'a jamais eu vocation a etablir l'issue —
+ * c'est la reverification aupres de CinetPay qui tranche, et elle n'est
+ * jamais facultative. En revanche, une erreur d'appel renvoie `false` : on
+ * ne traite pas une notification qu'on n'a pas pu qualifier.
+ */
+export async function donationNotifyTokenMatches(
+  reference: string,
+  digest: string,
+  correlationId: string,
+): Promise<boolean> {
+  let client: ReturnType<typeof createServiceRoleClient>;
+  try {
+    client = createServiceRoleClient();
+  } catch {
+    console.error('[ISE] don : configuration serveur incomplete', { correlationId });
+    return false;
+  }
+
+  const { data, error } = await client.rpc('donation_notify_token_matches', {
+    p_reference: reference,
+    p_digest: digest,
+  });
+
+  if (error) {
+    console.error('[ISE] don : controle du notify_token impossible', {
+      correlationId,
+      code: error.code,
+    });
+    return false;
+  }
+
+  return data === true;
+}

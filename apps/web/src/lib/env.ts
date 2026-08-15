@@ -42,7 +42,7 @@ export function serverEnv(): ServerEnv {
 }
 
 /**
- * MODULE DE DON (0134) — secrets des prestataires de paiement.
+ * MODULE DE DON (0134, 0135) — secrets des prestataires de paiement.
  *
  * SERVEUR UNIQUEMENT, et sans exception : aucune de ces variables n'est
  * prefixee `NEXT_PUBLIC_`, donc aucune ne peut se retrouver dans le bundle
@@ -52,13 +52,20 @@ export function serverEnv(): ServerEnv {
  * Cette lecture NE LEVE JAMAIS : une variable absente rend simplement son
  * prestataire indisponible. L'application demarre sans elles, et le module
  * de don s'annonce alors indisponible plutot que de planter.
+ *
+ * CINETPAY v2 (0135) : plus de `CINETPAY_SITE_ID` ni de `CINETPAY_SECRET_KEY`
+ * — la v2 n'a ni site marchand ni jeton HMAC. L'authentification est un
+ * couple `CINETPAY_API_KEY` / `CINETPAY_API_PASSWORD`. `CINETPAY_BASE_URL`
+ * et `CINETPAY_NOTIFY_URL` sont facultatives ; a defaut, la base URL est
+ * la PRODUCTION et l'URL de notification est deduite du site.
  */
 export function donationEnv(): DonationEnv {
   return readDonationEnv({
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     CINETPAY_API_KEY: process.env.CINETPAY_API_KEY,
-    CINETPAY_SITE_ID: process.env.CINETPAY_SITE_ID,
-    CINETPAY_SECRET_KEY: process.env.CINETPAY_SECRET_KEY,
+    CINETPAY_API_PASSWORD: process.env.CINETPAY_API_PASSWORD,
+    CINETPAY_BASE_URL: process.env.CINETPAY_BASE_URL,
+    CINETPAY_NOTIFY_URL: process.env.CINETPAY_NOTIFY_URL,
   });
 }
