@@ -17,6 +17,17 @@ import type { PublicLandingEvent } from '@/lib/public/landing-events';
  * Sans `IntersectionObserver` (navigateur ancien, JavaScript coupe), aucune
  * impression n'est comptee. C'est le bon defaut : mieux vaut sous-compter que
  * facturer une impression qui n'a pas eu lieu.
+ *
+ * 0137 — PROP `active`. Depuis le passage des carrousels au fondu, les
+ * diapositives masquees restent dans le DOM : elles ne sont plus en
+ * `display: none`, seulement transparentes. Or `IntersectionObserver` ignore
+ * `opacity` et `visibility` — il aurait donc compte une impression pour
+ * CHAQUE diapositive du carrousel des le chargement de la page, y compris
+ * celles que personne n'a vues. C'est exactement la metrique fausse que §51
+ * interdit. L'appelant qui empile ses blocs passe donc `active={false}` sur
+ * ceux qui sont invisibles : l'observation ne demarre qu'a la prise de vue.
+ * Le compteur `counted` vivant sur toute la duree du montage, un bloc qui
+ * revient une seconde fois n'est jamais compte deux fois.
  */
 
 const VISIBLE_RATIO = 0.5;
@@ -30,6 +41,7 @@ export function ImpressionTracker({
   sectionKey,
   position,
   className,
+  active = true,
   children,
 }: {
   eventType: PublicLandingEvent;
@@ -39,6 +51,12 @@ export function ImpressionTracker({
   sectionKey?: string | undefined;
   position?: number | undefined;
   className?: string | undefined;
+  /**
+   * `false` quand le bloc est present dans le DOM mais invisible (diapositive
+   * de carrousel en fondu). Rien n'est alors observe, donc rien n'est compte.
+   * Par defaut `true` : les appels existants ne changent pas de comportement.
+   */
+  active?: boolean | undefined;
   children: ReactNode;
 }) {
   const track = useLandingTracker();
@@ -48,6 +66,7 @@ export function ImpressionTracker({
   useEffect(() => {
     const node = host.current;
     if (node === null) return undefined;
+    if (!active) return undefined;
     if (typeof IntersectionObserver !== 'function') return undefined;
 
     let dwell: ReturnType<typeof setTimeout> | null = null;
@@ -90,7 +109,7 @@ export function ImpressionTracker({
       cancel();
       observer.disconnect();
     };
-  }, [track, eventType, entityType, entityId, placement, sectionKey, position]);
+  }, [track, eventType, entityType, entityId, placement, sectionKey, position, active]);
 
   return (
     <div ref={host} className={className}>
