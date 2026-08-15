@@ -70,6 +70,14 @@ export const ADMIN_ROUTES = {
   moderation: '/administration/moderation',
   /** SA-038 — File des tickets support. */
   support: '/administration/support',
+  /**
+   * Annonces diffusees en tete du tableau de bord membre (tache #188).
+   * Diffusion descendante admin -> membres, sans rapport avec le module
+   * Communication ascendant (support / remontees d'information, 0131).
+   */
+  announcements: '/administration/annonces',
+  /** Redaction d'une nouvelle annonce. */
+  announcementNew: '/administration/annonces/nouveau',
   /** SA-043 — Profils incomplets, priorisation. */
   incompleteProfiles: '/administration/profils-incomplets',
   /** Lot livre en parallele : analytics / parametres / audit. */
@@ -186,4 +194,9 @@ export function adminNewsProposalRoute(newsId: string): string {
 /** Examen d'une proposition d'evenement recue d'un ISE (0132). */
 export function adminEventProposalRoute(eventId: string): string {
   return `${ADMIN_ROUTES.eventProposals}/${encodeURIComponent(eventId)}`;
+}
+
+/** Fiche d'une annonce (tache #188) : edition + cycle de vie (publier/depublier/supprimer). */
+export function adminAnnouncementRoute(announcementId: string): string {
+  return `${ADMIN_ROUTES.announcements}/${encodeURIComponent(announcementId)}`;
 }

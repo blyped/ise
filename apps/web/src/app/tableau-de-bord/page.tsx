@@ -14,7 +14,9 @@ import { loadMemberContext, type MemberProfile } from '@/lib/queries/profile';
 import { loadNetworkCalls } from '@/lib/queries/calls';
 import { loadOpportunities } from '@/lib/queries/opportunities';
 import { loadPeopleYouMayKnow } from '@/lib/queries/dashboard';
+import { loadActiveAnnouncements } from '@/lib/queries/announcements';
 import { AppShell } from '@/components/layout/AppShell';
+import { AnnouncementsBanner } from './AnnouncementsBanner';
 import { CallCardView } from '@/components/calls/CallCardView';
 import { OpportunityCardView } from '@/components/opportunities/OpportunityCardView';
 import { ResultCard } from '@/components/search/ResultCard';
@@ -332,6 +334,13 @@ export default async function DashboardPage({
       ])
     : [null, null, null];
 
+  // Bandeau d'annonces (0145, tache #188) : lecture INDEPENDANTE du
+  // profil (visible meme sans profil rattache) et tolerante a l'echec —
+  // un echec de lecture degrade silencieusement en « aucun bandeau »
+  // (MASTER PROMPT §47), voir `AnnouncementsBanner`.
+  const announcementsResult = await loadActiveAnnouncements(correlationId);
+  const announcements = announcementsResult.ok ? announcementsResult.data : [];
+
   const accountEmail = user.email ?? '';
   const displayName = profile
     ? (profile.display_name ?? `${profile.first_name} ${profile.last_name}`.trim())
@@ -351,6 +360,8 @@ export default async function DashboardPage({
           </h1>
           <p className="text-body text-text-secondary">{fr.dashboard.subtitle}</p>
         </header>
+
+        <AnnouncementsBanner announcements={announcements} />
 
         {claimApproved && profile ? (
           <Alert variant="success" title={fr.dashboard.claimApprovedTitle}>
