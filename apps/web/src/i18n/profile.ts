@@ -135,6 +135,20 @@ export const frProfile = {
     photoWrongType: 'Ce format d’image n’est pas accepté ici. Choisissez un PNG, un JPEG ou un WebP.',
     photoTooLarge: 'Cette image dépasse 2 Mo. Choisissez un fichier plus léger.',
     photoUploadFailed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
+
+    // 0147/D-205 — cadrage ajustable (position + zoom), meme mecanisme
+    // que la vitrine publique (0141, D-204).
+    photoCropTitle: 'Cadrage de la photo',
+    photoCropHint:
+      'Ajustez la position et le zoom pour que votre visage reste bien centré dans le médaillon. Un zoom inférieur à 1 réduit la photo si elle paraît trop grande dans le cadre.',
+    photoCropXLabel: 'Position horizontale',
+    photoCropYLabel: 'Position verticale',
+    photoCropZoomLabel: 'Zoom',
+    photoCropSubmit: 'Enregistrer le cadrage',
+    photoCropSubmitPending: 'Enregistrement…',
+    photoCropReset: 'Réinitialiser',
+    photoCropSaved: 'Le cadrage de votre photo a été enregistré.',
+    photoCropInvalid: 'Le cadrage envoyé est invalide.',
     photoVisibilityNote:
       'Qui voit votre photo se règle plus bas, avec la visibilité des autres informations.',
   },

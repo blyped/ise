@@ -71,7 +71,7 @@ export const frShowcase = {
   // 0141 — cadrage ajustable (position + zoom), purement d'affichage.
   photoCropTitle: 'Cadrage de la vignette',
   photoCropHint:
-    'Ajustez la position et le zoom pour que votre visage reste bien centré dans le médaillon « ISE du jour ». Aucune nouvelle image n’est créée : seul l’affichage change, partout où cette photo apparaît en vignette.',
+    'Ajustez la position et le zoom pour que votre visage reste bien centré dans le médaillon « ISE du jour ». Un zoom inférieur à 1 réduit la photo si elle paraît trop grande dans le cadre. Aucune nouvelle image n’est créée : seul l’affichage change, partout où cette photo apparaît en vignette.',
   photoCropXLabel: 'Position horizontale',
   photoCropYLabel: 'Position verticale',
   photoCropZoomLabel: 'Zoom',
