@@ -110,6 +110,15 @@ export default async function CmsMediaPage({
               credit: asset.credit,
               width: asset.width,
               height: asset.height,
+              // 0141 — la mediatheque n'affiche jamais un cadrage propre au
+              // membre (c'est un reglage de « Ma vitrine publique », pas un
+              // attribut du media lui-meme) : les trois cles existent dans
+              // `LandingMedia` mais valent toujours `null` ici, exactement
+              // comme pour tout media qui n'est pas le portrait consenti
+              // d'un membre (carrousel, actualites, piliers, partenaires...).
+              focalX: null,
+              focalY: null,
+              zoom: null,
             });
             return (
               <li key={asset.id} className="border-border bg-surface rounded-lg border p-5">
