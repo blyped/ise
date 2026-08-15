@@ -18,7 +18,7 @@ import { StorageImage } from '@/components/media/StorageImage';
  * bucket prive, media sans alternative textuelle — et une seule
  * consequence : le conteneur reste vide et la mise en page est intacte.
  *
- * CADRAGE (0141, revise D-204/D-205) — quand `media.focalX` / `focalY` /
+ * CADRAGE (0141, revise D-205/D-206) — quand `media.focalX` / `focalY` /
  * `zoom` sont renseignes (seul le portrait public consenti d'un membre les
  * porte aujourd'hui, `private.landing_member_photo()`), un WRAPPER interne
  * porte le zoom et la position (`photoCropWrapperStyle`, `@ise/ui-web`) et
@@ -26,7 +26,7 @@ import { StorageImage } from '@/components/media/StorageImage';
  * ce wrapper avec `object-fit: cover` centre. C'est la MEME formule que
  * l'apercu de `PublicPhotoForm` : ce que le membre a regle est exactement
  * ce que la vignette affiche, partout ou `LandingMediaImage` sert ce media —
- * y compris l'encart « ISE du jour » de la page d'accueil (D-204 : c'est LA
+ * y compris l'encart « ISE du jour » de la page d'accueil (D-205 : c'est LA
  * « photo de l'accueil » que le porteur a signalee). L'ancienne formule
  * (`object-position` + `transform: scale()` directement sur l'image) ne
  * fonctionnait que sur l'axe ou la photo debordait naturellement du cadre

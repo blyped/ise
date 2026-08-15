@@ -15,7 +15,7 @@ export interface PublicViewerState {
   readonly displayName: string | null;
   /** URL signee de la photo de profil du membre connecte, ou `undefined`. */
   readonly avatarUrl: string | undefined;
-  /** Cadrage (position + zoom) de l'avatar ci-dessus — D-205, 0147. */
+  /** Cadrage (position + zoom) de l'avatar ci-dessus — D-206, 0147. */
   readonly avatarCrop: PhotoCrop | undefined;
   /**
    * D-194 — nombre de notifications non lues du membre connecte, ou
