@@ -28,6 +28,17 @@ export { Card, CardHeader, CardTitle, CardDescription, type CardProps } from './
 export { Badge, type BadgeProps, type BadgeTone } from './components/Badge';
 export { Chip, type ChipProps } from './components/Chip';
 export { Avatar, initialsOf, type AvatarProps, type AvatarSize } from './components/Avatar';
+export {
+  PHOTO_CROP_DEFAULT,
+  PHOTO_CROP_FOCAL_MIN,
+  PHOTO_CROP_FOCAL_MAX,
+  PHOTO_CROP_ZOOM_MIN,
+  PHOTO_CROP_ZOOM_MAX,
+  PHOTO_CROP_FRAME_STYLE,
+  photoCropWrapperStyle,
+  isCustomPhotoCrop,
+  type PhotoCrop,
+} from './utils/photo-crop';
 export { Skeleton, type SkeletonProps } from './components/Skeleton';
 
 export { Alert, type AlertProps, type AlertVariant } from './components/Alert';

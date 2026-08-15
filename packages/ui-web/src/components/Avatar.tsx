@@ -1,4 +1,5 @@
 import { cx } from '../utils/cx';
+import { photoCropWrapperStyle, type PhotoCrop } from '../utils/photo-crop';
 
 export type AvatarSize = 24 | 32 | 40 | 48 | 64 | 96 | 120;
 
@@ -13,6 +14,13 @@ export interface AvatarProps {
    * juste a cote) : il est alors masque aux lecteurs d'ecran.
    */
   decorative?: boolean;
+  /**
+   * Cadrage optionnel (position + zoom) — D-205. `undefined`/`null` :
+   * rendu inchange (`object-fit: cover`, centre, sans wrapper). Voir
+   * `photoCropWrapperStyle` pour le detail du mecanisme et du bug qu'il
+   * corrige (D-204).
+   */
+  crop?: PhotoCrop | null | undefined;
 }
 
 const TEXT: Record<AvatarSize, string> = {
@@ -37,21 +45,35 @@ export function initialsOf(name: string): string {
   return (first + last).toUpperCase();
 }
 
-export function Avatar({ name, src, size = 40, className, decorative = false }: AvatarProps) {
+export function Avatar({
+  name,
+  src,
+  size = 40,
+  className,
+  decorative = false,
+  crop = null,
+}: AvatarProps) {
   const style = { width: `${size}px`, height: `${size}px` };
 
   if (src) {
-    return (
+    const wrapperStyle = photoCropWrapperStyle(crop ?? null);
+    const img = (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={decorative ? '' : name}
-        width={size}
-        height={size}
-        style={style}
-        className={cx('border-border shrink-0 rounded-full border object-cover', className)}
+        className="h-full w-full object-cover"
         {...(decorative ? { 'aria-hidden': true } : {})}
       />
+    );
+
+    return (
+      <span
+        style={{ ...style, position: 'relative', overflow: 'hidden' }}
+        className={cx('border-border shrink-0 rounded-full border', className)}
+      >
+        {wrapperStyle ? <span style={wrapperStyle}>{img}</span> : img}
+      </span>
     );
   }
 
