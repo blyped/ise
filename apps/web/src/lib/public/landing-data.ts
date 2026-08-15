@@ -30,7 +30,7 @@ import { isEntityType, type EntityRef } from './entity-routes';
  *                                        de get_landing_partner_campaigns(). Avant cette
  *                                        migration, un bouton sans ressource interne liee
  *                                        ne pouvait tout simplement pas s'afficher : voir
- *                                        D-201.)
+ *                                        D-204.)
  *   get_landing_carousel_settings()    -> **objet** { autoplay_seconds } (0111, D-163).
  *                                         Reglage global (`platform_settings`), borne 3-60
  *                                         cote base ; repli 7 si la lecture echoue.
