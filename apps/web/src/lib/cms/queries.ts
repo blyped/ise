@@ -237,8 +237,8 @@ export async function loadCmsAutomationStatus(
 
 const CAROUSEL_COLUMNS =
   'id, title, subtitle, description, media_id, mobile_media_id, content_type, entity_type,' +
-  ' entity_id, cta_label, start_at, end_at, priority, is_sponsored, partner_campaign_id,' +
-  ' text_position, dim_media,' +
+  ' entity_id, cta_label, target_url, start_at, end_at, priority, is_sponsored,' +
+  ' partner_campaign_id, text_position, dim_media,' +
   ' status, published_at, published_snapshot, previous_published_snapshot, updated_at';
 
 function toCarouselItem(
@@ -265,6 +265,7 @@ function toCarouselItem(
     entityType: optionalOneOf(row['entity_type'], ENTITY_TYPES),
     entityId: nstr(row['entity_id']),
     ctaLabel: nstr(row['cta_label']),
+    targetUrl: nstr(row['target_url']),
     startAt: nstr(row['start_at']),
     endAt: nstr(row['end_at']),
     priority: num(row['priority']),

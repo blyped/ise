@@ -49,6 +49,14 @@ const draftSchema = z
     entityType: z.enum(CMS_ENTITY_TYPES).nullable(),
     entityId: z.string().uuid('Identifiant de ressource invalide.').nullable(),
     ctaLabel: z.string().trim().nullable(),
+    // 0148 — destination externe du bouton, alternative a entityType/entityId.
+    // Meme regle que `cms_partner_campaigns.target_url` (0057) : une adresse
+    // absolue en https, ou rien.
+    targetUrl: z
+      .string()
+      .trim()
+      .regex(/^https:\/\//, 'L’adresse doit commencer par https://')
+      .nullable(),
     startAt: z.string().nullable(),
     endAt: z.string().nullable(),
     priority: z.number().int().min(0).max(1000),
@@ -62,6 +70,13 @@ const draftSchema = z
   .refine((value) => (value.entityType === null) === (value.entityId === null), {
     message: 'Indiquez le type ET l’identifiant de la ressource, ou aucun des deux.',
     path: ['entityId'],
+  })
+  // 0148 — un bouton pointe soit une ressource interne, soit une adresse
+  // externe, jamais les deux a la fois (la route calculee par l'application
+  // aurait sinon deux cibles concurrentes pour un seul clic).
+  .refine((value) => value.entityId === null || value.targetUrl === null, {
+    message: 'Choisissez une ressource interne OU une adresse externe, pas les deux.',
+    path: ['targetUrl'],
   })
   .refine(
     (value) =>
@@ -82,6 +97,7 @@ function readDraft(formData: FormData): CarouselDraft | { error: z.ZodError } {
     entityType: text(formData, 'entityType'),
     entityId: text(formData, 'entityId'),
     ctaLabel: text(formData, 'ctaLabel'),
+    targetUrl: text(formData, 'targetUrl'),
     startAt: timestamp(formData, 'startAt'),
     endAt: timestamp(formData, 'endAt'),
     priority: integer(formData, 'priority', 0),

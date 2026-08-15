@@ -30,14 +30,20 @@ export interface CarouselFormProps {
 /**
  * Formulaire d'une slide (CMS-002).
  *
- * Trois points meritent d'etre lus :
+ * Quatre points meritent d'etre lus :
  *
  *   * DEUX VISUELS DISTINCTS, Desktop et Mobile (§32). Chacun se choisit
  *     dans la mediatheque, ou chaque media porte deja son texte
  *     alternatif — on ne le ressaisit donc pas ici, ce qui creerait deux
  *     verites.
  *   * LA RESSOURCE LIEE se declare par `entity_type` + `entity_id`, jamais
- *     par une URL (§10). La route est calculee par l'application.
+ *     par une URL INTERNE (§10). La route est calculee par l'application.
+ *   * LE BOUTON DU CTA (0148) pointe soit cette ressource interne, soit une
+ *     adresse EXTERNE saisie dans `targetUrl` (meme forme que
+ *     `cms_partner_campaigns.target_url`, §37 : `https://` obligatoire, les
+ *     deux etant mutuellement exclusifs). Sans l'une ou l'autre cible, le
+ *     bouton ne s'affiche pas sur la landing meme si `ctaLabel` est rempli —
+ *     c'etait precisement le bug signale par le porteur.
  *   * LE SPONSOR se choisit parmi les campagnes existantes. Cocher
  *     « sponsorise » sans campagne serait refuse par la contrainte
  *     `cms_carousel_items_sponsored_traceable` : le champ n'existe donc
@@ -213,6 +219,24 @@ export function CarouselForm({
               )}
             </CmsField>
           </div>
+
+          <CmsField
+            name="targetUrl"
+            label={frCms.carousel.fieldTargetUrl}
+            hint={frCms.carousel.fieldTargetUrlHelp}
+            error={errors['targetUrl']}
+          >
+            {(props) => (
+              <input
+                {...props}
+                type="url"
+                inputMode="url"
+                placeholder="https://"
+                defaultValue={item?.targetUrl ?? ''}
+                className={CMS_INPUT_CLASS}
+              />
+            )}
+          </CmsField>
 
           <div className="grid gap-5 lg:grid-cols-3">
             <CmsField name="ctaLabel" label={frCms.carousel.fieldCta} error={errors['ctaLabel']}>
