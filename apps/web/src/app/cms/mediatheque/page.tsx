@@ -22,8 +22,9 @@ export const metadata = { title: frCms.media.title };
  *
  * Recherche, metadonnees, texte alternatif obligatoire, dimensions,
  * references d'usage. Les references sont COMPTEES sur
- * `cms_carousel_items` et `cms_partner_campaigns` : un media dit
- * « utilise 2 fois » l'est reellement deux fois.
+ * `cms_carousel_items`, `cms_partner_campaigns` et
+ * `cms_landing_organizations` (0146) : un media dit « utilise 2 fois »
+ * l'est reellement deux fois.
  *
  * VIGNETTES REELLES depuis 0068. Le bucket `landing-media` est public :
  * chaque media a une URL chargeable, et la mediatheque montre donc le
@@ -102,7 +103,8 @@ export default async function CmsMediaPage({
       ) : (
         <ul aria-label={frCms.media.title} className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {assets.map((asset) => {
-            const usageTotal = asset.usage.carousel + asset.usage.campaigns;
+            const usageTotal =
+              asset.usage.carousel + asset.usage.campaigns + asset.usage.organizations;
             const thumbnailUrl = landingMediaUrl({
               bucket: asset.bucketId,
               path: asset.storagePath,
@@ -174,13 +176,19 @@ export default async function CmsMediaPage({
                       <p className="text-caption text-text-muted">{frCms.media.usageNone}</p>
                     ) : (
                       <p className="text-caption text-text-secondary">
-                        {asset.usage.carousel > 0
-                          ? `${asset.usage.carousel} ${frCms.media.usageCarousel}`
-                          : ''}
-                        {asset.usage.carousel > 0 && asset.usage.campaigns > 0 ? ' · ' : ''}
-                        {asset.usage.campaigns > 0
-                          ? `${asset.usage.campaigns} ${frCms.media.usageCampaign}`
-                          : ''}
+                        {[
+                          asset.usage.carousel > 0
+                            ? `${asset.usage.carousel} ${frCms.media.usageCarousel}`
+                            : null,
+                          asset.usage.campaigns > 0
+                            ? `${asset.usage.campaigns} ${frCms.media.usageCampaign}`
+                            : null,
+                          asset.usage.organizations > 0
+                            ? `${asset.usage.organizations} ${frCms.media.usageOrganization}`
+                            : null,
+                        ]
+                          .filter((label): label is string => label !== null)
+                          .join(' · ')}
                       </p>
                     )}
                   </div>

@@ -793,24 +793,30 @@ export async function loadMediaAssets(
   const rows = asRows(data);
   const originals = rows.filter((row) => str(row['variant_kind']) === 'original');
 
-  // References d'usage (§38) : comptees, jamais estimees.
-  const [carouselRefs, campaignRefs] = await Promise.all([
+  // References d'usage (§38) : comptees, jamais estimees. `organizations`
+  // (0146) compte les logos de la section « Ils nous font confiance »
+  // (`cms_landing_organizations.media_id`, 0133) : avant ce compteur, un
+  // logo activement affiche pouvait etre supprime sans avertissement, la
+  // meme faille que §38 decrit deja pour le carrousel et les campagnes.
+  const [carouselRefs, campaignRefs, organizationRefs] = await Promise.all([
     supabase.from('cms_carousel_items').select('media_id, mobile_media_id'),
     supabase.from('cms_partner_campaigns').select('media_id, mobile_media_id'),
+    supabase.from('cms_landing_organizations').select('media_id'),
   ]);
 
-  const countUsage = (payload: unknown): Map<string, number> => {
+  const countUsage = (payload: unknown, keys: readonly string[]): Map<string, number> => {
     const counts = new Map<string, number>();
     for (const row of asRows(payload)) {
-      for (const key of ['media_id', 'mobile_media_id']) {
+      for (const key of keys) {
         const id = nstr(row[key]);
         if (id !== null) counts.set(id, (counts.get(id) ?? 0) + 1);
       }
     }
     return counts;
   };
-  const carouselUsage = countUsage(carouselRefs.data);
-  const campaignUsage = countUsage(campaignRefs.data);
+  const carouselUsage = countUsage(carouselRefs.data, ['media_id', 'mobile_media_id']);
+  const campaignUsage = countUsage(campaignRefs.data, ['media_id', 'mobile_media_id']);
+  const organizationUsage = countUsage(organizationRefs.data, ['media_id']);
 
   const assets: CmsMediaAsset[] = originals.map((row) => {
     const id = str(row['id']);
@@ -846,6 +852,7 @@ export async function loadMediaAssets(
       usage: {
         carousel: carouselUsage.get(id) ?? 0,
         campaigns: campaignUsage.get(id) ?? 0,
+        organizations: organizationUsage.get(id) ?? 0,
       },
     };
   });
