@@ -1,6 +1,6 @@
 # Journal des décisions — Compétences ISE — Partie 10/10 : Dons, organisations, cadrage et pastilles
 
-Sections 44 à 54 du journal des décisions du projet Compétences ISE.
+Sections 44 à 55 du journal des décisions du projet Compétences ISE.
 Index général, préambule, convention de statut (ADOPTÉE / PROVISOIRE / OUVERTE)
 et décisions de cadrage : [`docs/decisions.md`](../decisions.md).
 
@@ -163,5 +163,20 @@ plateforme a été construite par un pair du réseau plutôt que par un tiers in
 | --- | --- | --- |
 | D-197 | **ADOPTÉE, pratique établie** — À quatre reprises sur ce lot de travail (`0133`, `0135`, `0140`/`0140b`, `0137b`), une migration s'est trouvée appliquée en base Supabase sans être committée dans le dépôt GitHub. Dans chaque cas, le SQL exact a été reconstruit depuis `supabase_migrations.schema_migrations.statements`, vérifié par hachage (comparaison byte à byte, y compris ligne par ligne en cas d'écart), puis versionné dans le dépôt **sans être ré-exécuté**. Cette pratique de reconstruction devient la procédure standard en cas de dérive constatée, plutôt qu'un correctif ponctuel à chaque occurrence. | commentaire méthodologique, sans migration propre |
 | D-198 | **OUVERTE** — La cause racine de cette dérive répétée (plusieurs agents autonomes appliquant des migrations directement via les outils Supabase sans toujours pousser le fichier correspondant dans le même geste) n'a pas été corrigée structurellement. Un contrôle de cohérence automatisé (comparer périodiquement `list_migrations` côté Supabase et le contenu de `supabase/migrations/` sur `main`) reste à mettre en place. | — |
+
+---
+
+## 55. Ouverture des trois modules du tableau de bord membre (D-199)
+
+| # | Décision | Source |
+| --- | --- | --- |
+| D-199 | **ADOPTÉE** — Les trois encarts du tableau de bord (« Le réseau a besoin de vous », « Opportunités pour vous », « ISE que vous pourriez connaître »), jusqu'ici un placeholder générique (`PendingSection`), sont branchés sur les lectures réelles déjà utilisées ailleurs dans l'application. **Appels** et **Opportunités** appellent `loadNetworkCalls`/`loadOpportunities` avec les mêmes filtres que les onglets « Pour moi »/« Pour vous » de `/appels` et `/opportunites` (`scope: 'for_me'`/`'for_you'`, `status: 'open'`), et réutilisent `CallCardView`/`OpportunityCardView` tels quels — trois cartes affichées, lien « Voir tout » vers la liste complète avec le même paramètre d'onglet. Pour **« ISE que vous pourriez connaître »**, aucune RPC « recommande-moi des gens » indépendante n'existe : six routines candidates ont été examinées en base (`pg_get_functiondef`) avant tout code — `list_recommended_mentors` est scopée au mentorat (`mentor_profiles`/`mentor_domains`), inadaptée à une découverte générale ; `profile_match_set` est le moteur **privé** déjà appelé par `public.match_profiles()` (donc par `runRelevanceSearch`, ISE-035) — l'invoquer directement aurait dupliqué un point d'entrée public existant sans rien ajouter ; `community_match_reasons`, `emit_recommendation_requested_event`, `respond_recommendation_request` et `guard_recommendation_write` relèvent des communautés et du flux de demande de recommandation/témoignage (ISE-028/029), sans rapport avec la découverte de profils. Le module dérive donc des **critères raisonnables** à partir du profil du membre connecté — même secteur déclaré et/ou même pays de résidence, lus par les mêmes fonctions « self-only » que l'écran de profil (`loadProfileHeader`, `loadProfileSectors`) — exclut les profils déjà en relation (première page de `loadConnections`, 20 au plus — une exclusion exhaustive aurait exigé de paginer l'intégralité des relations pour un gain marginal sur un encart de 3 cartes) et appelle **la même RPC** `public.match_profiles()` qu'ISE-035 via `runRelevanceSearch`, désormais dotée d'un paramètre `excludeProfileIds` optionnel (`p_exclude_profile_ids`, auparavant câblé à `null` en dur) — comportement d'ISE-035 inchangé, le paramètre n'est utilisé que par ce nouveau module. Le rendu réutilise `ResultCard`, la carte de `/rechercher/resultats`. Si ni le secteur ni le pays ne sont connus (profil incomplet ou lectures en échec), **aucun appel RPC n'est fait** : un critère vide renverrait un ensemble non filtré sans rapport avec « des ISE que vous pourriez connaître », donc un état vide invite à compléter le profil plutôt que d'inventer une liste. Les trois lectures ne sont lancées qu'en présence d'un profil (aucune lecture sans profil rattaché), en parallèle (`Promise.all`, aux côtés de `loadMemberContext`), et chaque module affiche indépendamment son propre état vide/erreur — la panne d'un module n'affecte jamais les deux autres (MASTER PROMPT §47). | `tableau-de-bord/page.tsx`, `lib/queries/dashboard.ts` (nouveau), `lib/queries/search.ts` (`runRelevanceSearch` accepte `excludeProfileIds`), `i18n/fr.ts` |
+
+Le porteur avait explicitement demandé de « réutiliser des RPC déjà existantes et déjà utilisées ailleurs »,
+pas de bâtir un moteur de recommandation depuis zéro. L'inventaire préalable des six fonctions candidates
+(plutôt qu'un choix a priori) confirme qu'aucune ne correspond au besoin sans détournement, ce qui justifie
+la dérivation de critères plutôt qu'un nouvel appel RPC dédié — cohérent avec D-42/D-43 (labels qualitatifs
+et raisons explicites, jamais de score) et avec le principe déjà posé par D-151 (aucune donnée inventée
+quand la base n'a rien à dire).
 
 ---

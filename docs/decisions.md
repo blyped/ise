@@ -25,7 +25,7 @@ Statut des décisions : **ADOPTÉE** (appliquée au code) · **PROVISOIRE** (à 
 
 ## Table des matières — les dix parties du journal
 
-Les décisions **D-01 → D-198** sont réparties dans dix fichiers thématiques, sous `docs/decisions/`,
+Les décisions **D-01 → D-199** sont réparties dans dix fichiers thématiques, sous `docs/decisions/`,
 dans l'ordre de lecture du journal (les numéros de section d'origine sont conservés).
 Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 
@@ -42,7 +42,7 @@ Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 | D-174 → D-178 | [`decisions/07-mises-en-avant-et-ise-du-jour.md`](decisions/07-mises-en-avant-et-ise-du-jour.md) |
 | D-179, D-180, exécution de C-08 | [`decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md`](decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md) |
 | D-181 → D-183 | [`decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md`](decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md) |
-| D-184 → D-198 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
+| D-184 → D-199 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
 
 ### [Partie 1 — Fondations et modèle de données](decisions/01-fondations-et-modele-de-donnees.md)
 
@@ -134,7 +134,7 @@ Sections 41 à 43.
 
 ### [Partie 10 — Dons, organisations, cadrage et pastilles](decisions/10-dons-organisations-cadrage-et-pastilles.md)
 
-Sections 44 à 54.
+Sections 44 à 55.
 
 - **§44. Lien de retour vers l'espace membre depuis Administration et CMS** — D-184
 - **§45. Proposition de contenu par les ISE, avec validation administrative** — D-185, bucket privé `content-proposals`, gap ouvert sur l'image des opportunités
@@ -148,3 +148,4 @@ Sections 44 à 54.
 - **§53. Cadrage ajustable de la photo « ISE du jour »** — D-195
 - **§54. Crédit auteur dans le pied de page** — D-196
 - **Note méthodologique — dérive de migrations non committées** — D-197 (pratique établie), D-198 (OUVERTE, cause racine non corrigée)
+- **§55. Ouverture des trois modules du tableau de bord membre** — D-199, critères de secteur/pays dérivés du profil pour « ISE que vous pourriez connaître »

@@ -352,11 +352,27 @@ export const fr = {
     networkNeedsYou: 'Le réseau a besoin de vous',
     opportunitiesForYou: 'Opportunités pour vous',
     peopleYouMayKnow: 'ISE que vous pourriez connaître',
-    moduleUnavailableTitle: 'Ce module n’est pas encore ouvert',
-    moduleUnavailableBody:
-      'Rien n’est affiché ici tant que les données réelles ne sont pas disponibles : aucun contenu de démonstration n’est présenté.',
     loadErrorTitle: 'Impossible de charger vos informations de profil.',
     loadErrorBody: 'Le reste du tableau de bord reste utilisable.',
+    /** Lien « Voir tout » des trois modules ci-dessous (D-199). */
+    seeAll: 'Voir tout',
+    modulesRequireProfileTitle: 'Disponible une fois votre profil réclamé',
+    modulesRequireProfileBody:
+      'Ce contenu est personnalisé à partir de votre profil ISE. Réclamez votre profil pour le voir.',
+    callsErrorTitle: 'Impossible de charger les appels au réseau.',
+    callsEmptyTitle: 'Aucun appel ouvert ne vous correspond pour le moment',
+    callsEmptyBody:
+      'Les appels publiés par d’autres ISE et correspondant à votre profil apparaîtront ici.',
+    opportunitiesErrorTitle: 'Impossible de charger les opportunités.',
+    opportunitiesEmptyTitle: 'Aucune opportunité ne vous correspond pour le moment',
+    opportunitiesEmptyBody:
+      'Les offres publiées et correspondant à votre profil apparaîtront ici.',
+    peopleErrorTitle: 'Impossible de charger les suggestions.',
+    peopleEmptyTitleNoCriteria: 'Complétez votre profil pour recevoir des suggestions',
+    peopleEmptyBodyNoCriteria:
+      'Indiquez votre secteur d’activité ou votre pays de résidence dans votre profil : ils servent à vous suggérer des ISE à connaître.',
+    peopleEmptyTitle: 'Aucune suggestion pour le moment',
+    peopleEmptyBody: 'Aucun profil ne correspond à votre secteur ou à votre pays pour le moment.',
   },
 
   system: {

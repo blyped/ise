@@ -443,11 +443,19 @@ export async function runDirectorySearch(
   };
 }
 
-/** ISE-035, mode `relevance` — `public.match_profiles()` (migrations 0031/0033/0034). */
+/**
+ * ISE-035, mode `relevance` — `public.match_profiles()` (migrations 0031/0033/0034).
+ *
+ * `excludeProfileIds` (D-199) : reservee au module « ISE que vous pourriez
+ * connaitre » du tableau de bord, qui exclut les profils deja en relation.
+ * `null` par defaut : le comportement d'ISE-035 (recherche/resultats) est
+ * inchange, la RPC decide seule qui exclure (blocages notamment).
+ */
 export async function runRelevanceSearch(
   criteria: SearchCriteria,
   rawCursor: string | null,
   correlationId: string,
+  excludeProfileIds: readonly string[] | null = null,
 ): Promise<QueryResult<SearchPage>> {
   const supabase = await createSupabaseServerClient();
 
@@ -460,7 +468,8 @@ export async function runRelevanceSearch(
     p_min_years_experience: criteria.minYearsOfExperience ?? null,
     p_language_codes: nullable(criteria.languageCodes),
     p_promotion_id: first(criteria.promotionIds),
-    p_exclude_profile_ids: null,
+    p_exclude_profile_ids:
+      excludeProfileIds !== null && excludeProfileIds.length > 0 ? [...excludeProfileIds] : null,
     p_cursor: rawCursor,
     p_page_size: criteria.pageSize,
   });
