@@ -175,14 +175,21 @@ export const frPublic = {
   },
 
   /**
-   * 0133 — « les organisations où travaillent les ISE ».
+   * 0133, révisé (D-184) — « Ils nous font confiance ».
    *
-   * Section de logos, sans une ligne de texte visible : le titre existe
-   * uniquement pour les lecteurs d'écran et pour la structure du document.
-   * Chaque logo porte l'alternative textuelle saisie dans la médiathèque.
+   * Jusqu'à D-184, la section n'affichait aucune ligne de texte visible : le
+   * titre n'existait que pour les lecteurs d'écran (porteur : « pas de
+   * bavardages, je ne veux pas de texte », voir l'en-tête de la migration
+   * 0133). Décision produit ultérieure : un titre et un sous-titre COURTS
+   * sont désormais affichés au-dessus de la grille de logos. `label` reste
+   * disponible comme nom accessible de repli. Chaque logo continue de porter
+   * sa propre alternative textuelle, saisie dans la médiathèque — cela ne
+   * change pas.
    */
   organizations: {
     label: 'Les organisations où travaillent les ISE',
+    title: 'Ils nous font confiance',
+    subtitle: 'Structures et institutions où travaillent les ISE',
   },
 
   /**
