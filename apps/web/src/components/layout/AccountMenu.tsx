@@ -11,7 +11,7 @@ export interface AccountMenuProps {
   displayName: string;
   /** URL signee de la photo de profil. `undefined` : repli sur les initiales, jamais d'erreur. */
   avatarUrl?: string | undefined;
-  /** Cadrage (position + zoom) de `avatarUrl` — D-205, 0147. */
+  /** Cadrage (position + zoom) de `avatarUrl` — D-206, 0147. */
   avatarCrop?: PhotoCrop | undefined;
   avatarSize?: AvatarSize;
   /** Ligne secondaire (promotion) affichee sous le libelle, si fournie. */

@@ -16,7 +16,7 @@ export interface TopbarProps {
    * `AccountMenu` retombe alors sur les initiales : jamais d'erreur visible.
    */
   avatarUrl?: string | undefined;
-  /** Cadrage (position + zoom) de `avatarUrl` — D-205, 0147. */
+  /** Cadrage (position + zoom) de `avatarUrl` — D-206, 0147. */
   avatarCrop?: PhotoCrop | undefined;
   /**
    * D-160 — `true` si le compte detient AU MOINS une permission
