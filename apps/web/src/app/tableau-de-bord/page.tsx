@@ -4,11 +4,20 @@ import { Alert, Badge, Card, CardHeader, CardTitle, EmptyState, ErrorState } fro
 import type { ClaimStatus, VerificationStatus } from '@ise/db-types';
 import { fr, t } from '@/i18n/fr';
 import { ROUTES } from '@/lib/routes';
-import { ONBOARDING_ROOT } from '@/lib/routes/onboarding';
+import { ONBOARDING_ROOT, PROFILE_ROUTES } from '@/lib/routes/onboarding';
+import { CALL_ROUTES } from '@/lib/routes/calls';
+import { OPPORTUNITY_ROUTES } from '@/lib/routes/opportunities';
+import { SEARCH_ROUTES, searchResultsRoute } from '@/lib/routes/search';
 import { newCorrelationId } from '@/lib/correlation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { loadMemberContext, type MemberProfile } from '@/lib/queries/profile';
+import { loadNetworkCalls } from '@/lib/queries/calls';
+import { loadOpportunities } from '@/lib/queries/opportunities';
+import { loadPeopleYouMayKnow } from '@/lib/queries/dashboard';
 import { AppShell } from '@/components/layout/AppShell';
+import { CallCardView } from '@/components/calls/CallCardView';
+import { OpportunityCardView } from '@/components/opportunities/OpportunityCardView';
+import { ResultCard } from '@/components/search/ResultCard';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: fr.nav.home };
@@ -26,17 +35,184 @@ const VERIFICATION_TONES: Record<VerificationStatus, 'neutral' | 'info' | 'succe
   rejected: 'error',
 };
 
-/** Section de contenu dont le module n'est pas encore ouvert. */
-function PendingSection({ title }: { title: string }) {
+const SEE_ALL_LINK =
+  'text-body-sm text-primary hover:text-primary-hover focus-visible:outline-active-blue shrink-0 font-semibold focus-visible:outline-2 focus-visible:outline-offset-2';
+
+/** En-tete commun aux trois modules : titre + lien « Voir tout » (D-199). */
+function ModuleHeader({
+  id,
+  title,
+  seeAllHref,
+}: {
+  id: string;
+  title: string;
+  seeAllHref: string | null;
+}) {
   return (
-    <section className="flex flex-col gap-4" aria-labelledby={`section-${title}`}>
-      <h2 id={`section-${title}`} className="text-h3 text-text-primary font-semibold">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 id={id} className="text-h3 text-text-primary font-semibold">
         {title}
       </h2>
+      {seeAllHref !== null ? (
+        <Link href={seeAllHref} className={SEE_ALL_LINK}>
+          {fr.dashboard.seeAll}
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Module affiche quand aucun profil n'est rattache au compte : les trois
+ * lectures personnalisees ne sont meme pas lancees (MASTER PROMPT §47 —
+ * un module sans donnee source n'a rien a demander a la base), voir
+ * `DashboardPage` ci-dessous.
+ */
+function ProfileRequiredSection({ id, title }: { id: string; title: string }) {
+  return (
+    <section className="flex flex-col gap-4" aria-labelledby={id}>
+      <ModuleHeader id={id} title={title} seeAllHref={null} />
       <EmptyState
-        title={fr.dashboard.moduleUnavailableTitle}
-        description={fr.dashboard.moduleUnavailableBody}
+        title={fr.dashboard.modulesRequireProfileTitle}
+        description={fr.dashboard.modulesRequireProfileBody}
       />
+    </section>
+  );
+}
+
+/**
+ * ISE-047 (« Le réseau a besoin de vous ») — memes 3-4 premiers appels
+ * ouverts que l'onglet « Pour moi » de `/appels` (`scope: 'for_me'`),
+ * reutilisant `CallCardView` a l'identique (D-199).
+ */
+function NetworkCallsSection({
+  result,
+}: {
+  result: Awaited<ReturnType<typeof loadNetworkCalls>>;
+}) {
+  return (
+    <section className="flex flex-col gap-4" aria-labelledby="section-appels">
+      <ModuleHeader
+        id="section-appels"
+        title={fr.dashboard.networkNeedsYou}
+        seeAllHref={`${CALL_ROUTES.list}?onglet=for_me`}
+      />
+
+      {!result.ok ? (
+        <ErrorState
+          title={fr.dashboard.callsErrorTitle}
+          description={result.error.userMessage}
+          correlationId={result.error.correlationId ?? '—'}
+        />
+      ) : result.data.rows.length === 0 ? (
+        <EmptyState title={fr.dashboard.callsEmptyTitle} description={fr.dashboard.callsEmptyBody} />
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {result.data.rows.slice(0, 3).map((call) => (
+            <li key={call.callId}>
+              <CallCardView call={call} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/**
+ * ISE-055 (« Opportunités pour vous ») — memes 3-4 premieres offres que
+ * l'onglet « Pour vous » de `/opportunites` (`scope: 'for_you'`),
+ * reutilisant `OpportunityCardView` a l'identique (D-199).
+ */
+function OpportunitiesSection({
+  result,
+}: {
+  result: Awaited<ReturnType<typeof loadOpportunities>>;
+}) {
+  return (
+    <section className="flex flex-col gap-4" aria-labelledby="section-opportunites">
+      <ModuleHeader
+        id="section-opportunites"
+        title={fr.dashboard.opportunitiesForYou}
+        seeAllHref={`${OPPORTUNITY_ROUTES.list}?onglet=for_you`}
+      />
+
+      {!result.ok ? (
+        <ErrorState
+          title={fr.dashboard.opportunitiesErrorTitle}
+          description={result.error.userMessage}
+          correlationId={result.error.correlationId ?? '—'}
+        />
+      ) : result.data.rows.length === 0 ? (
+        <EmptyState
+          title={fr.dashboard.opportunitiesEmptyTitle}
+          description={fr.dashboard.opportunitiesEmptyBody}
+        />
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {result.data.rows.slice(0, 3).map((opportunity) => (
+            <li key={opportunity.opportunityId}>
+              <OpportunityCardView opportunity={opportunity} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/**
+ * « ISE que vous pourriez connaître » (D-199) — criteres derives du profil
+ * (secteur et/ou pays), relations existantes exclues, memes cartes que
+ * `/rechercher/resultats` (`ResultCard`). Voir `lib/queries/dashboard.ts`
+ * pour le detail du choix produit et docs/decisions.md pour D-199.
+ */
+function PeopleYouMayKnowSection({
+  result,
+}: {
+  result: Awaited<ReturnType<typeof loadPeopleYouMayKnow>>;
+}) {
+  const seeAllHref =
+    result.ok && result.data.queryString.length > 0
+      ? searchResultsRoute(result.data.queryString)
+      : SEARCH_ROUTES.find;
+
+  return (
+    <section className="flex flex-col gap-4" aria-labelledby="section-personnes">
+      <ModuleHeader
+        id="section-personnes"
+        title={fr.dashboard.peopleYouMayKnow}
+        seeAllHref={seeAllHref}
+      />
+
+      {!result.ok ? (
+        <ErrorState
+          title={fr.dashboard.peopleErrorTitle}
+          description={result.error.userMessage}
+          correlationId={result.error.correlationId ?? '—'}
+        />
+      ) : result.data.noCriteria ? (
+        <EmptyState
+          title={fr.dashboard.peopleEmptyTitleNoCriteria}
+          description={fr.dashboard.peopleEmptyBodyNoCriteria}
+          action={
+            <Link
+              href={PROFILE_ROUTES.header}
+              className="rounded-base bg-surface text-body-sm text-text-primary hover:border-primary focus-visible:outline-active-blue inline-flex h-[44px] items-center justify-center border border-[#CBD5E1] px-5 font-medium focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              Compléter mon profil
+            </Link>
+          }
+        />
+      ) : result.data.rows.length === 0 ? (
+        <EmptyState title={fr.dashboard.peopleEmptyTitle} description={fr.dashboard.peopleEmptyBody} />
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {result.data.rows.slice(0, 3).map((row) => (
+            <ResultCard key={row.profileId} row={row} />
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
@@ -91,7 +267,7 @@ function ProfileCard({ profile }: { profile: MemberProfile }) {
   );
 }
 
-/** ISE-015 — Tableau de bord membre. Coquille alimentee uniquement par la base. */
+/** ISE-015 — Tableau de bord membre. */
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -116,6 +292,45 @@ export default async function DashboardPage({
   // finir : la position exacte est relue en base par `/bienvenue`
   // (ISE-008 -> ISE-014). Aucune etape n'est refaite inutilement.
   if (profile && profile.onboarding_completed_at === null) redirect(ONBOARDING_ROOT);
+
+  const correlationId = newCorrelationId();
+
+  // Les trois modules personnalises n'ont rien a lire sans profil : on ne
+  // lance meme pas les requetes (MASTER PROMPT §47), voir `ProfileRequiredSection`.
+  const [callsResult, opportunitiesResult, peopleResult] = profile
+    ? await Promise.all([
+        loadNetworkCalls(
+          {
+            scope: 'for_me',
+            query: null,
+            callType: null,
+            skillId: null,
+            sectorId: null,
+            countryCode: null,
+            urgency: null,
+            status: 'open',
+          },
+          null,
+          correlationId,
+        ),
+        loadOpportunities(
+          {
+            scope: 'for_you',
+            query: null,
+            opportunityType: null,
+            sectorId: null,
+            countryCode: null,
+            experienceLevel: null,
+            remoteOnly: false,
+            newGraduates: false,
+            status: 'open',
+          },
+          null,
+          correlationId,
+        ),
+        loadPeopleYouMayKnow(user.id, profile.id, correlationId, 4),
+      ])
+    : [null, null, null];
 
   const accountEmail = user.email ?? '';
   const displayName = profile
@@ -147,7 +362,7 @@ export default async function DashboardPage({
           <ErrorState
             title={fr.dashboard.loadErrorTitle}
             description={fr.dashboard.loadErrorBody}
-            correlationId={newCorrelationId()}
+            correlationId={correlationId}
           />
         ) : null}
 
@@ -170,9 +385,22 @@ export default async function DashboardPage({
 
         <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="flex flex-col gap-8">
-            <PendingSection title={fr.dashboard.networkNeedsYou} />
-            <PendingSection title={fr.dashboard.opportunitiesForYou} />
-            <PendingSection title={fr.dashboard.peopleYouMayKnow} />
+            {profile && callsResult && opportunitiesResult && peopleResult ? (
+              <>
+                <NetworkCallsSection result={callsResult} />
+                <OpportunitiesSection result={opportunitiesResult} />
+                <PeopleYouMayKnowSection result={peopleResult} />
+              </>
+            ) : (
+              <>
+                <ProfileRequiredSection id="section-appels" title={fr.dashboard.networkNeedsYou} />
+                <ProfileRequiredSection
+                  id="section-opportunites"
+                  title={fr.dashboard.opportunitiesForYou}
+                />
+                <ProfileRequiredSection id="section-personnes" title={fr.dashboard.peopleYouMayKnow} />
+              </>
+            )}
           </div>
 
           <aside className="flex flex-col gap-7" aria-label={fr.dashboard.profileCardTitle}>
