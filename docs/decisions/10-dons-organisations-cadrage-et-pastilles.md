@@ -1,6 +1,6 @@
 # Journal des décisions — Compétences ISE — Partie 10/10 : Dons, organisations, cadrage et pastilles
 
-Sections 44 à 57 du journal des décisions du projet Compétences ISE.
+Sections 44 à 58 du journal des décisions du projet Compétences ISE.
 Index général, préambule, convention de statut (ADOPTÉE / PROVISOIRE / OUVERTE)
 et décisions de cadrage : [`docs/decisions.md`](../decisions.md).
 
@@ -217,5 +217,19 @@ Ouvrir directement `provision_referenced_account` à `authenticated` (avec véri
 **Appel côté application** : `apps/web/src/app/auth/callback/route.ts` ajoute `matchGoogleAccountToProfile()`, appelée juste après `runAdminBootstrap(supabase)` dans les deux branches (`code` et `token_hash`) — un simple appel RPC enveloppé dans un `try/catch` qui n'empêche jamais la redirection normale en cas d'échec, même position et même philosophie que `runAdminBootstrap`/`logAuthLinkEvent` déjà en place (D-173).
 
 **Hors périmètre, comme demandé** : si aucun profil ne correspond (e-mail Google inconnu du recensement), la fonction ne fait strictement rien — l'utilisateur atterrit sur le tableau de bord sans profil rattaché, `loadViewerContext`/`loadMemberContext` renvoyant `withoutProfile: true` comme aujourd'hui pour tout compte sans profil. Aucun redirect automatique vers le parcours de réclamation manuelle n'a été ajouté : ce garde-fou n'existe pas non plus aujourd'hui pour un compte créé par mot de passe sans profil, et en ajouter un unilatéralement pour Google seul aurait introduit une incohérence entre méthodes de connexion, hors du périmètre demandé (« matcher avec le compte Google »).
+
+---
+
+## 58. Sixième emplacement « Organisations (logos) » dans la médiathèque CMS (D-203)
+
+| # | Décision | Source |
+| --- | --- | --- |
+| D-203 | **ADOPTÉE** — Retour du porteur : le sélecteur « Emplacement sur la vitrine » de la médiathèque (CMS-008, ADDENDUM §38/§39) s'arrêtait à quatre valeurs (`carousel`, `partners`, `news`, `sections`), sans emplacement dédié pour les logos d'organisations de la section « Ils nous font confiance » (`cms_landing_organizations.media_id`, D-186/0133). Un redacteur qui téléversait un logo devait donc choisir « Sections » par défaut — un emplacement qui ne dit pas ce que le fichier est réellement. `organizations` devient un sixième segment de chemin reconnu dans le bucket public `landing-media`. Le terme « Carrousel » couvrait déjà les diapositives du carrousel héros (aucun terme « session » n'existe dans le vocabulaire du produit) : seul le manque « Organisations » était réel. | `0146_landing_media_organizations_usage.sql`, `lib/cms/image-metadata.ts`, `i18n/cms.ts` |
+
+**Le seul endroit qui compte est la base, pas la liste TypeScript** — `CMS_MEDIA_USAGES` (application) n'est qu'un miroir de `private.is_landing_media_path()` (0068, redéfinie en 0120 pour `membres`), la fonction que la politique d'écriture `ise_landing_media_insert` (et sa jumelle éditoriale `ise_landing_media_insert_editorial`, 0132) interroge réellement pour accepter ou refuser un dépôt. Élargir uniquement la liste applicative aurait fait échouer tout dépôt sous `organizations/` — l'erreur inverse de celle documentée dans le commentaire de 0120 (une fonction redéfinie sans le privilège `EXECUTE` posé pour `authenticated`) mais la même leçon : ne jamais faire confiance à un seul des deux miroirs. La migration redéfinit donc la fonction pour accepter six préfixes (`carousel`, `partners`, `news`, `sections`, `membres`, `organizations`) et re-pose `revoke`/`grant` à chaque redéfinition (D-126), avant que le code applicatif ne propose la nouvelle valeur.
+
+**`membres` reste absent de `CMS_MEDIA_USAGES`** — ce cinquième préfixe (0120) est réservé au dépôt du portrait consenti d'un membre, un chemin d'écriture *member-self-service* distinct du circuit CMS ; l'exposer dans le sélecteur du back-office aurait laissé croire qu'un redacteur peut y déposer un visuel à la place d'un membre.
+
+**Comptage des références étendu, pas seulement le libellé** — `loadMediaAssets()` (`lib/cms/queries.ts`) ne comptait les références d'un média que sur `cms_carousel_items` et `cms_partner_campaigns` (ADDENDUM §38). Sans extension, un logo d'organisation activement affiché aurait pu être supprimé de la médiathèque sans le moindre avertissement — la même faille que celle que §38 corrigeait déjà pour le carrousel et les campagnes, simplement pas encore couverte pour ce troisième type de référence. `CmsMediaAsset.usage` gagne donc une clé `organizations`, alimentée par une requête sur `cms_landing_organizations.media_id`, et la page `/cms/mediatheque` l'inclut dans le total qui bloque la suppression (`deleteMediaAction`) ainsi que dans le détail affiché (« N logo(s) d'organisation »).
 
 ---
