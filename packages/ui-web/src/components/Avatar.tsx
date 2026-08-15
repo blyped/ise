@@ -15,10 +15,10 @@ export interface AvatarProps {
    */
   decorative?: boolean;
   /**
-   * Cadrage optionnel (position + zoom) — D-205. `undefined`/`null` :
+   * Cadrage optionnel (position + zoom) — D-206. `undefined`/`null` :
    * rendu inchange (`object-fit: cover`, centre, sans wrapper). Voir
    * `photoCropWrapperStyle` pour le detail du mecanisme et du bug qu'il
-   * corrige (D-204).
+   * corrige (D-205).
    */
   crop?: PhotoCrop | null | undefined;
 }

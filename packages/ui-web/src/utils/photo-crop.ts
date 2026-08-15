@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 /**
  * Cadrage d'une photo (position + zoom), partage par tout composant qui
  * affiche une image « recadrable » (portrait public « ISE du jour »,
- * photo de profil). Voir D-204 (docs/decisions.md) pour le diagnostic
+ * photo de profil). Voir D-205 (docs/decisions.md) pour le diagnostic
  * complet du bug corrige ici.
  *
  * DIAGNOSTIC — pourquoi l'ancienne formule (`object-position` +
@@ -53,7 +53,7 @@ export interface PhotoCrop {
   /**
    * Zoom applique a la photo, 0.5-3.0. 1.0 = comportement `object-fit:
    * cover` standard (aucun agrandissement). En dessous de 1.0, la photo
-   * est reduite a l'interieur du cadre (D-204).
+   * est reduite a l'interieur du cadre (D-205).
    */
   readonly zoom: number;
 }
@@ -64,7 +64,7 @@ export const PHOTO_CROP_DEFAULT: PhotoCrop = { focalX: 50, focalY: 50, zoom: 1 }
 export const PHOTO_CROP_FOCAL_MIN = 0;
 export const PHOTO_CROP_FOCAL_MAX = 100;
 /**
- * Borne basse du zoom — D-204. 0.5 laisse une reduction perceptible et
+ * Borne basse du zoom — D-205. 0.5 laisse une reduction perceptible et
  * utile (la photo occupe la moitie de la surface du cadre dans chaque
  * dimension) sans devenir un point illisible ; c'est le miroir de la
  * borne haute existante (3.0), choisie a l'origine (0141) pour la meme
