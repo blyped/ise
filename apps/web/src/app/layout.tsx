@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import { fr } from '@/i18n/fr';
 import { ConnectionLostBanner } from '@/components/system/ConnectionLostBanner';
 import './globals.css';
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         {/* SYS-010 — bandeau global « Connexion perdue » (role=status). */}
         <ConnectionLostBanner />
+        <Analytics />
       </body>
     </html>
   );
