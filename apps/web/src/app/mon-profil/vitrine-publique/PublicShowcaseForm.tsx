@@ -27,12 +27,13 @@ const LINK_CLASS =
   'inline-flex min-h-[44px] items-center text-body-sm font-medium text-text-secondary hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue';
 
 /**
- * Brève description publique et DEUX consentements distincts.
+ * Brève description publique et consentement « ISE du jour ».
  *
- * Le second consentement dit sans détour que l'image sera visible par
- * n'importe quel visiteur, y compris non connecté, et qu'une image publiée
- * peut être reprise par les moteurs de recherche. Aucune formulation ne
- * minimise : c'est la condition posée par la révision de D-135.
+ * D-211 — le consentement de publication de la PHOTO a quitté cet écran :
+ * il vit désormais sur « Photo de profil » (mon-profil/en-tete), avec le
+ * dépôt unique de la photo elle-même. Seul reste ici `allowPublicFeature`,
+ * qui porte sur le texte (nom, promotion, fonction, expertises, brève
+ * description) — indépendant de la photo depuis toujours (D-135).
  */
 export function PublicShowcaseForm({ showcase }: { showcase: PublicShowcase }) {
   const [state, formAction, isPending] = useActionState(
@@ -136,20 +137,6 @@ export function PublicShowcaseForm({ showcase }: { showcase: PublicShowcase }) {
             defaultChecked={showcase.allowPublicFeature}
             label={frShowcase.featureLabel}
             description={frShowcase.featureDescription}
-            onChange={() => clearField('publicSummary')}
-          />
-
-          <Checkbox
-            name="allowPublicPhoto"
-            defaultChecked={showcase.allowPublicPhoto}
-            label={frShowcase.photoLabel}
-            description={
-              <>
-                {frShowcase.photoDescription}
-                <br />
-                {frShowcase.photoRevokeNote}
-              </>
-            }
             onChange={() => clearField('publicSummary')}
           />
         </div>

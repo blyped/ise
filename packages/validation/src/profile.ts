@@ -83,13 +83,16 @@ export const PUBLIC_PHOTO_ALT_MAX = 200;
 /**
  * Vitrine publique du membre.
  *
- * Les deux consentements sont DISTINCTS et le restent :
- *   · `allowPublicFeature` — paraître comme « ISE du jour », texte seul ;
- *   · `allowPublicPhoto`   — publier un portrait sur le site public.
- * Les confondre était précisément le reproche de D-135.
+ * D-211 — le consentement de publication de la PHOTO (`allowPublicPhoto`)
+ * a quitte ce schema : il vit desormais sur l'ecran « Photo de profil »
+ * (mon-profil/en-tete), aux cotes du depot unique de la photo elle-meme
+ * (fusion D-211, docs/decisions.md). Seul reste ici `allowPublicFeature` —
+ * paraitre comme « ISE du jour » avec le texte ci-dessous — qui est un
+ * consentement independant, portant sur la brieve description et pas sur
+ * l'image.
  *
- * La brève description est exigée dès qu'un des deux consentements est
- * donné : sans elle, le profil n'est de toute façon pas éligible côté base
+ * La brève description est exigée dès que ce consentement est donné : sans
+ * elle, le profil n'est de toute façon pas éligible côté base
  * (`private.featured_profile_eligible`, migration 0120). Le dire ici évite
  * un consentement qui ne produirait jamais rien.
  */
@@ -102,9 +105,8 @@ export const publicShowcaseSchema = z
       .max(PUBLIC_SUMMARY_MAX, `La brève description ne peut pas dépasser ${PUBLIC_SUMMARY_MAX} caractères.`)
       .optional(),
     allowPublicFeature: z.boolean().default(false),
-    allowPublicPhoto: z.boolean().default(false),
   })
-  .refine((d) => !(d.allowPublicFeature || d.allowPublicPhoto) || d.publicSummary !== undefined, {
+  .refine((d) => !d.allowPublicFeature || d.publicSummary !== undefined, {
     path: ['publicSummary'],
     message:
       'Rédigez d’abord votre brève description : sans elle, votre profil ne peut pas paraître.',
