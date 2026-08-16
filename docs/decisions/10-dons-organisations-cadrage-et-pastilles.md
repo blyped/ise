@@ -1,6 +1,6 @@
 # Journal des décisions — Compétences ISE — Partie 10/10 : Dons, organisations, cadrage et pastilles
 
-Sections 44 à 62 du journal des décisions du projet Compétences ISE.
+Sections 44 à 65 du journal des décisions du projet Compétences ISE.
 Index général, préambule, convention de statut (ADOPTÉE / PROVISOIRE / OUVERTE)
 et décisions de cadrage : [`docs/decisions.md`](../decisions.md).
 
@@ -358,3 +358,21 @@ Soit **8 fusions supplémentaires**, portant le total à **29 organisations fusi
 - `AvatarForm` : `key={profile.avatarPath ?? 'none'}` — et **non** `key={avatarUrl}`. L'avatar vit dans le bucket **privé** `avatars` (D-73) : son URL est signée côté serveur (`signedAvatarUrl()`) et change de jeton à chaque rendu, même quand le fichier sous-jacent est identique. Clé sur l'URL signée aurait donc remonté le composant — et perdu tout réglage de curseur non enregistré — à chaque revalidation de la page déclenchée par n'importe quelle autre action (par exemple modifier son intitulé de poste), pas seulement au remplacement réel de l'avatar. `avatarPath` est le chemin Storage lui-même, stable, donc le signal correct.
 
 **Portée** — corrige les deux seuls écrans qui pilotent un cadrage local en `useState` initialisé depuis des props serveur (D-205, D-206) ; aucun autre composant du projet ne reproduit ce patron.
+
+---
+
+## 65. Bug — cache de la landing non purgé après les actions membre de la vitrine publique (D-210)
+
+| # | Décision | Source |
+| --- | --- | --- |
+| D-210 | **ADOPTÉE, corrective** — Signalé par le porteur, après vérification directe en base que le cadrage (D-209 déjà corrigé) s'enregistrait bien : « d'ici là.. tous ce que je fais (recadrage) ne fais pas bouger la photo ISE du jour sur l'accueil... » | `apps/web/src/app/mon-profil/vitrine-publique/actions.ts` |
+
+**Cause** — `get_landing_featured_profile()` (0120, cadrage ajouté par 0141) projette bien `focal_x`/`focal_y`/`zoom` pour le portrait consenti d'un membre (`private.landing_member_photo()`), et une lecture directe en base a confirmé que la RPC `set_my_public_photo_crop()` écrivait correctement les nouvelles valeurs (`public_photo_focal_x = 100`, `public_photo_focal_y = 0`, `public_photo_zoom = 1.30` pour le compte du porteur au moment du signalement) : la chaîne SQL → parseur TypeScript (`parseMedia()`, `lib/public/landing-data.ts`) → rendu (`LandingMediaImage`, `photoCropWrapperStyle`, D-205) est correcte de bout en bout et n'a nécessité aucune correction.
+
+Le défaut est ailleurs : `loadLandingData()` — la fonction qui assemble toutes les sections de la page d'accueil publique, dont l'« ISE du jour » — est enveloppée dans `unstable_cache()` (`next/cache`), étiquetée `LANDING_CACHE_TAG` (`'pub-001-landing'`) avec une durée de vie de 300 secondes (`LANDING_REVALIDATE_SECONDS`). Ce cache est **indépendant** du fait que la route `/` soit `force-dynamic` (D-154) : `force-dynamic` contrôle le rendu de la ROUTE à chaque requête, pas la fraîcheur des DONNÉES mises en cache par `unstable_cache` à l'intérieur de cette route. Purger ce cache exige un appel explicite à `revalidateTag(LANDING_CACHE_TAG)` — porté par la Server Action `revalidateLanding()` (`lib/public/revalidate-landing.ts`, ADDENDUM §46).
+
+Or `revalidateLanding()` n'était appelée que depuis le **CMS** (`lib/cms/revalidate.ts` → `revalidateLandingCache()`, elle-même appelée par les écrans de publication éditoriale) et par la route HTTP `/api/cms/revalidation-landing` (appelants externes). Les quatre Server Actions de la vitrine publique **membre** — `savePublicShowcaseAction`, `publishPublicPhotoAction`, `withdrawPublicPhotoAction`, `updatePublicPhotoCropAction` (`mon-profil/vitrine-publique/actions.ts`) — se contentaient d'un `revalidatePath()` sur les deux pages du membre lui-même (`refreshShowcase()`), jamais sur la landing. Un membre qui ajustait son cadrage, remplacait sa photo, la retirait ou changeait son consentement voyait donc le changement immédiatement sur **sa propre page** de réglage, mais l'encart « ISE du jour » de l'accueil public restait figé sur l'ancien état jusqu'à l'expiration naturelle des 300 secondes du cache — ou jusqu'à ce qu'une publication CMS sans rapport purge accidentellement le même tag.
+
+**Correctif** — `refreshShowcase()` devient asynchrone et appelle `revalidateLanding()` en plus des deux `revalidatePath()` déjà en place, dans un bloc `try/catch` tolérant à l'échec (même principe que `revalidateLandingCache()`, `lib/cms/revalidate.ts` : un problème de purge de cache ne doit jamais faire échouer l'enregistrement réel, déjà effectué en base à ce stade de chaque action). Les quatre points d'appel (`await refreshShowcase();`) sont mis à jour en conséquence. Aucune modification de `revalidateLanding()` elle-même, ni de son commentaire d'en-tête qui envisageait déjà des appelants « ailleurs dans l'application » sans les avoir jusqu'ici : cette action self-service membre est, du point de vue de la landing, un publieur au même titre que le CMS — son propre portrait devient un contenu public dès que le consentement est donné (D-176).
+
+**Portée** — corrige les quatre actions de `mon-profil/vitrine-publique/actions.ts` uniquement. Le formulaire d'avatar (`mon-profil/en-tete/actions.ts`, D-206) n'est pas concerné : l'avatar reste dans le bucket privé `avatars` et n'est jamais projeté sur la landing publique (D-73, D-134, D-206 le rappelle explicitement pour le cockpit). Aucun autre écran membre n'écrit de donnée consommée par `loadLandingData()` sans déjà appeler `revalidateLanding()` par ailleurs.
