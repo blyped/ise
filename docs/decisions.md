@@ -147,7 +147,7 @@ Sections 44 à 67.
 - **§52. Peuplement du référentiel des organisations et section « Ils nous font confiance »** — D-194, réserve non résolue sur le doublon `0140`/`0142`
 - **§53. Cadrage ajustable de la photo « ISE du jour »** — D-195
 - **§54. Crédit auteur dans le pied de page** — D-196
-- **Note méthodologique — dérive de migrations non committées** — D-197 (pratique établie), D-198 (OUVERTE, cause racine non corrigée)
+- **Note méthodologique — dérive de migrations non committées** — D-197 (pratique établie), D-198 (refermée par D-220, §72)
 - **§55. Ouverture des trois modules du tableau de bord membre** — D-199, critères de secteur/pays dérivés du profil pour « ISE que vous pourriez connaître »
 - **§56. Bandeau d'annonces admin en tête du tableau de bord membre** — D-200, diffusion descendante distincte du module Communication ascendant (D-183)
 - **§57. Rattachement automatique d'un compte Google à un profil ISE non réclamé** — D-201, l'e-mail Google vérifié fait office de preuve de possession, au même titre que le clic sur le lien d'activation (D-161)
@@ -165,3 +165,4 @@ Sections 44 à 67.
 - **§69. Bug — logo « Ils nous font confiance » invisible après fusion d'organisation** — D-216, `cms_landing_organizations` pointait vers une organisation déjà fusionnée (`merged_into_id`), exclue par le filtre de `get_landing_organizations()`
 - **§70. Guichet de don CinetPay en fenêtre (SDK Seamless), voie Stripe/VISA activée dans l'interface** — D-217 (libellé VISA, bouton « Initier le paiement »), D-218 (SDK `cinetpay-seamless` chargé par CDN, aucune dépendance npm ajoutée ; la vérité du paiement reste la notification serveur à serveur)
 - **§71. E-mail de remerciement au donateur** — D-219, `donation_receipt_info()` (migration 0156), envoyé une seule fois par don au franchissement réel vers `succeeded`
+- **§72. Contrôle quotidien de cohérence de la plateforme** — D-220, referme D-198 : tâche planifiée `ise-controle-coherence` (07h00) — dérive de migrations (procédure D-197 automatisée), santé des crons, doublons de surcharge (D-208), avis sécurité, déploiement ; traceur de migrations réaligné (0152 → 0156)
