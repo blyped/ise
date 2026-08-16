@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateLanding } from '@/lib/public/revalidate-landing';
 import { BUSINESS_ERRORS, toBusinessError } from '@ise/domain';
 import { publicShowcaseSchema } from '@ise/validation';
 import { failure, fieldErrorsFromZod, success, type FormState } from '@/lib/form-state';
@@ -53,9 +54,32 @@ const CROP_FOCAL_MAX = 100;
 const CROP_ZOOM_MIN = 0.5;
 const CROP_ZOOM_MAX = 3;
 
-function refreshShowcase() {
+async function refreshShowcase(): Promise<void> {
   revalidatePath(PROFILE_ROUTES.publicShowcase);
   revalidatePath(PROFILE_ROUTES.overview);
+
+  // D-210 — les quatre actions de ce fichier (description/consentements,
+  // depot du portrait, retrait, cadrage) peuvent toutes changer ce que
+  // `get_landing_featured_profile()` sert pour l'encart « ISE du jour » de
+  // la landing PUBLIQUE (`private.landing_member_photo()`, 0141). Or
+  // `loadLandingData()` est un cache serveur etiquete
+  // (`unstable_cache`, `LANDING_CACHE_TAG`, 300 s) qui n'etait purge que
+  // par les actions CMS (`lib/cms/revalidate.ts`) — jamais par ces actions
+  // MEMBRE. Un membre qui ajustait son cadrage ou remplacait sa photo la
+  // voyait donc changer immediatement sur SA PROPRE page (revalidatePath
+  // ci-dessus) mais pas sur l'accueil public, jusqu'a l'expiration
+  // naturelle du cache (jusqu'a 5 minutes) ou une prochaine publication
+  // CMS sans rapport. Purge tolerante a l'echec (meme principe que
+  // `revalidateLandingCache`, `lib/cms/revalidate.ts`) : un probleme de
+  // purge de cache ne doit jamais faire echouer l'enregistrement reel,
+  // deja effectue en base a ce stade de la fonction.
+  try {
+    await revalidateLanding();
+  } catch (error) {
+    console.error('[ISE] invalidation du cache de la landing en echec (vitrine publique)', {
+      cause: error instanceof Error ? error.name : 'inconnue',
+    });
+  }
 }
 
 /**
@@ -136,7 +160,7 @@ export async function savePublicShowcaseAction(
     return failure(business.userMessage, context.correlationId);
   }
 
-  refreshShowcase();
+  await refreshShowcase();
   return success(frShowcase.saved);
 }
 
@@ -219,7 +243,7 @@ export async function publishPublicPhotoAction(
     return failure(business.userMessage, correlationId);
   }
 
-  refreshShowcase();
+  await refreshShowcase();
   return success(frShowcase.photoPublished);
 }
 
@@ -246,7 +270,7 @@ export async function withdrawPublicPhotoAction(
     return failure(business.userMessage, context.correlationId);
   }
 
-  refreshShowcase();
+  await refreshShowcase();
   return success(frShowcase.photoRemoved);
 }
 
@@ -302,6 +326,6 @@ export async function updatePublicPhotoCropAction(
     return failure(business.userMessage, correlationId);
   }
 
-  refreshShowcase();
+  await refreshShowcase();
   return success(frShowcase.photoCropSaved);
 }
