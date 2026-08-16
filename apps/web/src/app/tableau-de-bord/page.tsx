@@ -3,10 +3,12 @@ import { redirect } from 'next/navigation';
 import { Alert, Badge, Card, CardHeader, CardTitle, EmptyState, ErrorState } from '@ise/ui-web';
 import type { ClaimStatus, VerificationStatus } from '@ise/db-types';
 import { fr, t } from '@/i18n/fr';
+import { frSignal } from '@/i18n/signal';
 import { ROUTES } from '@/lib/routes';
 import { ONBOARDING_ROOT, PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { CALL_ROUTES } from '@/lib/routes/calls';
 import { OPPORTUNITY_ROUTES } from '@/lib/routes/opportunities';
+import { SIGNAL_ROUTES } from '@/lib/routes/signal';
 import { SEARCH_ROUTES, searchResultsRoute } from '@/lib/routes/search';
 import { newCorrelationId } from '@/lib/correlation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -359,6 +361,15 @@ export default async function DashboardPage({
               : fr.dashboard.greetingFallback}
           </h1>
           <p className="text-body text-text-secondary">{fr.dashboard.subtitle}</p>
+          {/* D-222 — acces direct au guichet unique « Signaler ». */}
+          <p>
+            <Link
+              href={SIGNAL_ROUTES.home}
+              className="rounded-base bg-primary text-body-sm hover:bg-primary-hover focus-visible:outline-active-blue inline-flex h-[44px] items-center justify-center px-6 font-semibold text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2"
+            >
+              {frSignal.title}
+            </Link>
+          </p>
         </header>
 
         <AnnouncementsBanner announcements={announcements} />

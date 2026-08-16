@@ -2,6 +2,7 @@ import Link from 'next/link';
 import {
   Bell,
   Briefcase,
+  Send,
   CalendarDays,
   CircleHelp,
   Gift,
@@ -20,6 +21,7 @@ import { frDonations } from '@/i18n/donations';
 import { ROUTES } from '@/lib/routes';
 import { AVAILABILITY_ROUTES, PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { NETWORK_ROUTES } from '@/lib/routes/network';
+import { SIGNAL_ROUTES } from '@/lib/routes/signal';
 import { CALL_ROUTES } from '@/lib/routes/calls';
 import { OPPORTUNITY_ROUTES } from '@/lib/routes/opportunities';
 import { PROMOTION_ROUTES } from '@/lib/routes/promotions';
@@ -54,6 +56,9 @@ interface NavItem {
 function buildItems(donationsAvailable: boolean): readonly NavItem[] {
   return [
     { key: 'home', label: fr.nav.home, icon: Home, href: ROUTES.dashboard },
+    // D-222 — guichet unique « Signaler » : le point d'entree en langage
+    // naturel vers tous les signaux (opportunites, appels, evenements...).
+    { key: 'signal', label: fr.nav.signal, icon: Send, href: SIGNAL_ROUTES.home },
     // ISE-040 -> ISE-046 livres : la section « Réseau » a desormais une
     // destination reelle, « Mes relations ».
     { key: 'network', label: fr.nav.network, icon: Waypoints, href: NETWORK_ROUTES.connections },
