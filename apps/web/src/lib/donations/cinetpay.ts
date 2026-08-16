@@ -175,6 +175,15 @@ export interface CinetpayPaymentInput {
 export interface CinetpayPaymentSession {
   /** URL du guichet HEBERGE. Renseignee uniquement si la v2 demande la redirection. */
   readonly url: string;
+  /**
+   * D-218 (16/08/2026) — jeton opaque du meme guichet, consomme par le SDK
+   * `cinetpay-seamless` (`CinetPaySeamless.open({ paymentToken, paymentUrl })`)
+   * pour ouvrir le paiement dans une popup SANS quitter le site, plutot
+   * qu'une redirection pleine page vers `url`. Les deux champs decrivent
+   * la MEME transaction ; `paymentUrl` reste transmis en priorite au SDK
+   * (recommandation officielle), ce jeton n'est qu'un identifiant.
+   */
+  readonly paymentToken: string | null;
   /** Jeton a usage unique renvoye dans la notification. A CONSERVER. */
   readonly notifyToken: string | null;
   /** Identifiant CinetPay de la transaction (leur cote), a titre de trace. */
@@ -274,6 +283,7 @@ export async function createCinetpayPayment(
     ok: true,
     session: {
       url,
+      paymentToken: asText(record['payment_token']),
       notifyToken: asText(record['notify_token']),
       transactionId: asText(record['transaction_id']),
       merchantTransactionId,
