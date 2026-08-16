@@ -14,7 +14,7 @@ pas de followers, pas de likes, pas de score social, pas de classement de person
 ## État du projet
 
 | Phase                           | Périmètre                                                                      | Statut         |
-| ------------------------------- | ------------------------------------------------------------------------------ | -------------- |
+| -------------------------------- | -------------------------------------------------------------------------------- | -------------- |
 | 0 — Audit                       | 199 maquettes inventoriées, matrice de traçabilité, ~140 arbitrages tranchés   | ✅ Terminée    |
 | 0 — Données                     | 68 migrations · 201 tables `public`, 24 `private`, 4 `analytics` · RLS partout | ✅ Terminée    |
 | 1 — Fondations                  | Monorepo, design system, moteur de matching, auth réelle, écrans système, CI   | ✅ Terminée    |
@@ -50,7 +50,7 @@ pnpm dev                              # http://localhost:3000
 ### Commandes
 
 | Commande            | Effet                                  |
-| ------------------- | -------------------------------------- |
+| -------------------- | --------------------------------------- |
 | `pnpm dev`          | Serveur de développement               |
 | `pnpm build`        | Build de production                    |
 | `pnpm typecheck`    | TypeScript strict sur tout le monorepo |
@@ -95,11 +95,11 @@ React DOM et React Native restent séparés.
 PostgreSQL sur Supabase, en quatre schémas :
 
 | Schéma      | Contenu                                                        | Exposé au client                       |
-| ----------- | -------------------------------------------------------------- | -------------------------------------- |
+| ----------- | ---------------------------------------------------------------- | ----------------------------------------- |
 | `public`    | Données métier                                                 | Oui, **RLS active sur les 201 tables** |
 | `private`   | RBAC, coordonnées, imports bruts, notes administratives, audit | Non                                    |
 | `analytics` | Agrégats et vues matérialisées                                 | Non                                    |
-| `auth`      | Géré par Supabase                                              | —                                      |
+| `auth`      | Géré par Supabase                                              | —                                       |
 
 RLS est **fermée par défaut** : une table sans politique est totalement inaccessible. Trois tables
 le restent volontairement (`domain_events`, `notification_deliveries`, `profile_search_documents`),
@@ -153,7 +153,7 @@ Ces règles ont dicté le schéma et le code ; les enfreindre casse le produit.
 ## Documentation
 
 | Document                                                                   | Contenu                                               |
-| -------------------------------------------------------------------------- | ----------------------------------------------------- |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------- |
 | [`docs/decisions.md`](docs/decisions.md)                                   | Tous les arbitrages rendus, avec leur justification   |
 | [`docs/implementation-status.md`](docs/implementation-status.md)           | Avancement module par module, et ce qui manque        |
 | [`docs/db-conventions.md`](docs/db-conventions.md)                         | Conventions normatives de la base                     |
@@ -176,3 +176,5 @@ Trois workflows CI : qualité (formatage, typage, tests, build), recherche de se
 intégrité des migrations, plus un contrôle quotidien de la ligne de base de sécurité de la base.
 
 Pour signaler une vulnérabilité, ouvrez une issue privée plutôt qu'une issue publique.
+
+<!-- nudge de déploiement 2026-08-16 : force un nouveau push GitHub après une pause du webhook Vercel -->
