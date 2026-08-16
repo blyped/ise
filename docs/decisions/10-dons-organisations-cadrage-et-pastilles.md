@@ -409,7 +409,7 @@ Or `revalidateLanding()` n'était appelée que depuis le **CMS** (`lib/cms/reval
 
 | # | Décision | Source |
 | --- | --- | --- |
-| D-212 | **ADOPTÉE, corrective** — Signalé par le porteur, captures d'écran à l'appui et images originelles jointes à titre de comparaison : « regarde comment tes cadrans (médaillon et rectangle) coupe mes photos avant même que je recadre. je t'ai mis à côté les images originel que j'ai uploadu00e9. intègre les tailles originelles des images sans les couper pour que je puisse aisément les recadrer. » | `packages/ui-web/src/utils/photo-crop.ts`, `apps/web/src/app/mon-profil/en-tete/*`, `apps/web/src/app/(public)/_components/LandingMediaImage.tsx`, migration `0152` |
+| D-212 | **ADOPTÉE, corrective** — Signalé par le porteur, captures d'écran à l'appui et images originelles jointes à titre de comparaison : « regarde comment tes cadrans (médaillon et rectangle) coupe mes photos avant même que je recadre. je t'ai mis à côté les images originel que j'ai uploadé. intègre les tailles originelles des images sans les couper pour que je puisse aisément les recadrer. » | `packages/ui-web/src/utils/photo-crop.ts`, `apps/web/src/app/mon-profil/en-tete/*`, `apps/web/src/app/(public)/_components/LandingMediaImage.tsx`, migration `0152` |
 
 **Cause** — `photoCropWrapperStyle()` (introduite par D-205/0147 pour corriger un bug de panoramique différent, voir §60) dimensionnait le wrapper interne à `zoom * 100 %` appliqué **identiquement** à la largeur et à la hauteur du CADRE — c'est-à-dire que le wrapper adoptait toujours le rapport largeur/hauteur du CADRE (1:1 pour le médaillon, 16:9 pour le rectangle « ISE du jour »), jamais celui de la PHOTO réellement déposée. Comme l'image à l'intérieur de ce wrapper garde `object-fit: cover`, elle remplit intégralement cette forme en CADRE en découpant tout ce qui déborde — y compris au zoom neutre (1.0) et au centrage par défaut (50/50), c'est-à-dire **avant tout réglage manuel du membre**. Le porteur a fourni les dimensions originelles exactes d'une de ses photos (2335×2600, affichée à 1796×2000 dans son outil de référence) pour démontrer que la version affichée dans les cadrans était déjà rognée par rapport au fichier source.
 
@@ -422,3 +422,66 @@ Or `revalidateLanding()` n'était appelée que depuis le **CMS** (`lib/cms/reval
 **Portée volontairement limitée** — le médaillon final du cockpit et de l'en-tête public (`Avatar.tsx`, consommé par `Topbar`/`AccountMenu` via `loadViewerAvatar()` et `readPublicViewer()`/`readAvatar()`) n'a **pas** été mis à jour dans ce correctif : il continue d'afficher l'ancien comportement (wrapper dimensionné au cadre). Choix délibéré, pas un oubli — cette surface est un avatar de 24 à 120px dans un menu, la marge de letterboxing y serait à peine perceptible, et la propager exigerait de threader `avatarWidth`/`avatarHeight` à travers huit fichiers supplémentaires (`viewer.ts`, `protected-route.server.ts`, `AppShell.tsx`, `PublicHeader.tsx`, `PublicShell.tsx`, `PublicViewerProvider.tsx`, `Topbar.tsx`, `AccountMenu.tsx`) pour un bénéfice visuel marginal, alors que le bug signalé par le porteur concernait spécifiquement les cadrans de réglage de `/mon-profil/en-tete`. La migration `0152` rend cette extension possible sans nouvelle migration si elle est demandée plus tard : les dimensions sont déjà en base dès qu'un membre redépose son avatar.
 
 **Portée** — `photoCropWrapperStyle()` reste rétrocompatible à 100 % (`shape` optionnel) : aucun appelant existant qui ne fournit pas ce paramètre n'est affecté. Aucune RLS ni grant nouveaux au-delà de `avatar_width`/`avatar_height` (même politique que les colonnes homologues). Aucun octet d'image déplacé ou retouché : purement un correctif d'affichage, comme D-205 et D-211 avant lui.
+
+---
+
+## 68. Taille max de photo relevée à 5 Mo, bug d'affichage de l'avatar corrigé, cadrage optimisé (D-213, D-214, D-215)
+
+| # | Décision | Source |
+| --- | --- | --- |
+| D-213 | **ADOPTÉE** — Demande du porteur : « met la taille max à 5mo. » | `supabase/migrations/0153_avatar_bucket_5mb.sql`, `en-tete/actions.ts`, `packages/config/src/limits.ts`, `apps/mobile/src/lib/avatar.ts` |
+| D-214 | **ADOPTÉE, corrective** — Signalé par le porteur, capture à l'appui : « la photo de profil n'arrive pas sur cette page. » (`/mon-profil`, initiales affichées au lieu de la photo) | `apps/web/src/app/mon-profil/page.tsx` |
+| D-215 | **ADOPTÉE** — Demande détaillée du porteur en 5 points sur l'outil de cadrage : centrage par défaut, calibrage de la barre de zoom, zoom minimum montrant l'image entière, zoom maximum à 100 % du cadre, bornes de position couvrant les bords réels de l'image | `packages/ui-web/src/utils/photo-crop.ts`, `en-tete/PhotoForm.tsx`, `en-tete/actions.ts`, migration `0154` |
+
+**D-213 — 2 Mo → 5 Mo.** `AVATAR_MAX_BYTES` relevé de `2 * 1024 * 1024` à `5 * 1024 * 1024` dans les trois couches qui le contrôlaient (Server Action web, `packages/config/src/limits.ts`, garde-fou mobile), et surtout `file_size_limit` du bucket Storage `avatars` lui-même (`storage.buckets`), qui restait la limite RÉELLEMENT appliquée par Supabase indépendamment de tout contrôle applicatif. **Incident auto-corrigé dans la foulée** : la migration `0153` avait d'abord été poussée sur GitHub sans être appliquée à la base de production — un porteur a immédiatement rencontré une erreur de dépôt (référence `ISE-F6AB0EBABDCA`) parce que le bucket exécutait toujours 2 Mo pendant que l'application en annonçait 5. Diagnostiqué et corrigé en appliquant directement la migration à la base live.
+
+**D-214 — cause.** `<Avatar>` sur `/mon-profil` (page de synthèse) était appelé sans les props `src`/`crop`, contrairement au même composant dans la Topbar : il retombait donc systématiquement sur les initiales. Correctif : `loadViewerAvatar()` (déjà utilisée par la Topbar, D-206) ajoutée au `Promise.all()` de la page et threadée dans l'appel à `<Avatar>`.
+
+**D-215 — analyse et correctif.** Sur les 5 points demandés, 4 étaient déjà satisfaits par le mécanisme `shape`-aware de D-212 (centrage, calibrage de barre, bornes de position par axe) : seul le point 3 (bornes du zoom) exigeait un changement réel. Le zoom minimum passe de 0,5 à 1,0 (photo entière toujours visible, le retrécissement sous le cadre n'ayant plus d'objet une fois D-212 en place) ; le zoom maximum n'est plus une constante fixe (3,0) mais calculé **par photo et par cadre** via la nouvelle fonction `photoCropZoomMax(shape)` : `ratio = imageAspect / frameAspect`, puis `max(ratio, 1/ratio)` — le zoom exact auquel le cadre est rempli sans marge, borné par sécurité à 8,0. Le médaillon (1:1) et le rectangle (16:9) obtiennent donc des maximums différents pour une même photo. Les contraintes `CHECK` de `avatar_zoom`/`public_photo_zoom` et la vérification inline de `set_my_public_photo_crop()` sont réalignées sur `[1.0, 8.0]` par la migration `0154`, appliquée avant le déploiement du code (leçon tirée de l'incident D-213 ci-dessus : cette fois la base a été vérifiée et alignée en premier).
+
+**Portée** — aucune régression pour les cadrages déjà enregistrés hors de la nouvelle plage : le formulaire clampe la valeur affichée à l'ouverture.
+
+---
+
+## 69. Bug — logo « Ils nous font confiance » invisible après fusion d'organisation (D-216)
+
+| # | Décision | Source |
+| --- | --- | --- |
+| D-216 | **ADOPTÉE, corrective** — Signalé par le porteur : « la section "ou travaille les ISE" à disparu, alors que le logo Banque mondiale est toujours uploadé. » | `supabase/migrations/0155_fix_orphaned_landing_organization_logo.sql` |
+
+**Cause** — `cms_landing_organizations` ne comptait qu'une ligne, publiée, avec un logo valide, mais pointant vers « La Banque mondiale » — une organisation déjà FUSIONNÉE dans « Banque mondiale » par `0143` (D-194) : sa colonne `merged_into_id` était renseignée. `get_landing_organizations()` (0133) filtre explicitement `merged_into_id is null` (bonne pratique : une organisation fusionnée ne doit jamais réapparaître) ; la ligne ne franchissait donc plus ce filtre et la section, vide, ne se rendait pas du tout (règle « section vide = pas de section », D-138) — alors que le logo restait visible dans la médiathèque CMS, d'où la confusion du porteur. La ligne avait été écrite (ou son média mis à jour) le 15/08/2026, sur l'organisation fusionnée plutôt que sur la canonique, très probablement via une recherche d'organisation qui ne filtre pas les entrées déjà fusionnées de son propre référentiel.
+
+**Correctif** — repointage de la ligne existante vers l'organisation canonique (même mécanique de cascade que `0143`/`0149`). Le garde-fou déjà en place dans `set_landing_organization()` (0149, D-207) empêche qu'une organisation fusionnée soit sélectionnée de nouveau depuis l'écran CMS.
+
+---
+
+## 70. Guichet de don CinetPay en fenêtre (SDK Seamless), voie Stripe/VISA activée dans l'interface (D-217, D-218)
+
+| # | Décision | Source |
+| --- | --- | --- |
+| D-217 | **ADOPTÉE** — Demandes du porteur : « ajouter l'option VISA... activer le bouton "continuer vers le paiement"... mettre plutôt "Initier le paiement" » | `i18n/donations.ts` |
+| D-218 | **ADOPTÉE** — « je préfère que tu utilise le SDK de cinetpay pour l'intégration du paiement mobile money : cinetpay-seamless » | `don/actions.ts`, `don/DonationForm.tsx`, `lib/donations/cinetpay.ts`, `lib/donations/shared.ts`, `api/dons/statut/route.ts` |
+
+**Constat de départ** — le module de dons (D-189/D-190, révisé D-135/D-163) proposait déjà, côté code, DEUX voies (CinetPay en XOF, Stripe en EUR) avec bornes et montants proposés tirés de `donation_currency_rules` — « aucune conversion, une devise = un prestataire ». La voie Stripe n'apparaissait simplement pas à l'écran chez le porteur parce que `donationAvailability()` (`lib/donations/config.ts`) la masque tant que `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` ne sont pas configurées en environnement — comportement voulu (« un prestataire à moitié posé ferait échouer le paiement en plein parcours »), pas un bug. **Aucune Stripe key n'a été demandée ni saisie dans cette session** : le porteur a dit vouloir préparer le terrain et fournir les identifiants plus tard. Le libellé de la voie Stripe est reformulé pour nommer VISA explicitement (« VISA et carte bancaire internationale ») ; l'activation réelle de cette voie attend simplement que `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` soient posées sur l'environnement de production — aucun code supplémentaire n'est nécessaire à ce moment-là.
+
+**D-218 — CinetPay Seamless.** Jusqu'ici, valider le formulaire de don CinetPay faisait quitter Compétences ISE en pleine page vers le guichet hébergé de CinetPay (`redirect(gatewayUrl)`). Le SDK officiel `cinetpay-seamless` (confirmé, via la documentation CinetPay elle-même, comme l'outil recommandé pour la plateforme Xcollect déjà en service chez le porteur — même API OAuth `/v1/oauth/login` + `/v1/payment` que l'intégration existante, 0135) ouvre ce même guichet dans une fenêtre : le donateur ne quitte plus le site.
+
+**Pas de dépendance npm** — le SDK est chargé depuis son CDN (`unpkg.com/cinetpay-seamless`), injecté par un `<script>` côté client, plutôt qu'installé via `pnpm add`. Choix délibéré : `lib/donations/stripe.ts` documentait déjà, avant cette session, que ce bac à sable ne peut pas régénérer `pnpm-lock.yaml` de façon fiable et qu'un verrou incohérent casse le build Vercel (déjà arrivé, tâches #79/#118/#172) — le même risque aurait existé pour `cinetpay-seamless`.
+
+**Architecture** — `startDonationAction()` ne redirige plus pour la voie CinetPay : elle renvoie désormais un état `checkout` (jeton + URL du guichet, capturés depuis la réponse `POST /v1/payment` déjà appelée). `DonationForm.tsx` charge le SDK, ouvre la popup, et route le donateur vers `/don/retour` sur `payment.success`/`payment.failed`/`close` — jamais sur `payment.pending`, pour ne pas interrompre une confirmation mobile money en cours. **La vérité du paiement ne change pas de source** : ni le SDK, ni ses callbacks ne décident jamais d'un statut ; seule la notification serveur à serveur de CinetPay (`api/dons/cinetpay/route.ts`, inchangée) fait avancer un don en base. Une nouvelle route `api/dons/statut` fournit au SDK un `statusUrl` de secours (poll toutes les 4 s) : elle relit l'état déjà constaté en base (jamais CinetPay une seconde fois), sous la session du donateur, via `get_my_donation()` — même garantie d'appartenance que la page `/don/retour`. Un lien de secours (« Ouvrir la fenêtre de paiement ») reste toujours affiché : une popup bloquée par le navigateur ne bloque jamais le don.
+
+**Portée** — Stripe conserve son comportement d'origine (redirection pleine page vers Stripe Checkout, page hébergée). `mark_donation_redirected()` est désormais appelée dès l'ouverture du jeton CinetPay plutôt qu'après un `redirect()` qui n'a plus lieu.
+
+---
+
+## 71. E-mail de remerciement au donateur (D-219)
+
+| # | Décision | Source |
+| --- | --- | --- |
+| D-219 | **ADOPTÉE** — Le porteur : « j'espère qu'il y a un paiement de remerciement pour le don » | `lib/donations/settle.ts`, migration `0156` |
+
+**Constat** — la page `/don/retour` remerciait déjà à l'écran (« Merci. Votre don est confirmé. ») dès que le don passait à `succeeded`, mais aucun e-mail n'était envoyé : `settle_donation_notification()` (0134) écrivait le statut et journalisait, sans notifier le donateur par un autre canal.
+
+**Correctif** — `donation_receipt_info(p_donation_id)` (migration `0156`) lit les coordonnées du donateur (e-mail, nom d'affichage) et le montant confirmé ; réservée à `service_role`, exactement comme `settle_donation_notification()` elle-même (0134) — ni un navigateur donateur, ni un administrateur connecté ne peut l'appeler directement. `settleDonationNotification()` déclenche l'envoi via `sendEmail()` (Resend, D-24) **uniquement** quand le résultat de la RPC est `updated` avec un statut `succeeded` — jamais sur une relivraison (`duplicate`), jamais sur `already_succeeded` : l'idempotence déjà garantie par `private.donation_notifications` (0134) suffit à garantir un envoi unique par don, sans mécanisme de déduplication supplémentaire côté e-mail. Aucune promesse fiscale, aucun reçu déductible — même prudence que le reste du module (D-189).
+
+**Portée** — un e-mail introuvable ou un envoi en échec n'annulent rien : le don reste `succeeded`, l'absence de courrier est journalisée sans nouvelle tentative. « Mes dons » reste la source de vérité, quoi qu'il arrive côté boîte mail.
