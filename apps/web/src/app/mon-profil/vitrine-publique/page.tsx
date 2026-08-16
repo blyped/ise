@@ -114,6 +114,13 @@ export default async function PublicShowcasePage() {
           <>
             <PublicShowcaseForm showcase={showcase.data} />
             <PublicPhotoForm
+              // D-209 — remonte le composant a chaque remplacement de photo
+              // (photoUrl change) pour que useState(focalX/focalY/zoom) se
+              // reinitialise sur les valeurs fraiches du serveur (50/50/1
+              // apres le declencheur de reinitialisation du cadrage) plutot
+              // que de garder l'ancien reglage local, cense cadrer l'ANCIENNE
+              // photo, applique par erreur a la nouvelle avant tout geste.
+              key={photoUrl ?? 'none'}
               showcase={showcase.data}
               photoUrl={photoUrl}
               photoFocalX={showcase.data.photoFocalX}

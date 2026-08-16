@@ -94,6 +94,17 @@ export default async function EditProfileHeaderPage() {
         </header>
 
         <AvatarForm
+          // D-209 — meme correctif que PublicPhotoForm : remonte le composant
+          // quand le portrait change pour reinitialiser useState(focalX/
+          // focalY/zoom) sur les valeurs fraiches du serveur au lieu de
+          // conserver le cadrage local de l'ANCIEN avatar applique par
+          // erreur au nouveau. Cle sur profile.avatarPath (chemin Storage
+          // stable) et non sur avatarUrl : ce dernier est une URL SIGNEE
+          // qui change a chaque rendu meme si le fichier n'a pas bouge — la
+          // cle aurait sinon force un remontage (et perdu tout reglage non
+          // enregistre) a chaque revalidation de la page, pas seulement au
+          // remplacement reel de la photo.
+          key={profile.avatarPath ?? 'none'}
           avatarUrl={avatarUrl}
           initials={initials}
           focalX={profile.avatarFocalX}
