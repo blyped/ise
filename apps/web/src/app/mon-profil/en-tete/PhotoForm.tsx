@@ -14,9 +14,9 @@ import {
   PHOTO_CROP_FOCAL_MAX,
   PHOTO_CROP_FOCAL_MIN,
   PHOTO_CROP_FRAME_STYLE,
-  PHOTO_CROP_ZOOM_MAX,
   PHOTO_CROP_ZOOM_MIN,
   photoCropWrapperStyle,
+  photoCropZoomMax,
 } from '@ise/ui-web';
 import { frProfile } from '@/i18n/profile';
 import { initialFormState } from '@/lib/form-state';
@@ -114,17 +114,49 @@ export function PhotoForm({
     initialFormState,
   );
 
+  // 0152/D-212 — forme réelle des deux photos, pour que le wrapper de
+  // cadrage montre l'image ENTIÈRE au zoom neutre au lieu de la découper
+  // au rapport du cadre (voir le diagnostic dans photo-crop.ts). `null`
+  // tant que la dimension n'est pas connue : l'aperçu retombe alors sans
+  // régression sur l'ancien comportement (dimensionné au cadre). Calculée
+  // AVANT les `useState` de zoom ci-dessous : D-215 en a besoin pour
+  // borner (et clamper) le zoom initial par photo et par cadre.
+  const avatarShape =
+    avatarWidth !== null && avatarHeight !== null && avatarHeight > 0
+      ? { imageAspect: avatarWidth / avatarHeight, frameAspect: 1 }
+      : null;
+  const photoShape =
+    photoWidth !== null && photoHeight !== null && photoHeight > 0
+      ? { imageAspect: photoWidth / photoHeight, frameAspect: 16 / 9 }
+      : null;
+
+  // D-215 — zoom maximum PAR PHOTO ET PAR CADRE (celui auquel le cadre est
+  // rempli à 100 % sans marge, voir `photoCropZoomMax`) : le médaillon
+  // (1:1) et le rectangle « ISE du jour » (16:9) n'ont pas la même valeur
+  // pour la MÊME photo, puisque le rapport largeur/hauteur relatif à
+  // chaque cadre diffère.
+  const avatarZoomMax = photoCropZoomMax(avatarShape);
+  const photoZoomMax = photoCropZoomMax(photoShape);
+
   // Case de publication : pilote l'affichage du champ de description ET du
   // second bloc de cadrage, avant même tout enregistrement.
   const [allowPublicPhoto, setAllowPublicPhoto] = useState(initialAllowPublicPhoto);
 
   const [avatarFocalX, setAvatarFocalX] = useState(initialAvatarFocalX);
   const [avatarFocalY, setAvatarFocalY] = useState(initialAvatarFocalY);
-  const [avatarZoom, setAvatarZoom] = useState(initialAvatarZoom);
+  // Bornée à [PHOTO_CROP_ZOOM_MIN, avatarZoomMax] dès l'état initial : un
+  // cadrage enregistré avant D-215 (ancienne plage 0.5-3.0) peut porter une
+  // valeur désormais hors bornes (ex. sous 1.0) — le curseur doit s'ouvrir
+  // sur une valeur qu'il peut réellement représenter.
+  const [avatarZoom, setAvatarZoom] = useState(() =>
+    Math.min(Math.max(initialAvatarZoom, PHOTO_CROP_ZOOM_MIN), avatarZoomMax),
+  );
 
   const [photoFocalX, setPhotoFocalX] = useState(initialPhotoFocalX);
   const [photoFocalY, setPhotoFocalY] = useState(initialPhotoFocalY);
-  const [photoZoom, setPhotoZoom] = useState(initialPhotoZoom);
+  const [photoZoom, setPhotoZoom] = useState(() =>
+    Math.min(Math.max(initialPhotoZoom, PHOTO_CROP_ZOOM_MIN), photoZoomMax),
+  );
 
   const uploadFailed =
     uploadState.status === 'error' &&
@@ -134,31 +166,20 @@ export function PhotoForm({
   const cropFailed = cropState.status === 'error' && cropState.correlationId !== null;
 
   function resetCrop() {
+    // D-215 — réinitialiser au minimum (`PHOTO_CROP_ZOOM_MIN`, 1.0) rétablit
+    // exactement l'état « photo entière visible » : ce n'est plus un cran
+    // arbitraire, c'est la borne basse elle-même.
     setAvatarFocalX(50);
     setAvatarFocalY(50);
-    setAvatarZoom(1);
+    setAvatarZoom(PHOTO_CROP_ZOOM_MIN);
     setPhotoFocalX(50);
     setPhotoFocalY(50);
-    setPhotoZoom(1);
+    setPhotoZoom(PHOTO_CROP_ZOOM_MIN);
   }
 
   // Le bloc « accueil » n'a de sens que si une copie publique existe déjà
   // (case cochée ET dépôt déjà effectué) — sinon il n'y a rien à cadrer.
   const homeBlockActive = allowPublicPhoto && publicPhotoUrl !== null;
-
-  // 0152/D-212 — forme réelle des deux photos, pour que le wrapper de
-  // cadrage montre l'image ENTIÈRE au zoom neutre au lieu de la découper
-  // au rapport du cadre (voir le diagnostic dans photo-crop.ts). `null`
-  // tant que la dimension n'est pas connue : l'aperçu retombe alors sans
-  // régression sur l'ancien comportement (dimensionné au cadre).
-  const avatarShape =
-    avatarWidth !== null && avatarHeight !== null && avatarHeight > 0
-      ? { imageAspect: avatarWidth / avatarHeight, frameAspect: 1 }
-      : null;
-  const photoShape =
-    photoWidth !== null && photoHeight !== null && photoHeight > 0
-      ? { imageAspect: photoWidth / photoHeight, frameAspect: 16 / 9 }
-      : null;
 
   return (
     <Card>
@@ -289,8 +310,8 @@ export function PhotoForm({
                 <input
                   type="range"
                   min={PHOTO_CROP_ZOOM_MIN}
-                  max={PHOTO_CROP_ZOOM_MAX}
-                  step={0.1}
+                  max={avatarZoomMax}
+                  step={0.02}
                   value={avatarZoom}
                   onChange={(event) => setAvatarZoom(Number(event.target.value))}
                   aria-label={frProfile.header.photoCropZoomLabel}
@@ -360,8 +381,8 @@ export function PhotoForm({
                     <input
                       type="range"
                       min={PHOTO_CROP_ZOOM_MIN}
-                      max={PHOTO_CROP_ZOOM_MAX}
-                      step={0.1}
+                      max={photoZoomMax}
+                      step={0.02}
                       value={photoZoom}
                       onChange={(event) => setPhotoZoom(Number(event.target.value))}
                       aria-label={frProfile.header.photoCropZoomLabel}

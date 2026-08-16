@@ -89,27 +89,59 @@ export interface PhotoCrop {
   /** Position verticale du point focal, 0-100 (pourcentage du cadre). */
   readonly focalY: number;
   /**
-   * Zoom applique a la photo, 0.5-3.0. 1.0 = comportement `object-fit:
-   * cover` standard (aucun agrandissement). En dessous de 1.0, la photo
-   * est reduite a l'interieur du cadre (D-205).
+   * Zoom applique a la photo — bornes D-215, voir plus bas
+   * (`PHOTO_CROP_ZOOM_MIN`, `photoCropZoomMax`). 1.0 = photo entiere
+   * visible dans le cadre (letterboxee si le rapport largeur/hauteur ne
+   * correspond pas exactement a celui du cadre).
    */
   readonly zoom: number;
 }
 
-/** Cadrage neutre : centre, sans zoom — identique au rendu d'avant 0141. */
+/** Cadrage neutre : centre, photo entiere visible — identique au rendu d'avant 0141. */
 export const PHOTO_CROP_DEFAULT: PhotoCrop = { focalX: 50, focalY: 50, zoom: 1 };
 
 export const PHOTO_CROP_FOCAL_MIN = 0;
 export const PHOTO_CROP_FOCAL_MAX = 100;
+
 /**
- * Borne basse du zoom — D-205. 0.5 laisse une reduction perceptible et
- * utile (la photo occupe la moitie de la surface du cadre dans chaque
- * dimension) sans devenir un point illisible ; c'est le miroir de la
- * borne haute existante (3.0), choisie a l'origine (0141) pour la meme
- * raison de lisibilite.
+ * BORNES DU ZOOM — revisees par D-215 (16/08/2026), a la demande du
+ * porteur : « le zoom minimum integre tout l'image dans le medaillon et
+ * le rectangle et le zoom maximum agrandit a 100 % ». Deux consequences :
+ *
+ *   1. Le zoom ne descend plus sous 1.0 : le zoom MINIMUM correspond
+ *      TOUJOURS a la photo entiere visible (letterboxee si necessaire),
+ *      quelle que soit l'image — c'est exactement l'etat garanti par le
+ *      wrapper `shape`-aware de D-212 au zoom neutre. L'ancienne borne
+ *      basse (0.5, D-205) permettait de RETRECIR encore la photo dans le
+ *      cadre ; ce cran est retire, il n'ajoutait qu'une marge decorative
+ *      supplementaire une fois le letterboxing de D-212 en place, et
+ *      contredisait la demande explicite d'un minimum qui montre
+ *      « tout » (ni plus, ni moins) de l'image.
+ *
+ *   2. Le zoom MAXIMUM n'est plus une constante globale (3.0) : il est
+ *      calcule PAR PHOTO et PAR CADRE, via `photoCropZoomMax()` plus bas
+ *      — c'est le zoom exact auquel le wrapper `shape`-aware couvre
+ *      integralement le cadre, SANS marge de letterboxing (equivalent a
+ *      l'ancien `object-fit: cover` par defaut, avant D-205), ni au-dela.
+ *      Une image dont le rapport largeur/hauteur est deja identique a
+ *      celui du cadre (ex. portrait deja carre dans un medaillon) a donc
+ *      un zoom maximum de 1.0 : rien a agrandir, la photo couvre deja le
+ *      cadre des le minimum.
+ *
+ * CONSEQUENCE GEOMETRIQUE ATTENDUE — a l'interieur de cette plage
+ * [1, zoomMax], SEUL l'axe dont le rapport de la photo deborde celui du
+ * cadre passe par un etat de decoupage reel ; l'autre reste, par
+ * construction, toujours integralement visible (il atteint tout juste
+ * 100 % au zoom maximum, jamais plus). C'est le comportement standard de
+ * tout outil de recadrage grand public (Instagram, Canva…) : le
+ * panoramique sur un axe n'a de sens que si cet axe deborde reellement
+ * du cadre au zoom courant.
  */
-export const PHOTO_CROP_ZOOM_MIN = 0.5;
+export const PHOTO_CROP_ZOOM_MIN = 1.0;
+/** Repli quand `shape` est inconnue (ancien avatar sans dimensions enregistrees) — ancien plafond fixe, inchange. */
 export const PHOTO_CROP_ZOOM_MAX = 3.0;
+/** Plafond de securite du zoom calcule (`photoCropZoomMax`) : evite une plage de curseur demesuree pour un panorama extreme. */
+const PHOTO_CROP_ZOOM_HARD_CAP = 8.0;
 
 /** Le cadre appelant doit toujours porter ce style : socle du recadrage. */
 export const PHOTO_CROP_FRAME_STYLE: CSSProperties = {
@@ -127,6 +159,37 @@ export interface PhotoCropShape {
   readonly imageAspect: number;
   /** Rapport largeur/hauteur du cadre d'affichage (1 = medaillon, 16/9 = vignette accueil). */
   readonly frameAspect: number;
+}
+
+/**
+ * Zoom maximum, PAR PHOTO ET PAR CADRE — D-215. C'est le zoom exact
+ * auquel le wrapper `shape`-aware (D-212) couvre integralement le cadre,
+ * sans aucune marge de letterboxing : `ratio = imageAspect / frameAspect`,
+ * puis `max(ratio, 1/ratio)` — l'un des deux vaut exactement l'inverse de
+ * l'autre selon que la photo deborde en largeur ou en hauteur, et ce
+ * maximum est TOUJOURS >= 1 (egal a 1 seulement quand la photo a deja
+ * exactement le rapport du cadre). Clampe entre `PHOTO_CROP_ZOOM_MIN` et
+ * un plafond de securite pour rester lisible sur un curseur, meme pour un
+ * panorama extreme.
+ *
+ * `shape` absente ou invalide (dimensions inconnues, avatar depose avant
+ * 0152) : repli sur `PHOTO_CROP_ZOOM_MAX`, l'ancien plafond fixe — aucune
+ * regression pour les photos dont on ne connait pas encore la taille
+ * reelle.
+ */
+export function photoCropZoomMax(shape?: PhotoCropShape | null): number {
+  if (
+    shape &&
+    Number.isFinite(shape.imageAspect) &&
+    Number.isFinite(shape.frameAspect) &&
+    shape.imageAspect > 0 &&
+    shape.frameAspect > 0
+  ) {
+    const ratio = shape.imageAspect / shape.frameAspect;
+    const coverZoom = ratio >= 1 ? ratio : 1 / ratio;
+    return Math.min(Math.max(coverZoom, PHOTO_CROP_ZOOM_MIN), PHOTO_CROP_ZOOM_HARD_CAP);
+  }
+  return PHOTO_CROP_ZOOM_MAX;
 }
 
 /**

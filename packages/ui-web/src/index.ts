@@ -36,6 +36,7 @@ export {
   PHOTO_CROP_ZOOM_MAX,
   PHOTO_CROP_FRAME_STYLE,
   photoCropWrapperStyle,
+  photoCropZoomMax,
   isCustomPhotoCrop,
   type PhotoCrop,
   type PhotoCropShape,

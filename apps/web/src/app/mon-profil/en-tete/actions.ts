@@ -367,8 +367,21 @@ export async function removePhotoAction(
 
 const CROP_FOCAL_MIN = 0;
 const CROP_FOCAL_MAX = 100;
-const CROP_ZOOM_MIN = 0.5;
-const CROP_ZOOM_MAX = 3;
+/**
+ * D-215 (16/08/2026) — le zoom minimum reel est desormais 1.0 (photo
+ * entiere visible, plus de retrecissement sous le cadre, voir
+ * `PHOTO_CROP_ZOOM_MIN` dans `packages/ui-web/src/utils/photo-crop.ts`)
+ * et le maximum reel depend de la photo et du cadre (`photoCropZoomMax`),
+ * calcule cote client a partir des dimensions naturelles connues. Cette
+ * action ne recalcule pas cette borne exacte cote serveur (il faudrait
+ * relire `avatar_width/height` ou `public_photo_width/height` pour rien
+ * de plus qu'une sur-verification) : elle applique un GARDE-FOU large,
+ * jusqu'au plafond de securite (`PHOTO_CROP_ZOOM_HARD_CAP`, 8) partage
+ * par le calcul client — la valeur reellement precise et restrictive est
+ * deja imposee par l'attribut `max` du curseur cote formulaire.
+ */
+const CROP_ZOOM_MIN = 1;
+const CROP_ZOOM_MAX = 8;
 
 function validCropTriplet(focalX: number, focalY: number, zoom: number): boolean {
   return (
