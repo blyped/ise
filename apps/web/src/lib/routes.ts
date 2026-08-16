@@ -90,6 +90,13 @@ export const SYSTEM_ROUTES: readonly string[] = [
   // que les cookies `SameSite=Lax` n'accompagnent pas). Elle ne lit que la
   // reference et redirige ; elle ne decide d'aucun statut.
   DONATION_ROUTES.returnBridge,
+  // D-221 — appel MACHINE du cron Vercel (courrier hebdomadaire des
+  // signaux). Aucune session ne peut exister : Vercel appelle depuis ses
+  // serveurs. L'authenticite est etablie par le Bearer CRON_SECRET,
+  // verifie dans le gestionnaire, jamais par un cookie. Sans cette
+  // exemption, le middleware redirigerait le cron vers /connexion et le
+  // courrier ne partirait jamais.
+  '/api/notifications/digest',
 ];
 
 /**
@@ -122,6 +129,8 @@ export const AUTH_ROUTE_PREFIXES: readonly string[] = [
  */
 export const MEMBER_ROUTE_PREFIXES: readonly string[] = [
   '/tableau-de-bord',
+  // D-222 — guichet unique « Signaler ».
+  '/signaler',
   '/mon-profil',
   '/ma-disponibilite',
   '/profil',
