@@ -42,7 +42,7 @@ Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 | D-174 → D-178 | [`decisions/07-mises-en-avant-et-ise-du-jour.md`](decisions/07-mises-en-avant-et-ise-du-jour.md) |
 | D-179, D-180, exécution de C-08 | [`decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md`](decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md) |
 | D-181 → D-183 | [`decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md`](decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md) |
-| D-184 → D-208 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
+| D-184 → D-209 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
 
 ### [Partie 1 — Fondations et modèle de données](decisions/01-fondations-et-modele-de-donnees.md)
 
@@ -157,3 +157,4 @@ Sections 44 à 62.
 - **§61. Cadrage ajustable étendu à la photo de profil (avatar)** — D-206, même mécanisme que le portrait public, appliqué au cockpit (en-tête) et à l'écran d'édition
 - **§62. Nettoyage, dédoublonnage et harmonisation du référentiel organisations, ajout d'Optimum Conseil** — D-207, fusion de 8 doublons supplémentaires (au-delà des 21 de D-194/0143), liste des cas douteux volontairement non tranchés, durcissement de la picklist CMS et de `set_landing_organization()`
 - **§63. Incident — ambigüité de surcharge SQL bloquant 100 % du provisioning d'invitations, et remédiation des 50 comptes orphelins** — D-208, `create or replace function` avec une signature élargie crée une surcharge au lieu de remplacer ; correctif + rattachement rétroactif de 50 profils déjà invités
+- **§64. Bug — cadrage photo publique et avatar non réinitialisé au remplacement du fichier** — D-209, `useState` ne se resynchronisait pas avec les nouvelles valeurs serveur ; l'ancien cadrage restait appliqué à la nouvelle image jusqu'à un geste manuel sur un curseur
