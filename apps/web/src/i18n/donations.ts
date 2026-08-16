@@ -19,7 +19,7 @@ export const frDonations = {
 
   title: 'Faire un don',
   subtitle:
-    'Compétences ISE n’a pas été conçue pour collecter des fonds : votre contribution sert uniquement à couvrir les frais liés à la plateforme (hébergement des serveurs, développement, maintenance).',
+    'Compétences ISE n’a pas été conçue pour collecter des fonds : votre contribution sert uniquement à couvrir les frais liés à la plateforme (hébergement des serveurs, développement, maintenance).',
 
   correlationLabel: 'Référence à communiquer à l’assistance',
   back: 'Retour',
@@ -35,10 +35,10 @@ export const frDonations = {
   },
 
   form: {
-    providerLegend: 'Comment souhaitez-vous payer ?',
+    providerLegend: 'Comment souhaitez-vous payer ?',
     providerHint:
-      'Chaque voie de paiement a sa propre devise. Aucune conversion n’est appliquée : le montant débité est exactement celui que vous choisissez ici.',
-    stripeLabel: 'Carte bancaire internationale',
+      'Chaque voie de paiement a sa propre devise. Aucune conversion n’est appliquée : le montant débité est exactement celui que vous choisissez ici.',
+    stripeLabel: 'VISA et carte bancaire internationale',
     stripeDescription: 'Paiement en euros, page sécurisée Stripe.',
     cinetpayLabel: 'Mobile money et cartes (Afrique de l’Ouest)',
     cinetpayDescription: 'Paiement en francs CFA (XOF), guichet sécurisé CinetPay.',
@@ -57,10 +57,10 @@ export const frDonations = {
     messageLabel: 'Un mot à joindre (facultatif)',
     messagePlaceholder: 'Ce que vous souhaitez dire au réseau…',
 
-    submit: 'Continuer vers le paiement',
+    submit: 'Initier le paiement',
     submitPending: 'Ouverture du guichet sécurisé…',
     submitHint:
-      'Vous serez redirigé vers la page de paiement de l’opérateur. Rien n’est débité avant que vous ne validiez sur cette page.',
+      'Le guichet de paiement de l’opérateur s’ouvre depuis cette page (ou dans un nouvel onglet pour la carte internationale). Rien n’est débité avant que vous ne validiez chez l’opérateur.',
 
     errorAmount: 'Ce montant n’est pas valable. Vérifiez les bornes indiquées.',
     errorProvider: 'Choisissez une voie de paiement.',
@@ -68,6 +68,17 @@ export const frDonations = {
       'Cette voie de paiement n’est pas disponible pour le moment. Essayez l’autre, ou revenez plus tard.',
     errorGateway:
       'Le guichet de paiement n’a pas répondu. Aucun montant n’a été prélevé. Réessayez dans un instant.',
+
+    /**
+     * D-218 (16/08/2026) — guichet CinetPay ouvert dans une fenêtre (SDK
+     * `cinetpay-seamless`) plutôt qu'en redirection pleine page.
+     */
+    openingGateway: 'Ouverture de la fenêtre de paiement…',
+    openGatewayManually: 'Ouvrir la fenêtre de paiement',
+    errorPopupBlocked:
+      'Votre navigateur a bloqué la fenêtre de paiement. Autorisez les fenêtres pop-up pour ce site, ou utilisez le lien ci-dessous.',
+    paymentPendingNotice:
+      'Nous attendons la confirmation de l’opérateur. Vous pouvez fermer cette fenêtre : l’état de votre don apparaîtra dans « Mes dons ».',
   },
 
   history: {
@@ -95,9 +106,9 @@ export const frDonations = {
   returnPage: {
     title: 'Retour du guichet de paiement',
     missingReference:
-      'Nous n’avons pas retrouvé la référence de ce don. Ouvrez « Mes dons » pour vérifier l’état de vos contributions.',
+      'Nous n’avons pas retrouvé la référence de ce don. Ouvrez « Mes dons » pour vérifier l’état de vos contributions.',
     notFound:
-      'Ce don n’existe pas ou n’est pas le vôtre. Ouvrez « Mes dons » pour retrouver vos contributions.',
+      'Ce don n’existe pas ou n’est pas le vôtre. Ouvrez « Mes dons » pour retrouver vos contributions.',
 
     pendingTitle: 'Nous attendons la confirmation de l’opérateur',
     pendingBody:
@@ -120,8 +131,20 @@ export const frDonations = {
 
   failurePage: {
     title: 'Paiement interrompu',
-    body: 'Vous avez quitté la page de paiement avant de valider. Aucun montant n’a été prélevé. Si vous avez pourtant validé le paiement, ouvrez « Mes dons » : seul l’état affiché là-bas fait foi.',
+    body: 'Vous avez quitté la page de paiement avant de valider. Aucun montant n’a été prélevé. Si vous avez pourtant validé le paiement, ouvrez « Mes dons » : seul l’état affiché là-bas fait foi.',
     retry: 'Reprendre un don',
+  },
+
+  /**
+   * D-219 (16/08/2026) — e-mail envoyé au donateur UNIQUEMENT quand
+   * `settle_donation_notification()` fait franchir un don à `succeeded`
+   * (jamais sur une relivraison, jamais sur une simple redirection). Même
+   * prudence que le reste du module : aucune promesse fiscale, aucun reçu.
+   */
+  receiptEmail: {
+    subject: 'Merci pour votre don à Compétences ISE',
+    body: 'Nous avons bien reçu la confirmation de votre don de {amount}. Il est enregistré sous la référence {reference}. Ce don sert uniquement à couvrir les frais de la plateforme (hébergement, développement, maintenance) — merci pour votre soutien au réseau.',
+    cta: 'Voir mes dons',
   },
 
   admin: {
@@ -132,7 +155,7 @@ export const frDonations = {
     summaryTitle: 'Dons confirmés',
     summaryEmpty: 'Aucun don confirmé à ce jour.',
     summaryNote:
-      'Les totaux sont présentés par devise et jamais additionnés entre elles : aucun taux de change ne fait autorité ici.',
+      'Les totaux sont présentés par devise et jamais additionnés entre elles : aucun taux de change ne fait autorité ici.',
     countLabel: '{count} don(s)',
     statusBreakdown: 'Répartition par état',
     listTitle: 'Derniers dons',

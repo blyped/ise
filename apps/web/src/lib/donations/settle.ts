@@ -1,7 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@ise/db-types';
 import { serverEnv } from '@/lib/env';
-import type { DonationProvider } from './shared';
+import { sendEmail } from '@/lib/email/resend';
+import { frDonations, tdon } from '@/i18n/donations';
+import { DONATION_ROUTES } from '@/lib/routes/donations';
+import { formatDonationAmount, type DonationProvider } from './shared';
+
+/** Echappement minimal avant interpolation dans un corps d'e-mail HTML (meme fonction que `app/promotions/actions.ts`). */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 /**
  * UNIQUE point d'ecriture du resultat d'un paiement.
@@ -62,6 +75,76 @@ function createServiceRoleClient() {
   });
 }
 
+
+/**
+ * D-219 (16/08/2026) — e-mail de remerciement, envoye UNE SEULE FOIS par
+ * don : seulement quand `settle_donation_notification()` vient de faire
+ * franchir ce don precis a `succeeded` (jamais sur une relivraison, jamais
+ * sur `already_succeeded`). `donation_receipt_info()` est, comme cette
+ * fonction, reservee a `service_role` (0156) : ni un navigateur donateur,
+ * ni un administrateur connecte ne peut la lire directement.
+ *
+ * Un e-mail introuvable (profil sans adresse connue) ou un envoi en echec
+ * n'annulent RIEN : le don reste `succeeded`, seul le courrier manque. On
+ * journalise, on ne relance pas — la page « Mes dons » reste la source de
+ * verite, quoi qu'il arrive du cote de la boite mail.
+ */
+async function sendDonationReceiptEmail(
+  client: ReturnType<typeof createServiceRoleClient>,
+  donationId: string,
+  correlationId: string,
+): Promise<void> {
+  const { data, error } = await client.rpc('donation_receipt_info', {
+    p_donation_id: donationId,
+  });
+
+  if (error) {
+    console.warn('[ISE] don : lecture des coordonnees du recu impossible', {
+      correlationId,
+      code: error.code,
+    });
+    return;
+  }
+
+  const record = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
+  const donorEmail = typeof record['donor_email'] === 'string' ? record['donor_email'] : null;
+  const reference = typeof record['reference'] === 'string' ? record['reference'] : null;
+  const amountMinor = typeof record['amount_minor'] === 'number' ? record['amount_minor'] : null;
+  const currency = typeof record['currency'] === 'string' ? record['currency'] : null;
+  const exponent =
+    typeof record['minor_unit_exponent'] === 'number' ? record['minor_unit_exponent'] : 0;
+  const donorName =
+    typeof record['donor_display_name'] === 'string' ? record['donor_display_name'] : null;
+
+  if (donorEmail === null || reference === null || amountMinor === null || currency === null) {
+    console.warn('[ISE] don : recu non envoye (coordonnees incompletes)', {
+      correlationId,
+      donationId,
+    });
+    return;
+  }
+
+  const amountLabel = formatDonationAmount(amountMinor, currency, exponent);
+  const greeting = donorName !== null ? `Bonjour ${escapeHtml(donorName)},` : 'Bonjour,';
+  const bodyText = tdon(frDonations.receiptEmail.body, { amount: amountLabel, reference });
+  const siteUrl = serverEnv().NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '');
+  const link = `${siteUrl}${DONATION_ROUTES.home}`;
+
+  const sent = await sendEmail({
+    to: donorEmail,
+    subject: frDonations.receiptEmail.subject,
+    html:
+      `<p>${greeting}</p>` +
+      `<p>${escapeHtml(bodyText)}</p>` +
+      `<p><a href="${link}">${escapeHtml(frDonations.receiptEmail.cta)}</a></p>`,
+    text: `${bodyText}\n\n${frDonations.receiptEmail.cta} : ${link}`,
+  });
+
+  if (!sent.ok) {
+    console.warn('[ISE] don : envoi du recu en echec', { correlationId, donationId });
+  }
+}
+
 export async function settleDonationNotification(
   input: SettleDonationInput,
   correlationId: string,
@@ -106,6 +189,14 @@ export async function settleDonationNotification(
     outcome: input.outcome,
     result,
   });
+
+  // D-219 — recu envoye seulement au VRAI franchissement vers `succeeded`.
+  if (result === 'updated' && record['status'] === 'succeeded') {
+    const donationId = typeof record['donation_id'] === 'string' ? record['donation_id'] : null;
+    if (donationId !== null) {
+      await sendDonationReceiptEmail(client, donationId, correlationId);
+    }
+  }
 
   return { ok: true, result };
 }
