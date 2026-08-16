@@ -17,6 +17,7 @@ import { ONBOARDING_ROOT, PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { requireProfile } from '@/lib/profile-guard';
 import { loadMissingItems, loadMyCompletion } from '@/lib/queries/onboarding';
 import { loadCountries } from '@/lib/queries/reference';
+import { loadViewerAvatar } from '@/lib/queries/viewer';
 import {
   loadEducations,
   loadExperiences,
@@ -77,7 +78,7 @@ export default async function MyProfilePage() {
 
   const { profile, correlationId } = context;
 
-  const [experiences, educations, skills, sectors, availabilities, missing, completion] =
+  const [experiences, educations, skills, sectors, availabilities, missing, completion, avatar] =
     await Promise.all([
       loadExperiences(profile.id, correlationId),
       loadEducations(profile.id, correlationId),
@@ -86,6 +87,13 @@ export default async function MyProfilePage() {
       loadNamedAvailabilities(profile.id, correlationId),
       loadMissingItems(correlationId),
       loadMyCompletion(),
+      // D-214 — cette carte n'a jamais recu l'avatar : `<Avatar>` etait
+      // toujours appele sans `src`, donc toujours rendu en initiales, meme
+      // pour un membre ayant deja depose une photo (visible, elle, dans la
+      // Topbar via ce meme `loadViewerAvatar()`, D-206). Lecture tolerante
+      // a l'echec (retombe sur `undefined` -> initiales), meme contrat que
+      // partout ailleurs ou cette fonction est appelee.
+      loadViewerAvatar(),
     ]);
 
   let promotionLabel: string | null = null;
@@ -142,7 +150,13 @@ export default async function MyProfilePage() {
             <Card>
               <div className="flex flex-wrap items-start justify-between gap-5">
                 <div className="flex min-w-0 items-start gap-5">
-                  <Avatar name={displayName} size={64} decorative />
+                  <Avatar
+                    name={displayName}
+                    size={64}
+                    decorative
+                    src={avatar?.url}
+                    crop={avatar?.crop}
+                  />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-3">
                       <h2 className="text-h3 text-text-primary font-bold">{displayName}</h2>
