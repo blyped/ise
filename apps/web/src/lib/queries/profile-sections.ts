@@ -23,7 +23,7 @@ function fail<T>(raw: unknown, correlationId: string): Result<T> {
 
 const HEADER_COLUMNS =
   'id, first_name, last_name, display_name, headline, bio, avatar_path, ' +
-  'avatar_focal_x, avatar_focal_y, avatar_zoom, ' +
+  'avatar_focal_x, avatar_focal_y, avatar_zoom, avatar_width, avatar_height, ' +
   'linkedin_url, website_url, current_position, current_organization_id, ' +
   'current_organization_raw, current_country_code, current_city, ' +
   'promotion_id, claim_status, verification_status, onboarding_completed_at, updated_at';
@@ -40,6 +40,15 @@ export interface ProfileHeader {
   avatarFocalX: number;
   avatarFocalY: number;
   avatarZoom: number;
+  /**
+   * Dimensions naturelles de l'avatar deja depose — 0152/D-212. `null` si
+   * aucun avatar, ou si depose avant cette migration (pas de backfill :
+   * un simple redepot suffit a les renseigner). Permet au wrapper de
+   * cadrage (`photoCropWrapperStyle`) de montrer la photo ENTIERE au
+   * zoom neutre plutot que de la decouper au rapport du cadre.
+   */
+  avatarWidth: number | null;
+  avatarHeight: number | null;
   linkedinUrl: string | null;
   websiteUrl: string | null;
   currentPosition: string | null;
@@ -84,6 +93,8 @@ export async function loadProfileHeader(
       avatarFocalX: Number(row['avatar_focal_x'] ?? 50),
       avatarFocalY: Number(row['avatar_focal_y'] ?? 50),
       avatarZoom: Number(row['avatar_zoom'] ?? 1),
+      avatarWidth: (row['avatar_width'] as number | null) ?? null,
+      avatarHeight: (row['avatar_height'] as number | null) ?? null,
       linkedinUrl: (row['linkedin_url'] as string | null) ?? null,
       websiteUrl: (row['website_url'] as string | null) ?? null,
       currentPosition: (row['current_position'] as string | null) ?? null,

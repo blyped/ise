@@ -129,12 +129,16 @@ export default async function EditProfileHeaderPage() {
           avatarFocalX={profile.avatarFocalX}
           avatarFocalY={profile.avatarFocalY}
           avatarZoom={profile.avatarZoom}
+          avatarWidth={profile.avatarWidth}
+          avatarHeight={profile.avatarHeight}
           allowPublicPhoto={showcase.ok ? showcase.data.allowPublicPhoto : false}
           publicPhotoUrl={publicPhotoUrl}
           publicPhotoAlt={showcase.ok ? showcase.data.photoAlt : null}
           photoFocalX={showcase.ok ? showcase.data.photoFocalX : 50}
           photoFocalY={showcase.ok ? showcase.data.photoFocalY : 50}
           photoZoom={showcase.ok ? showcase.data.photoZoom : 1}
+          photoWidth={showcase.ok ? showcase.data.photoWidth : null}
+          photoHeight={showcase.ok ? showcase.data.photoHeight : null}
         />
 
         {/* Entree vers « Ma vitrine publique » : la breve description et le

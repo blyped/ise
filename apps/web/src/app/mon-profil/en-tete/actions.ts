@@ -226,7 +226,13 @@ export async function uploadPhotoAction(
 
     const { error: avatarUpdateError } = await supabase
       .from('ise_profiles')
-      .update({ avatar_path: storagePath })
+      // 0152/D-212 : les dimensions naturelles voyagent avec le chemin,
+      // deja calculees par inspectImage() ci-dessus — aucune mesure
+      // supplementaire. Elles alimentent le wrapper de cadrage
+      // (photoCropWrapperStyle) pour que l'apercu du medaillon montre la
+      // photo entiere au zoom neutre, au lieu de la decouper au rapport
+      // du cadre (D-212).
+      .update({ avatar_path: storagePath, avatar_width: width, avatar_height: height })
       .eq('id', profileId);
 
     if (avatarUpdateError) {

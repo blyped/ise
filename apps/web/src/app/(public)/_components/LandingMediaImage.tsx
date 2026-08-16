@@ -38,7 +38,23 @@ import { StorageImage } from '@/components/media/StorageImage';
  * IMPORTANT — le CADRE appelant (le parent de `LandingMediaImage`, par
  * exemple `MediaFrame`) doit toujours porter `position: relative; overflow:
  * hidden` : c'est lui qui borne la fenetre visible, avec ou sans cadrage.
+ *
+ * FORME REELLE DE LA PHOTO (0152/D-212) — `photoCropWrapperStyle` sait
+ * desormais dimensionner le wrapper au rapport largeur/hauteur REEL de la
+ * photo plutot qu'a celui du cadre (voir le diagnostic dans
+ * `photo-crop.ts`) : sans cela, MEME au cadrage neutre enregistre par le
+ * membre, la vignette decoupait deja sa photo. `media.width`/`media.height`
+ * sont deja projetes ici (0120/0141) — aucune mesure supplementaire. Le
+ * rapport du CADRE, lui, est fixe a 16:9 : seul le portrait public d'un
+ * membre porte un cadrage aujourd'hui (`private.landing_member_photo()`),
+ * et il n'est jamais rendu ailleurs que dans `MediaFrame`
+ * (`HighlightsSection.tsx`, encart « ISE du jour », rapport 16/9) — c'est
+ * d'ailleurs exactement le rapport reproduit par le second bloc de cadrage
+ * de `PhotoForm.tsx`, pour que ce que le membre y regle corresponde ici
+ * au pixel pres (D-211 : « il voit exactement comment ca sera... »).
  */
+const MEMBER_PHOTO_FRAME_ASPECT = 16 / 9;
+
 export function LandingMediaImage({
   media,
   sizes,
@@ -62,11 +78,16 @@ export function LandingMediaImage({
         }
       : null;
 
+  const shape =
+    media.width !== null && media.height !== null && media.height > 0
+      ? { imageAspect: media.width / media.height, frameAspect: MEMBER_PHOTO_FRAME_ASPECT }
+      : null;
+
   const image = (
     <StorageImage src={url} alt={media.alt} sizes={sizes} className={className} priority={priority} />
   );
 
-  const wrapperStyle = photoCropWrapperStyle(crop);
+  const wrapperStyle = photoCropWrapperStyle(crop, shape);
   if (!wrapperStyle) return image;
 
   return <div style={wrapperStyle}>{image}</div>;

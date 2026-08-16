@@ -62,6 +62,14 @@ export interface PhotoFormProps {
   avatarFocalX: number;
   avatarFocalY: number;
   avatarZoom: number;
+  /**
+   * Dimensions naturelles de l'avatar déjà déposé (0152/D-212). `null`
+   * tant qu'aucune valeur n'est connue (avant tout dépôt postérieur à
+   * cette migration) : l'aperçu retombe alors sur l'ancien comportement
+   * (wrapper dimensionné au cadre, pas à la photo).
+   */
+  avatarWidth: number | null;
+  avatarHeight: number | null;
   /** Case de publication sur l'accueil (ex-`allowPublicPhoto`, D-135/0120). */
   allowPublicPhoto: boolean;
   /** URL publique de la copie déjà déposée, ou `null` si aucune copie active. */
@@ -71,6 +79,9 @@ export interface PhotoFormProps {
   photoFocalX: number;
   photoFocalY: number;
   photoZoom: number;
+  /** Dimensions naturelles de la copie publique déjà déposée (0120), même rôle qu'`avatarWidth`/`avatarHeight` (0152/D-212). */
+  photoWidth: number | null;
+  photoHeight: number | null;
 }
 
 export function PhotoForm({
@@ -79,12 +90,16 @@ export function PhotoForm({
   avatarFocalX: initialAvatarFocalX,
   avatarFocalY: initialAvatarFocalY,
   avatarZoom: initialAvatarZoom,
+  avatarWidth,
+  avatarHeight,
   allowPublicPhoto: initialAllowPublicPhoto,
   publicPhotoUrl,
   publicPhotoAlt,
   photoFocalX: initialPhotoFocalX,
   photoFocalY: initialPhotoFocalY,
   photoZoom: initialPhotoZoom,
+  photoWidth,
+  photoHeight,
 }: PhotoFormProps) {
   const [uploadState, uploadAction, isUploading] = useActionState(
     uploadPhotoAction,
@@ -131,6 +146,20 @@ export function PhotoForm({
   // (case cochée ET dépôt déjà effectué) — sinon il n'y a rien à cadrer.
   const homeBlockActive = allowPublicPhoto && publicPhotoUrl !== null;
 
+  // 0152/D-212 — forme réelle des deux photos, pour que le wrapper de
+  // cadrage montre l'image ENTIÈRE au zoom neutre au lieu de la découper
+  // au rapport du cadre (voir le diagnostic dans photo-crop.ts). `null`
+  // tant que la dimension n'est pas connue : l'aperçu retombe alors sans
+  // régression sur l'ancien comportement (dimensionné au cadre).
+  const avatarShape =
+    avatarWidth !== null && avatarHeight !== null && avatarHeight > 0
+      ? { imageAspect: avatarWidth / avatarHeight, frameAspect: 1 }
+      : null;
+  const photoShape =
+    photoWidth !== null && photoHeight !== null && photoHeight > 0
+      ? { imageAspect: photoWidth / photoHeight, frameAspect: 16 / 9 }
+      : null;
+
   return (
     <Card>
       <CardHeader>
@@ -149,10 +178,10 @@ export function PhotoForm({
       <div className="mt-6 flex flex-wrap items-center gap-5">
         {avatarUrl !== null ? (
           <div
-            className="border-border h-[96px] w-[96px] rounded-full border"
+            className="border-border bg-surface-muted h-[96px] w-[96px] rounded-full border"
             style={PHOTO_CROP_FRAME_STYLE}
           >
-            <div style={photoCropWrapperStyle({ focalX: avatarFocalX, focalY: avatarFocalY, zoom: avatarZoom })}>
+            <div style={photoCropWrapperStyle({ focalX: avatarFocalX, focalY: avatarFocalY, zoom: avatarZoom }, avatarShape)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={avatarUrl}
@@ -210,10 +239,10 @@ export function PhotoForm({
               </div>
 
               <div
-                className="border-border mx-auto h-[128px] w-[128px] rounded-full border"
+                className="border-border bg-surface-muted mx-auto h-[128px] w-[128px] rounded-full border"
                 style={PHOTO_CROP_FRAME_STYLE}
               >
-                <div style={photoCropWrapperStyle({ focalX: avatarFocalX, focalY: avatarFocalY, zoom: avatarZoom })}>
+                <div style={photoCropWrapperStyle({ focalX: avatarFocalX, focalY: avatarFocalY, zoom: avatarZoom }, avatarShape)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={avatarUrl}
@@ -284,7 +313,7 @@ export function PhotoForm({
               {homeBlockActive ? (
                 <>
                   <div className={`${HOME_FRAME_CLASS} mx-auto`}>
-                    <div style={photoCropWrapperStyle({ focalX: photoFocalX, focalY: photoFocalY, zoom: photoZoom })}>
+                    <div style={photoCropWrapperStyle({ focalX: photoFocalX, focalY: photoFocalY, zoom: photoZoom }, photoShape)}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={publicPhotoUrl ?? avatarUrl}

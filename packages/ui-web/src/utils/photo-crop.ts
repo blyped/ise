@@ -44,6 +44,44 @@ import type { CSSProperties } from 'react';
  * Le CADRE appelant DOIT poser `position: relative; overflow: hidden`
  * (`photoCropFrameStyle` le fournit) ; ce wrapper est toujours
  * `position: absolute`.
+ *
+ * BUG SUIVANT, CORRIGE PAR D-212 -- le correctif ci-dessus dimensionne
+ * TOUJOURS le wrapper aux dimensions du CADRE (`zoom * 100 %` applique a
+ * largeur ET hauteur), jamais a celles de la PHOTO source. Consequence :
+ * le wrapper adopte systematiquement le rapport largeur/hauteur DU CADRE
+ * (1:1 pour un medaillon, 16:9 pour la vignette accueil), jamais celui de
+ * la photo deposee -- et comme l'image a l'interieur garde `object-fit:
+ * cover`, elle remplit integralement ce wrapper en decoupant tout ce qui
+ * deborde de sa forme. Resultat signale par un porteur, capture d'ecran a
+ * l'appui : ses cadrans de recadrage coupaient deja sa photo AVANT tout
+ * reglage manuel, meme au zoom neutre (1.0) et au centrage par defaut
+ * (50/50) -- impossible, avec l'ancienne formule, de voir la photo source
+ * dans son integralite pour la recadrer en connaissance de cause.
+ *
+ * CORRECTIF D-212 -- `photoCropWrapperStyle()` accepte desormais un
+ * second parametre optionnel, `shape` (`imageAspect`/`frameAspect`).
+ * Quand il est fourni, le wrapper n'est plus dimensionne au rapport du
+ * CADRE mais a celui, RELATIF, de la PHOTO :
+ *   - `ratio = imageAspect / frameAspect` ;
+ *   - si `ratio > 1` (photo plus "large" que le cadre) : largeur de base
+ *     100 %, hauteur de base `100 / ratio` % -- la photo tient toute sa
+ *     largeur, une marge (letterboxing) apparait en haut/bas ;
+ *   - sinon : hauteur de base 100 %, largeur de base `ratio * 100 %` --
+ *     marge a gauche/droite ;
+ *   - le zoom demande par le membre multiplie ensuite cette base, comme
+ *     avant.
+ *   Preuve (algebre) : le rapport largeur/hauteur REEL du wrapper obtenu
+ *   (rapporte au cadre, pas au pourcentage) vaut exactement `imageAspect`
+ *   quelle que soit la valeur du zoom -- `object-fit: cover` sur l'image
+ *   interne devient alors un NO-OP (le wrapper a deja la forme exacte de
+ *   l'image), donc plus aucun decoupage involontaire au zoom neutre.
+ *   Quand `imageAspect === frameAspect` (photo carree dans un medaillon,
+ *   p. ex.), la formule se reduit EXACTEMENT a l'ancienne : aucune
+ *   regression pour les appelants qui ne fournissent pas encore `shape`,
+ *   ni pour les photos dont le rapport correspond deja au cadre.
+ *   `shape` reste optionnel : un appelant qui ne connait pas encore les
+ *   dimensions naturelles de l'image continue d'obtenir le rendu d'avant
+ *   D-212, inchange.
  */
 export interface PhotoCrop {
   /** Position horizontale du point focal, 0-100 (pourcentage du cadre). */
@@ -80,22 +118,61 @@ export const PHOTO_CROP_FRAME_STYLE: CSSProperties = {
 };
 
 /**
+ * Forme relative photo/cadre — D-212. Permet a `photoCropWrapperStyle` de
+ * dimensionner le wrapper au rapport largeur/hauteur REEL de la photo
+ * plutot qu'a celui du cadre. Voir le diagnostic ci-dessus pour la preuve.
+ */
+export interface PhotoCropShape {
+  /** Rapport largeur/hauteur de l'image source (naturalWidth / naturalHeight). */
+  readonly imageAspect: number;
+  /** Rapport largeur/hauteur du cadre d'affichage (1 = medaillon, 16/9 = vignette accueil). */
+  readonly frameAspect: number;
+}
+
+/**
  * Style du wrapper interne qui porte le zoom et la position — voir le
  * diagnostic ci-dessus. `undefined` si `crop` est `null` : l'appelant
  * revient alors au rendu simple (`object-fit: cover`, sans wrapper), pour
  * les images qui ne portent aucun cadrage (immense majorite des medias).
+ *
+ * `shape` (D-212) — optionnel, ignore si absent ou invalide (dimensions
+ * inconnues) : le wrapper garde alors exactement l'ancien comportement
+ * (dimensionne au cadre). Fourni, il dimensionne le wrapper au rapport de
+ * la PHOTO : au zoom neutre, la photo entiere est visible (letterboxee),
+ * sans aucun decoupage avant reglage manuel du membre.
  */
-export function photoCropWrapperStyle(crop: PhotoCrop | null): CSSProperties | undefined {
+export function photoCropWrapperStyle(
+  crop: PhotoCrop | null,
+  shape?: PhotoCropShape | null,
+): CSSProperties | undefined {
   if (crop === null) return undefined;
+
   const sizePercent = crop.zoom * 100;
-  const left = (crop.focalX / 100) * (100 - sizePercent);
-  const top = (crop.focalY / 100) * (100 - sizePercent);
+  let widthPercent = sizePercent;
+  let heightPercent = sizePercent;
+
+  if (
+    shape &&
+    Number.isFinite(shape.imageAspect) &&
+    Number.isFinite(shape.frameAspect) &&
+    shape.imageAspect > 0 &&
+    shape.frameAspect > 0
+  ) {
+    const ratio = shape.imageAspect / shape.frameAspect;
+    const baseWidthPercent = ratio > 1 ? 100 : ratio * 100;
+    const baseHeightPercent = ratio > 1 ? 100 / ratio : 100;
+    widthPercent = baseWidthPercent * crop.zoom;
+    heightPercent = baseHeightPercent * crop.zoom;
+  }
+
+  const left = (crop.focalX / 100) * (100 - widthPercent);
+  const top = (crop.focalY / 100) * (100 - heightPercent);
   return {
     position: 'absolute',
     left: `${left}%`,
     top: `${top}%`,
-    width: `${sizePercent}%`,
-    height: `${sizePercent}%`,
+    width: `${widthPercent}%`,
+    height: `${heightPercent}%`,
   };
 }
 

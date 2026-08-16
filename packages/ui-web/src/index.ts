@@ -38,6 +38,7 @@ export {
   photoCropWrapperStyle,
   isCustomPhotoCrop,
   type PhotoCrop,
+  type PhotoCropShape,
 } from './utils/photo-crop';
 export { Skeleton, type SkeletonProps } from './components/Skeleton';
 
