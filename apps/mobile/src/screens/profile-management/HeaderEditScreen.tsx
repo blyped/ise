@@ -87,7 +87,7 @@ const PHOTO_TEXT = pm.header.photo;
  * LA GARDE RESTE EN BASE : politique Storage `ise_avatars_write` (0027),
  * `ise_profiles_update_own` (0021), contrainte
  * `ise_profiles_avatar_path_scope` (0126). Les contrôles côté écran
- * (2 Mo, PNG/JPEG/WebP, AVIF et HEIC refusés) ne font qu'annoncer en
+ * (5 Mo, PNG/JPEG/WebP, AVIF et HEIC refusés) ne font qu'annoncer en
  * français ce que le bucket refuserait de toute façon.
  */
 export function HeaderEditScreen({ navigation }: Props) {

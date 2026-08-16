@@ -127,7 +127,7 @@ export const frProfile = {
     photoNoneHint: 'Vos initiales sont utilisées tant qu’aucune photo n’est déposée.',
     photoFileLabel: 'Fichier image',
     photoFileHint:
-      'PNG, JPEG ou WebP, 2 Mo maximum. Un cadrage carré du visage (au moins 400 × 400 px) donne le meilleur rendu. Laissez ce champ vide pour ne changer que les réglages ci-dessous, sans remplacer la photo.',
+      'PNG, JPEG ou WebP, 5 Mo maximum. Un cadrage carré du visage (au moins 400 × 400 px) donne le meilleur rendu. Laissez ce champ vide pour ne changer que les réglages ci-dessous, sans remplacer la photo.',
     photoFormSubmit: 'Enregistrer ma photo',
     photoSubmitPending: 'Enregistrement…',
     photoSaved: 'Votre photo de profil a été enregistrée.',
@@ -137,7 +137,7 @@ export const frProfile = {
     photoRemoved: 'Votre photo a été retirée, y compris sur la page d’accueil si elle y était publiée.',
     photoInvalid: 'Ce fichier n’est pas une image exploitable. Choisissez un PNG, un JPEG ou un WebP.',
     photoWrongType: 'Ce format d’image n’est pas accepté ici. Choisissez un PNG, un JPEG ou un WebP.',
-    photoTooLarge: 'Cette image dépasse 2 Mo. Choisissez un fichier plus léger.',
+    photoTooLarge: 'Cette image dépasse 5 Mo. Choisissez un fichier plus léger.',
     photoUploadFailed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
 
     // D-211 — case de publication, reprise et adaptée de l'ex-vitrine

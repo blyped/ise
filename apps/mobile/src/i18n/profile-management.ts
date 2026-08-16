@@ -80,7 +80,7 @@ export const profileManagement = {
       currentNotice: 'Cette photo n’est visible que des membres autorisés.',
       noneNotice: 'Vos initiales sont utilisées tant qu’aucune photo n’est déposée.',
       formatsHint:
-        'PNG, JPEG ou WebP, 2 Mo maximum. Un cadrage carré du visage donne le meilleur rendu.',
+        'PNG, JPEG ou WebP, 5 Mo maximum. Un cadrage carré du visage donne le meilleur rendu.',
       replaceHint: 'Déposer une nouvelle photo remplacera celle-ci ; l’ancienne sera effacée.',
       cameraAction: 'Prendre une photo',
       libraryAction: 'Choisir dans la galerie',
@@ -107,7 +107,7 @@ export const profileManagement = {
           'Ce fichier n’est pas une image exploitable. Choisissez un PNG, un JPEG ou un WebP.',
         wrong_type:
           'Ce format d’image n’est pas accepté ici. Choisissez un PNG, un JPEG ou un WebP.',
-        too_large: 'Cette image dépasse 2 Mo. Choisissez un fichier plus léger.',
+        too_large: 'Cette image dépasse 5 Mo. Choisissez un fichier plus léger.',
         upload_failed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
         save_failed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
       },

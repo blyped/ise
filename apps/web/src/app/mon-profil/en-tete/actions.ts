@@ -55,9 +55,10 @@ import { inspectImage } from '@/lib/cms/image-metadata';
 const AVATAR_BUCKET = 'avatars';
 const PUBLIC_BUCKET = 'landing-media';
 
-/** 2 Mo : `file_size_limit` réel du bucket `avatars` (0027) — la borne la
- * plus stricte des deux buckets, donc celle qui s'applique au dépôt unique. */
-const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+/** 5 Mo : `file_size_limit` du bucket `avatars` (0027, relevé à 5 Mo par
+ * 0153/D-213), aligné sur celui du bucket `landing-media` (déjà 5 Mo, 0068)
+ * puisqu'un seul fichier alimente désormais les deux (D-211). */
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
 /** Le bucket `avatars` n'accepte que ces trois types (`allowed_mime_types`,
  * 0027) — AVIF (accepté par `landing-media`) est donc exclu ici aussi,

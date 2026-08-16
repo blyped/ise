@@ -35,7 +35,7 @@ export const limits = {
   },
 
   avatar: {
-    maxBytes: 2 * 1024 * 1024,
+    maxBytes: 5 * 1024 * 1024,
     allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'] as const,
   },
 

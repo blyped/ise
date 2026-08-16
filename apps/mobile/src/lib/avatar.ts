@@ -28,7 +28,7 @@ import { getSupabaseClient } from './supabase/client';
  *   · la contrainte `ise_profiles_avatar_path_scope` (0126) refuse
  *     d'enregistrer le chemin d'un AUTRE membre.
  * Les vérifications ci-dessous ne sont qu'une politesse : dire non en
- * français avant d'envoyer 2 Mo sur un réseau mobile, plutôt que de laisser
+ * français avant d'envoyer 5 Mo sur un réseau mobile, plutôt que de laisser
  * Storage renvoyer une erreur illisible.
  *
  * LE BUCKET RESTE PRIVÉ. Cette photo n'est jamais servie au web ouvert : elle
@@ -40,10 +40,10 @@ import { getSupabaseClient } from './supabase/client';
 export const AVATAR_BUCKET = 'avatars';
 
 /**
- * 2 Mo : ce n'est pas une préférence d'écran, c'est le `file_size_limit`
- * réel du bucket `avatars` (0027), et la même borne qu'annonce le web.
+ * 5 Mo : `file_size_limit` du bucket `avatars` (0027, relevé à 5 Mo par
+ * 0153/D-213), et la même borne qu'annonce le web.
  */
-export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+export const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
 /**
  * Miroir exact d'`allowed_mime_types` du bucket `avatars` (0027).
@@ -169,7 +169,7 @@ function base64ToBytes(value: string): Uint8Array | null {
  * `aspect` n'agit que sur Android — iOS impose déjà un carré.
  *
  * `quality: 0.85` n'est pas cosmétique : une photo prise au téléphone dépasse
- * facilement les 2 Mo du bucket. La borne reste vérifiée sur les octets réels
+ * facilement les 5 Mo du bucket. La borne reste vérifiée sur les octets réels
  * plus bas ; ceci évite seulement de la heurter pour rien.
  */
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
@@ -228,7 +228,7 @@ export type AvatarUploadFailure =
   | 'unreadable'
   /** Image reconnue mais refusée par le bucket (AVIF, HEIC, GIF…). */
   | 'wrong_type'
-  /** Au-delà des 2 Mo du bucket. */
+  /** Au-delà des 5 Mo du bucket. */
   | 'too_large'
   /** Storage a refusé le dépôt (politique, réseau…). */
   | 'upload_failed'
