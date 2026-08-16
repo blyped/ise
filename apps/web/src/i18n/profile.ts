@@ -108,14 +108,18 @@ export const frProfile = {
     visibilityHint:
       'Chaque champ porte sa propre visibilité (4 niveaux). Le choix est enregistré et appliqué par la base.',
     /**
-     * Identité visuelle — révision de D-117 (14/08/2026).
-     * Le dépôt de photo est OUVERT : ces libellés ne doivent plus annoncer
-     * une indisponibilité. L'ancien message « pas encore ouvert » a été
-     * retiré ici et l'écran porte désormais un vrai formulaire.
+     * Photo de profil — révision de D-117 (14/08/2026), FUSIONNÉE avec
+     * l'ancienne « photo publique » par D-211 (16/08/2026) : un dépôt
+     * UNIQUE, demande explicite du porteur (« je ne veux même pas qu'on
+     * mette 2 photos pour chaque profil »). Le fichier vit toujours dans le
+     * bucket privé `avatars` (lien signé, membres connectés seulement) ;
+     * s'il autorise la publication, la même photo est aussi montrée sur la
+     * page d'accueil publique (« ISE du jour »), en rectangle plutôt qu'en
+     * médaillon — d'où les DEUX blocs de cadrage plus bas.
      */
-    photoTitle: 'Identité visuelle',
+    photoTitle: 'Photo de profil',
     photoIntro:
-      'Votre photo n’est visible que des membres connectés autorisés : le stockage est privé et l’image est servie par un lien signé qui expire. Elle n’est jamais publiée sur le site public — cela relève de « Ma vitrine publique », avec un consentement distinct.',
+      'Cette photo est utilisée dans votre espace membre (médaillon). Si vous autorisez sa publication ci-dessous, c’est la MÊME photo qui paraît sur la page d’accueil publique si votre profil y est mis en avant — inutile d’en déposer une seconde.',
     photoCurrentTitle: 'Photo actuelle',
     photoCurrentHint: 'Déposer une nouvelle image remplacera celle-ci ; l’ancienne sera effacée.',
     photoCurrentAlt: 'Votre photo de profil actuelle',
@@ -123,24 +127,49 @@ export const frProfile = {
     photoNoneHint: 'Vos initiales sont utilisées tant qu’aucune photo n’est déposée.',
     photoFileLabel: 'Fichier image',
     photoFileHint:
-      'PNG, JPEG ou WebP, 2 Mo maximum. Un cadrage carré du visage (au moins 400 × 400 px) donne le meilleur rendu.',
-    photoSubmit: 'Déposer ma photo',
-    photoReplaceSubmit: 'Remplacer ma photo',
-    photoSubmitPending: 'Dépôt en cours…',
+      'PNG, JPEG ou WebP, 2 Mo maximum. Un cadrage carré du visage (au moins 400 × 400 px) donne le meilleur rendu. Laissez ce champ vide pour ne changer que les réglages ci-dessous, sans remplacer la photo.',
+    photoFormSubmit: 'Enregistrer ma photo',
+    photoSubmitPending: 'Enregistrement…',
     photoSaved: 'Votre photo de profil a été enregistrée.',
+    photoConsentSaved: 'Vos réglages de publication ont été enregistrés.',
     photoRemove: 'Retirer ma photo',
     photoRemovePending: 'Retrait en cours…',
-    photoRemoved: 'Votre photo de profil a été retirée.',
+    photoRemoved: 'Votre photo a été retirée, y compris sur la page d’accueil si elle y était publiée.',
     photoInvalid: 'Ce fichier n’est pas une image exploitable. Choisissez un PNG, un JPEG ou un WebP.',
     photoWrongType: 'Ce format d’image n’est pas accepté ici. Choisissez un PNG, un JPEG ou un WebP.',
     photoTooLarge: 'Cette image dépasse 2 Mo. Choisissez un fichier plus léger.',
     photoUploadFailed: 'Le dépôt de la photo a échoué. Réessayez dans un instant.',
 
-    // 0147/D-206 — cadrage ajustable (position + zoom), meme mecanisme
-    // que la vitrine publique (0141, D-205).
-    photoCropTitle: 'Cadrage de la photo',
-    photoCropHint:
-      'Ajustez la position et le zoom pour que votre visage reste bien centré dans le médaillon. Un zoom inférieur à 1 réduit la photo si elle paraît trop grande dans le cadre.',
+    // D-211 — case de publication, reprise et adaptée de l'ex-vitrine
+    // publique (frShowcase.photoLabel/photoDescription/photoRevokeNote,
+    // migration 0120) : les libellés ne minimisent rien, la page d'accueil
+    // est servie à des visiteurs anonymes.
+    consentTitle: 'Publier sur la page d’accueil',
+    consentLabel:
+      'J’autorise la publication de cette photo sur la page d’accueil publique (« ISE du jour »).',
+    consentDescription:
+      'Votre photo sera alors visible par n’importe quel visiteur du site, y compris non connecté. Une image publiée sur le web ouvert peut être enregistrée par les moteurs de recherche, mise en cache et copiée : retirer cet accord la retire du site, mais ne peut pas la reprendre à ceux qui l’auraient déjà récupérée.',
+    consentRevokeNote:
+      'Si vous décochez cette case, la photo disparaît immédiatement de la page d’accueil ; votre médaillon dans l’espace membre, lui, n’est pas affecté.',
+    photoAltLabel: 'Description de l’image (pour les lecteurs d’écran)',
+    photoAltPlaceholder: 'Ex. Portrait de Gille KOUAKOU, souriant, en chemise claire.',
+    photoAltHint:
+      'Obligatoire pour publier sur l’accueil : une image publiée sans description n’est pas lisible par tout le monde.',
+    photoAltRequired: 'La description de l’image est obligatoire pour publier sur l’accueil.',
+
+    // 0147/D-206 — cadrage ajustable (position + zoom), FUSIONNÉ par D-211
+    // en un seul enregistrement pour les deux blocs (médaillon + rectangle
+    // « ISE du jour »), même mécanisme que 0141/D-205.
+    photoCropTitle: 'Cadrage',
+    photoCropIntro:
+      'Deux aperçus, parce que la photo n’est pas montrée de la même façon aux deux endroits. Réglez les deux si besoin, puis enregistrez : les deux cadrages sont sauvegardés ensemble.',
+    cropAvatarTitle: 'Dans votre espace membre (médaillon)',
+    cropAvatarHint: 'Ajustez la position et le zoom pour que votre visage reste bien centré.',
+    cropHomeTitle: 'Sur la page d’accueil (« ISE du jour »)',
+    cropHomeHint:
+      'Même photo, cadrage différent puisque la vignette de l’accueil est un rectangle et non un cercle.',
+    cropHomeDisabled:
+      'Cochez « J’autorise la publication de cette photo sur la page d’accueil » ci-dessus pour régler ce cadrage.',
     photoCropXLabel: 'Position horizontale',
     photoCropYLabel: 'Position verticale',
     photoCropZoomLabel: 'Zoom',
@@ -150,7 +179,7 @@ export const frProfile = {
     photoCropSaved: 'Le cadrage de votre photo a été enregistré.',
     photoCropInvalid: 'Le cadrage envoyé est invalide.',
     photoVisibilityNote:
-      'Qui voit votre photo se règle plus bas, avec la visibilité des autres informations.',
+      'Qui voit votre photo dans l’espace membre se règle plus bas, avec la visibilité des autres informations.',
   },
 
   /** ISE-018 — Mes expériences. */
