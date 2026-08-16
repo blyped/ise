@@ -746,6 +746,17 @@ export async function loadCampaignMetrics(
   };
 }
 
+/**
+ * Picklist CMS-013 (organisations de la section « Ils nous font confiance »).
+ *
+ * D-207 (0149) — une organisation FUSIONNEE (`merged_into_id` renseigne) est
+ * un doublon connu conserve pour la tracabilite, jamais une cible valide
+ * pour un nouveau logo : `.is('merged_into_id', null)` l'exclut de la liste
+ * proposee au redacteur CMS, exactement comme `loadOrganizations` (cote
+ * membre, `lib/queries/reference.ts`, D-194) l'exclut deja de la picklist du
+ * formulaire de profil. `set_landing_organization()` refuse aussi cote base
+ * (0149) une organisation fusionnee, meme si cette liste etait contournee.
+ */
 export async function loadOrganizations(
   correlationId: string,
 ): Promise<CmsResult<readonly CmsOrganizationOption[]>> {
@@ -753,6 +764,7 @@ export async function loadOrganizations(
   const { data, error } = await supabase
     .from('organizations')
     .select('id, canonical_name, is_verified')
+    .is('merged_into_id', null)
     .order('canonical_name', { ascending: true })
     .limit(500);
   if (error) return fail(error, correlationId, 'organizations');
