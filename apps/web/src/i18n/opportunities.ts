@@ -36,7 +36,7 @@ export const frOpportunities = {
     job: 'Emploi',
     internship: 'Stage',
     mission: 'Mission',
-    business: 'Business',
+    business: 'Appel d’offres / marché',
     research: 'Recherche',
     scholarship: 'Bourse',
   } as Record<string, string>,

@@ -301,6 +301,7 @@ export const fr = {
   nav: {
     sidebarLabel: 'Navigation principale',
     home: 'Accueil',
+    signal: 'Signaler',
     network: 'Réseau',
     networkCalls: 'Appels au réseau',
     opportunities: 'Opportunités',
