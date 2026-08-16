@@ -42,7 +42,7 @@ Les décisions de cadrage **C-01 → C-08** restent ci-dessus, dans ce fichier.
 | D-174 → D-178 | [`decisions/07-mises-en-avant-et-ise-du-jour.md`](decisions/07-mises-en-avant-et-ise-du-jour.md) |
 | D-179, D-180, exécution de C-08 | [`decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md`](decisions/08-depots-de-fichiers-et-retrait-de-la-messagerie.md) |
 | D-181 → D-183 | [`decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md`](decisions/09-textes-des-piliers-moderation-et-remontee-d-information.md) |
-| D-184 → D-211 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
+| D-184 → D-212 | [`decisions/10-dons-organisations-cadrage-et-pastilles.md`](decisions/10-dons-organisations-cadrage-et-pastilles.md) |
 
 ### [Partie 1 — Fondations et modèle de données](decisions/01-fondations-et-modele-de-donnees.md)
 
@@ -134,7 +134,7 @@ Sections 41 à 43.
 
 ### [Partie 10 — Dons, organisations, cadrage et pastilles](decisions/10-dons-organisations-cadrage-et-pastilles.md)
 
-Sections 44 à 66.
+Sections 44 à 67.
 
 - **§44. Lien de retour vers l'espace membre depuis Administration et CMS** — D-184
 - **§45. Proposition de contenu par les ISE, avec validation administrative** — D-185, bucket privé `content-proposals`, gap ouvert sur l'image des opportunités
@@ -160,3 +160,4 @@ Sections 44 à 66.
 - **§64. Bug — cadrage photo publique et avatar non réinitialisé au remplacement du fichier** — D-209, `useState` ne se resynchronisait pas avec les nouvelles valeurs serveur ; l'ancien cadrage restait appliqué à la nouvelle image jusqu'à un geste manuel sur un curseur
 - **§65. Bug — cache de la landing non purgé après les actions membre de la vitrine publique** — D-210, `loadLandingData()` restait figé jusqu'à 5 minutes après un changement de photo/cadrage/consentement, faute d'appel à `revalidateLanding()` en dehors du CMS
 - **§66. Fusion de la photo de profil et de la photo publique en un dépôt unique** — D-211, un seul fichier déposé alimente désormais le médaillon privé (cockpit) ET la copie publique consentie (« ISE du jour »), avec deux blocs de cadrage réglés et enregistrés ensemble
+- **§67. Bug — cadrans de recadrage (médaillon + rectangle) qui découpaient déjà la photo avant tout réglage** — D-212, le wrapper de cadrage dimensionnait toujours au rapport du CADRE, jamais à celui de la PHOTO ; correctif générique (`imageAspect`/`frameAspect`), nouvelles colonnes `avatar_width`/`avatar_height` (migration 0152, même forme que `public_photo_width`/`height` de 0120), corrigé dans l'éditeur ET dans la vignette « ISE du jour » de l'accueil
