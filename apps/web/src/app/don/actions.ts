@@ -2,7 +2,6 @@
 
 import { redirect } from 'next/navigation';
 import { newCorrelationId } from '@/lib/correlation';
-import { failure, type FormState } from '@/lib/form-state';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { donationEnv, serverEnv } from '@/lib/env';
 import { frDonations } from '@/i18n/donations';
@@ -18,7 +17,12 @@ import {
   createCinetpayPayment,
   isCinetpayUrlAcceptable,
 } from '@/lib/donations/cinetpay';
-import { isDonationProvider } from '@/lib/donations/shared';
+import {
+  donationCheckoutOpened,
+  donationFailure,
+  isDonationProvider,
+  type DonationFormState,
+} from '@/lib/donations/shared';
 import { loadDonationCurrencyRules } from '@/lib/queries/donations';
 
 /**
@@ -64,14 +68,14 @@ function readText(value: FormDataEntryValue | null): string {
 }
 
 export async function startDonationAction(
-  _previous: FormState,
+  _previous: DonationFormState,
   formData: FormData,
-): Promise<FormState> {
+): Promise<DonationFormState> {
   const correlationId = newCorrelationId();
 
   const provider = readText(formData.get('provider'));
   if (!isDonationProvider(provider)) {
-    return failure(frDonations.form.errorProvider, correlationId, {
+    return donationFailure(frDonations.form.errorProvider, correlationId, {
       provider: frDonations.form.errorProvider,
     });
   }
@@ -79,12 +83,12 @@ export async function startDonationAction(
   const secrets = donationEnv();
   const providerSecrets = provider === 'stripe' ? secrets.stripe : secrets.cinetpay;
   if (providerSecrets === null) {
-    return failure(frDonations.form.errorProviderUnavailable, correlationId);
+    return donationFailure(frDonations.form.errorProviderUnavailable, correlationId);
   }
 
   const requestedAmount = readInteger(readText(formData.get('amountMinor')));
   if (requestedAmount === null || requestedAmount <= 0) {
-    return failure(frDonations.form.errorAmount, correlationId, {
+    return donationFailure(frDonations.form.errorAmount, correlationId, {
       amountMinor: frDonations.form.errorAmount,
     });
   }
@@ -94,7 +98,7 @@ export async function startDonationAction(
   const rules = await loadDonationCurrencyRules();
   const rule = rules.find((candidate) => candidate.provider === provider);
   if (rule === undefined) {
-    return failure(frDonations.form.errorProviderUnavailable, correlationId);
+    return donationFailure(frDonations.form.errorProviderUnavailable, correlationId);
   }
 
   const isAnonymous = formData.get('isAnonymous') !== null;
@@ -112,7 +116,7 @@ export async function startDonationAction(
 
   if (startError) {
     console.error('[ISE] don : creation refusee', { correlationId, code: startError.code });
-    return failure(frDonations.form.errorAmount, correlationId, {
+    return donationFailure(frDonations.form.errorAmount, correlationId, {
       amountMinor: frDonations.form.errorAmount,
     });
   }
@@ -133,7 +137,7 @@ export async function startDonationAction(
     authoritativeCurrency === null
   ) {
     console.error('[ISE] don : reponse de creation inexploitable', { correlationId });
-    return failure(frDonations.form.errorGateway, correlationId);
+    return donationFailure(frDonations.form.errorGateway, correlationId);
   }
 
   const siteUrl = serverEnv().NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '');
@@ -164,7 +168,7 @@ export async function startDonationAction(
         correlationId,
         reason: session.reason,
       });
-      return failure(frDonations.form.errorGateway, correlationId);
+      return donationFailure(frDonations.form.errorGateway, correlationId);
     }
     gatewayUrl = session.url;
     providerReference = session.sessionId;
@@ -176,7 +180,10 @@ export async function startDonationAction(
     // `lib/routes/donations.ts`). Elle sert de `success_url` COMME de
     // `failed_url` : la page d'arrivee relit l'etat REEL en base et dit
     // aussi bien un echec qu'une attente. Aucune des deux URL n'affirme
-    // quoi que ce soit par elle-meme.
+    // quoi que ce soit par elle-meme. Ces URL restent utilisees meme avec
+    // le SDK Seamless (D-218) : elles servent de repli si le guichet doit
+    // naviguer a l'interieur de sa propre fenetre plutot que de fermer par
+    // `postMessage`.
     //
     // La v2 borne ces URL a 120 caracteres. Si la reference ne tient pas,
     // on la retire plutot que de laisser CinetPay tronquer : la passerelle
@@ -214,7 +221,7 @@ export async function startDonationAction(
         correlationId,
         reason: payment.reason,
       });
-      return failure(frDonations.form.errorGateway, correlationId);
+      return donationFailure(frDonations.form.errorGateway, correlationId);
     }
 
     // Le `notify_token` est le PREMIER controle d'authenticite de la
@@ -236,15 +243,38 @@ export async function startDonationAction(
       }
     }
 
-    gatewayUrl = payment.session.url;
-    providerReference = payment.session.transactionId ?? payment.session.merchantTransactionId;
+    // --- 3bis. Passage au guichet constate, IMMEDIATEMENT (D-218) --------
+    // Contrairement a Stripe, CinetPay ne redirige plus la page entiere :
+    // le client ouvre une popup (SDK `cinetpay-seamless`). Le guichet est
+    // donc deja « ouvert » des que ce jeton existe, meme si la popup n'est
+    // pas encore apparue a l'ecran cote navigateur.
+    const { error: markError } = await supabase.rpc('mark_donation_redirected', {
+      p_donation_id: donationId,
+      p_provider_reference: payment.session.transactionId ?? payment.session.merchantTransactionId,
+    });
+    if (markError) {
+      console.warn('[ISE] don : suivi de redirection non enregistre', {
+        correlationId,
+        code: markError.code,
+      });
+    }
+
+    // Aucun `redirect()` ici : le client recoit le jeton et l'URL du
+    // guichet, et ouvre lui-meme la popup CinetPay Seamless.
+    return donationCheckoutOpened({
+      provider: 'cinetpay',
+      reference,
+      paymentToken: payment.session.paymentToken,
+      paymentUrl: payment.session.url,
+    });
   }
 
   if (gatewayUrl === null) {
-    return failure(frDonations.form.errorGateway, correlationId);
+    return donationFailure(frDonations.form.errorGateway, correlationId);
   }
 
   // --- 3. Passage au guichet constate. Toujours pas un paiement. --------
+  // (CinetPay ne passe plus par ici : voir le retour anticipe ci-dessus.)
   const { error: markError } = await supabase.rpc('mark_donation_redirected', {
     p_donation_id: donationId,
     p_provider_reference: providerReference,

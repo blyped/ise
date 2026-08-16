@@ -46,6 +46,57 @@ export function isDonationProvider(value: unknown): value is DonationProvider {
   return value === 'stripe' || value === 'cinetpay';
 }
 
+/**
+ * D-218 (16/08/2026) — etat de `startDonationAction`, un cran plus riche
+ * que le `FormState` generique (`lib/form-state.ts`).
+ *
+ * POURQUOI UN TYPE A PART, ET PAS UNE EXTENSION DE `FormState` PARTOUT
+ * REUTILISEE : Stripe garde son comportement D'ORIGINE — l'action appelle
+ * `redirect()` cote serveur, la page hebergee de Stripe s'ouvre en
+ * navigation pleine page, aucun etat n'a besoin de transporter quoi que ce
+ * soit de plus qu'un message d'erreur. CinetPay, lui, ne redirige PLUS
+ * (D-218, migration vers le SDK `cinetpay-seamless`) : l'action renvoie le
+ * jeton et l'URL du guichet, et c'est le CLIENT qui ouvre la popup. Ce
+ * champ supplementaire n'existe donc que pour CinetPay ; il reste `null`
+ * dans tous les autres cas (erreur, ou redirection Stripe qui ne rend
+ * jamais cet etat puisque `redirect()` interrompt l'action avant).
+ */
+export interface DonationCheckoutInfo {
+  readonly provider: 'cinetpay';
+  readonly reference: string;
+  readonly paymentToken: string | null;
+  readonly paymentUrl: string;
+}
+
+export interface DonationFormState {
+  readonly status: 'idle' | 'error' | 'success';
+  readonly message: string | null;
+  readonly correlationId: string | null;
+  readonly fieldErrors: Record<string, string>;
+  /** Non nul uniquement juste apres l'ouverture reussie du guichet CinetPay. */
+  readonly checkout: DonationCheckoutInfo | null;
+}
+
+export const initialDonationFormState: DonationFormState = {
+  status: 'idle',
+  message: null,
+  correlationId: null,
+  fieldErrors: {},
+  checkout: null,
+};
+
+export function donationFailure(
+  message: string,
+  correlationId: string,
+  fieldErrors: Record<string, string> = {},
+): DonationFormState {
+  return { status: 'error', message, correlationId, fieldErrors, checkout: null };
+}
+
+export function donationCheckoutOpened(checkout: DonationCheckoutInfo): DonationFormState {
+  return { status: 'success', message: null, correlationId: null, fieldErrors: {}, checkout };
+}
+
 export function isDonationStatus(value: unknown): value is DonationStatus {
   return (
     value === 'pending' ||
