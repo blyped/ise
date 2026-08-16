@@ -6,10 +6,8 @@ import { ROUTES } from '@/lib/routes';
 import { PROFILE_ROUTES } from '@/lib/routes/onboarding';
 import { requireProfile } from '@/lib/profile-guard';
 import { loadPublicShowcase } from '@/lib/queries/public-showcase';
-import { LANDING_MEDIA_BUCKET, landingMediaUrl } from '@/lib/public/landing-data';
 import { AppShell } from '@/components/layout/AppShell';
 import { PublicShowcaseForm } from './PublicShowcaseForm';
-import { PublicPhotoForm } from './PublicPhotoForm';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: frShowcase.title };
@@ -18,16 +16,19 @@ const LINK_CLASS =
   'text-body-sm font-semibold text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-active-blue';
 
 /**
- * Ma vitrine publique — brève description et consentements « ISE du jour ».
+ * Ma vitrine publique — brève description et consentement « ISE du jour ».
  *
- * RÉVISION DE D-135 (migration 0120). Deux consentements distincts :
- * la parution comme « ISE du jour » (texte) d'une part, la publication d'un
- * portrait sur le site public d'autre part. Le second n'est pas déduit du
- * premier : c'était précisément le reproche de D-135.
+ * RÉVISION DE D-135 (migration 0120), puis D-211 (14/08/2026) : le dépôt de
+ * la photo et son consentement de publication (`allowPublicPhoto`) ont
+ * quitté cet écran. Demande du porteur : « la photo que l'ISE mettra pour
+ * son profil, c'est elle qui sera affichée devant pour l'accueil » — un
+ * dépôt UNIQUE, plutôt que deux photos distinctes. Ce dépôt vit désormais
+ * sur « Photo de profil » (mon-profil/en-tete), avec deux blocs de cadrage
+ * (médaillon + rectangle « ISE du jour ») réglés en un seul geste.
  *
- * Rappel que l'écran assume : la fiche profil complète est réservée aux
- * membres connectés, mais l'encart d'accueil, lui, est public. Le
- * consentement porte donc sur une exposition réellement anonyme.
+ * Ce qui reste ici porte sur le TEXTE, indépendant de la photo depuis
+ * toujours (D-135) : la brève description et le consentement à paraître
+ * comme « ISE du jour ».
  */
 export default async function PublicShowcasePage() {
   const context = await requireProfile();
@@ -65,26 +66,6 @@ export default async function PublicShowcasePage() {
   const showcase = await loadPublicShowcase(profile.id, correlationId);
   const displayName = profile.displayName ?? `${profile.firstName} ${profile.lastName}`.trim();
 
-  // L'URL n'est construite que si le portrait est réellement consenti et
-  // décrit : la même règle que la projection SQL, pour ne jamais afficher
-  // ici une image que la vitrine ne montrerait pas. Le cadrage (0141)
-  // n'entre pas dans cette URL : c'est une donnée d'affichage, transmise à
-  // part à `PublicPhotoForm`.
-  const photoUrl =
-    showcase.ok && showcase.data.allowPublicPhoto && showcase.data.photoPath !== null
-      ? landingMediaUrl({
-          bucket: LANDING_MEDIA_BUCKET,
-          path: showcase.data.photoPath,
-          alt: showcase.data.photoAlt ?? '',
-          credit: null,
-          width: showcase.data.photoWidth,
-          height: showcase.data.photoHeight,
-          focalX: null,
-          focalY: null,
-          zoom: null,
-        })
-      : null;
-
   return (
     <AppShell currentPath={PROFILE_ROUTES.publicShowcase} displayName={displayName}>
       <div className="flex flex-col gap-7">
@@ -99,6 +80,20 @@ export default async function PublicShowcasePage() {
           {frShowcase.contextBody}
         </Alert>
 
+        {/* Renvoi vers « Photo de profil » — révision D-211 : la photo et
+            son consentement de publication vivent désormais là-bas, pas ici. */}
+        <Alert
+          variant="info"
+          title={frShowcase.photoPointerTitle}
+          action={
+            <Link href={PROFILE_ROUTES.header} className={LINK_CLASS}>
+              {frShowcase.photoPointerLink}
+            </Link>
+          }
+        >
+          {frShowcase.photoPointerHint}
+        </Alert>
+
         {!showcase.ok ? (
           <Card>
             <CardHeader>
@@ -111,23 +106,7 @@ export default async function PublicShowcasePage() {
             />
           </Card>
         ) : (
-          <>
-            <PublicShowcaseForm showcase={showcase.data} />
-            <PublicPhotoForm
-              // D-209 — remonte le composant a chaque remplacement de photo
-              // (photoUrl change) pour que useState(focalX/focalY/zoom) se
-              // reinitialise sur les valeurs fraiches du serveur (50/50/1
-              // apres le declencheur de reinitialisation du cadrage) plutot
-              // que de garder l'ancien reglage local, cense cadrer l'ANCIENNE
-              // photo, applique par erreur a la nouvelle avant tout geste.
-              key={photoUrl ?? 'none'}
-              showcase={showcase.data}
-              photoUrl={photoUrl}
-              photoFocalX={showcase.data.photoFocalX}
-              photoFocalY={showcase.data.photoFocalY}
-              photoZoom={showcase.data.photoZoom}
-            />
-          </>
+          <PublicShowcaseForm showcase={showcase.data} />
         )}
       </div>
     </AppShell>

@@ -35,7 +35,9 @@ export function toHeaderInput(formData: FormData) {
 }
 
 /**
- * Vitrine publique (revision D-135, migration 0120).
+ * Vitrine publique (revision D-135, migration 0120 ; D-211 retire
+ * `allowPublicPhoto` de ce formulaire — ce consentement vit desormais sur
+ * l'ecran « Photo de profil », avec le depot unique de la photo).
  *
  * Une case non cochee n'est pas postee du tout : `checkboxToBoolean(null)`
  * vaut donc `false`, ce qui est exactement le retrait du consentement.
@@ -44,7 +46,6 @@ export function toPublicShowcaseInput(formData: FormData) {
   return {
     publicSummary: blankToUndefined(formData.get('publicSummary')),
     allowPublicFeature: checkboxToBoolean(formData.get('allowPublicFeature')),
-    allowPublicPhoto: checkboxToBoolean(formData.get('allowPublicPhoto')),
   };
 }
 
