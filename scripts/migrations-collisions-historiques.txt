@@ -1,0 +1,17 @@
+# Collisions de numerotation anterieures a la mise en place du controle.
+#
+# Ces migrations sont DEJA APPLIQUEES en production : les renommer reviendrait a
+# reediter une migration appliquee, ce que le MASTER PROMPT §77 interdit. Elles
+# sont donc tolerees ici, nommement et definitivement.
+#
+# Cette liste est FERMEE. On n'y ajoute rien : toute nouvelle migration prend un
+# numero libre, ou un suffixe de lettre (0157b_...) si le numero suivant est deja
+# pris par une branche en cours.
+#
+# Un fichier par ligne, sans l'extension .sql, tel qu'il apparait dans
+# supabase/migrations. Les fichiers _partN ne figurent pas ici : ils sont
+# reconnus automatiquement comme les morceaux d'une meme migration.
+
+0120_public_photo_consent_storage_purge
+0142_organizations_seed_from_profiles_fix
+0146_landing_media_organizations_usage
